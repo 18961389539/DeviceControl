@@ -1,0 +1,52 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const cfg=JSON.parse(fs.readFileSync(new URL('../backend/DeviceControl.Api/config/station.json',import.meta.url),'utf8'));
+const ctx={window:{STATION_CONFIG:cfg},setTimeout,clearTimeout,console,Date,Error,Promise,structuredClone};
+vm.createContext(ctx);
+for(const name of ['shared-resource-coordinator.js','workflow-engine.js','mock-runtime.js','workflow-studio.js','governance-mock.js'])vm.runInContext(fs.readFileSync(new URL('../frontend/'+name,import.meta.url),'utf8'),ctx);
+const m=new ctx.window.MockRuntime(), gov=new ctx.window.GovernanceMock(m);
+const operator=gov.login('operator','demo123'),engineer=gov.login('engineer','demo123'),admin=gov.login('admin','demo123');
+assert.equal(operator.role,'Operator');assert.equal(engineer.role,'Engineer');assert.equal(admin.role,'Admin');
+assert.throws(()=>gov.login('admin','not-the-pass'),/密码错误/);
+await assert.rejects(gov.post('/api/manual/axes/X/enable',{enabled:true},operator),/无权/);
+assert.equal(gov.audit[0].status,403);
+await assert.rejects(gov.post('/api/recipes/draft',{name:'blocked'},operator),/无权/);
+const draft=(await gov.post('/api/recipes/draft',{name:'产品 A',visionOffsetMm:2.5,extraDwellMs:90},engineer)).data;
+assert.equal(draft.status,'Draft');
+await assert.rejects(gov.post('/api/recipes/'+draft.id+'/publish',{},engineer),/无权/);
+const validated=(await gov.post('/api/recipes/'+draft.id+'/validate',{},engineer)).data;
+assert.equal(validated.status,'Validated');
+const old=gov.activeId;
+// Start a simulated cycle; publishing is disallowed even if the active demo user is an administrator.
+for(const axis of ['X','Y']){
+  await gov.post(`/api/manual/axes/${axis}/enable`,{enabled:true},engineer);
+  await gov.post(`/api/manual/axes/${axis}/home`,{},engineer);
+}
+await gov.post('/api/mode',{mode:'Auto'},engineer);
+await gov.post('/api/cycle/start',{},operator);
+assert.equal(m.snapshot().busy,true);
+assert.equal(m.cycleRecipe.visionOffsetMm,0);
+await assert.rejects(gov.post('/api/recipes/'+draft.id+'/publish',{},admin),/执行/);
+await gov.post('/api/cycle/stop',{},operator);
+const wait=async()=>{let i=0;while(m.snapshot().busy&&i++<300)await new Promise(r=>setTimeout(r,30));assert.equal(m.snapshot().busy,false)};
+await wait();
+assert.equal(m.snapshot().recoveryRequired,true);
+await assert.rejects(gov.post('/api/recipes/'+draft.id+'/publish',{},admin),/恢复/);
+// Reset from a stopped cycle: move each component back to its neutral station state.
+await gov.post('/api/mode',{mode:'Manual'},engineer);
+for(const cylinder of ['Clamp','Stopper'])await gov.post(`/api/manual/cylinders/${cylinder}/retract`,{},engineer);
+for(const axis of ['X','Y'])await gov.post(`/api/manual/axes/${axis}/home`,{},engineer);
+await gov.post('/api/recovery/confirm',{},engineer);
+const published=(await gov.post('/api/recipes/'+draft.id+'/publish',{},admin)).data;
+assert.equal(published.status,'Published');assert.equal(gov.activeId,draft.id);
+assert.equal(gov.active().values.visionOffsetMm,2.5);
+await assert.rejects(gov.post('/api/recipes/rollback',{id:old},engineer),/无权/);
+const rollback=(await gov.post('/api/recipes/rollback',{id:old},admin)).data;
+assert.notEqual(rollback.id,old);
+assert.equal(rollback.sourceId,old);
+assert.equal(gov.active().values.visionOffsetMm,0);
+assert(gov.audit.some(a=>a.status===403));
+assert(gov.audit.some(a=>a.status===409));
+assert.equal(gov.checklist().required,false);
+console.log('PASS V0.4 governance: login, denied actions, validate, run-time publish guard, recovery guard, release, rollback, audit');

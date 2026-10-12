@@ -1,0 +1,57 @@
+{
+  "product": "DeviceControl",
+  "version": "2.0-rc",
+  "startedUtc": "2026-10-12T12:52:30.302052+00:00",
+  "finishedUtc": "2026-10-12T12:52:32.347844+00:00",
+  "profile": "offline",
+  "browserIncluded": false,
+  "dotnetPresent": false,
+  "dotnetLocation": null,
+  "passed": 3,
+  "failed": 0,
+  "blocked": 0,
+  "releaseApproved": false,
+  "tests": [
+    {
+      "name": "python:test_recovery_sandbox_v19.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.63,
+      "log": "artifacts/v20-targeted/logs/python_test_recovery_sandbox_v19.py.log",
+      "command": [
+        "/opt/pyvenv/bin/python",
+        "tests/test_recovery_sandbox_v19.py"
+      ]
+    },
+    {
+      "name": "python:test_recovery_v20.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.73,
+      "log": "artifacts/v20-targeted/logs/python_test_recovery_v20.py.log",
+      "command": [
+        "/opt/pyvenv/bin/python",
+        "tests/test_recovery_v20.py"
+      ]
+    },
+    {
+      "name": "python:test_v20_recovery_contract.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.69,
+      "log": "artifacts/v20-targeted/logs/python_test_v20_recovery_contract.py.log",
+      "command": [
+        "/opt/pyvenv/bin/python",
+        "tests/test_v20_recovery_contract.py"
+      ]
+    }
+  ],
+  "sourceSha256": {
+    "backend/DeviceControl.Api/Program.cs": "c3bfb5e8c2f9572e4a4b85d3357957eb484685f350d9ba6199e7f551cf4e0e00",
+    "backend/DeviceControl.Api/StationUpgradeManager.cs": "a220e7320ac0605d628c6af709fda25c8aa09110a68c6391c4b8ebe998909252",
+    "tools/recovery_sandbox.py": "7ff7ae20b57ff371d27733f1a5bb6e56f91dab137a6971d20b23531a78b9fa9e"
+  },
+  "limitations": [
+    "Release not approved: offline-only, failing, missing, or unverified gates"
+  ]
+}

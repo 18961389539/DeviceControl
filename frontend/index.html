@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>DeviceControl V2.0 RC · 多工站软件仿真</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">D</div><div><b>Device Control</b><small>CONTROL STUDIO · V1.8</small></div></div>
+    <div class="section-label">工作空间</div>
+    <nav class="navigation" aria-label="页面导航">
+      <button data-tab="dashboard" class="nav-item active"><span class="nav-icon">▦</span>生产总览</button>
+      <button data-tab="templates" class="nav-item"><span class="nav-icon">▧</span>配置模板与部署 <span class="nav-beta">V1.8</span></button>
+      <button data-tab="stations" class="nav-item"><span class="nav-icon">▥</span>多工站调度 <span class="nav-beta">V1.3</span></button>
+      <button data-tab="manual" class="nav-item"><span class="nav-icon">⚙</span>手动调试</button>
+      <button data-tab="io" class="nav-item"><span class="nav-icon">◉</span>IO 监控</button>
+      <button data-tab="config" class="nav-item"><span class="nav-icon">▤</span>机构与互锁</button>
+      <button data-tab="sequence" class="nav-item"><span class="nav-icon">↳</span>流程调试</button>
+      <button data-tab="workflow" class="nav-item"><span class="nav-icon">◇</span>流程设计器 <span class="nav-beta">NEW</span></button>
+      <button data-tab="quality" class="nav-item"><span class="nav-icon">✓</span>流程质量门禁 <span class="nav-beta">NEW</span></button>
+      <button data-tab="replay" class="nav-item"><span class="nav-icon">▣</span>历史回放 <span class="nav-beta">NEW</span></button>
+      <button data-tab="analytics" class="nav-item"><span class="nav-icon">▥</span>运行分析</button>
+      <button data-tab="events" class="nav-item"><span class="nav-icon">≡</span>报警与日志</button>
+      <button data-tab="recovery" class="nav-item"><span class="nav-icon">✚</span>故障恢复向导</button>
+      <button data-tab="governance" class="nav-item"><span class="nav-icon">♙</span>配方版本与审计</button>
+    </nav>
+    <div class="sidebar-bottom"><div class="connection-dot"></div><span id="connectionLabel">检查服务连接…</span><small>仅供仿真 · 非安全控制系统</small></div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <div><div class="eyebrow">设备 / DEMO-DUAL-STATION · <span id="workspaceBreadcrumb">STATION A</span></div><h1 id="pageTitle">生产总览</h1></div>
+      <div class="topright"><label for="workspaceStation" class="workspace-chooser">工站 <select id="workspaceStation" class="select-field" aria-label="选择当前工作区"><option value="A">工站 A</option><option value="B">工站 B</option></select></label><span id="workspaceTag" class="mode-chip">工作区 A</span><span class="mode-chip" id="sourceMode">初始化中</span><span class="mode-chip" id="userLabel">未登录</span><button id="logoutButton" class="btn btn-light" style="padding:8px 11px" disabled>退出</button><span class="clock" id="clock">--:--:--</span></div>
+    </header>
+    <div class="content">
+      <div class="notice"><span class="notice-icon">i</span><span>V2.0 RC：新增严格发布验收门禁和备份来源保护。离线仿真不代表 .NET/HTTP 验收通过。</span><button id="helpToggle" class="text-button">说明</button></div>
+      <div id="help" class="help-panel hidden">离线打开时使用浏览器内置仿真。启动 .NET 后端并由 5173 静态服务访问前端时，连接本地 API 仿真。控制动作都由软件普通互锁约束，但这不能替代机械安全系统。后端连接丢失时会锁定控制，禁止无提示自动切换到另一台模拟设备。</div>
+      <div id="toast" role="status" class="toast hidden"></div>
+      <div id="loginOverlay" class="login-overlay">
+        <div class="login-dialog">
+          <div class="login-logo">D</div><h2>登录 Device Control</h2>
+          <p>本地仿真实验台 · 演示身份，不用于真实系统认证</p>
+          <form id="loginForm">
+            <label class="field-label" for="loginUser">演示角色</label>
+            <select id="loginUser" class="select-field"><option value="operator">操作员 · Operator</option><option value="engineer" selected>调试工程师 · Engineer</option><option value="admin">管理员 · Admin</option></select>
+            <label class="field-label" for="loginPassword">演示密码</label>
+            <input id="loginPassword" class="login-input" type="password" value="demo123" autocomplete="off" required>
+            <button class="btn btn-primary full" type="submit" style="margin-top:19px">进入仿真实验台</button>
+            <div id="loginError" class="login-error" role="alert"></div>
+          </form><small>Operator：生产操作　|　Engineer：调试、验证　|　Admin：发布、回滚</small>
+        </div>
+      </div>
+
+      <section id="panel-templates" class="panel">
+        <div class="section-intro"><h2>工站模板 · 配置版本库</h2><p>从已有工站的已发布流程与配方生成不可变模板快照，进行验证、管理员发布、差异比较，再创建新的独立仿真工站。</p></div>
+        <div class="template-layout">
+          <div class="card template-card"><div class="card-head"><div><h2>① 捕获模板</h2><p>抓取来源工站当前已发布的软件配置</p></div><span class="pill neutral">Engineer+</span></div>
+            <label class="field-label" for="templateSource">来源工站</label><select id="templateSource" class="select-field"></select>
+            <label class="field-label" for="templateName">模板名称</label><input id="templateName" class="login-input" value="3C 视觉装配标准工站" maxlength="60" />
+            <button class="btn btn-primary full" data-template-action="capture">创建草稿快照</button>
+            <div class="control-hint">快照包含机构映射、互锁、已发布流程及配方，不包含周期、报警、权限或运行状态。</div>
+          </div>
+          <div class="card template-card"><div class="card-head"><div><h2>② 审批版本</h2><p>草稿 → 已验证 → 已发布</p></div><span class="pill neutral">Admin 发布</span></div>
+            <label class="field-label" for="templateSelect">选择模板版本</label><select id="templateSelect" class="select-field"></select>
+            <div id="templateSummary" class="template-summary">暂无模板</div>
+            <div class="btn-row"><button class="btn btn-light" data-template-action="validate">检查模板</button><button class="btn btn-primary" data-template-action="publish">批准发布</button></div>
+            <div class="control-hint">发布后形成不可变版本。V1.7 允许已有工站在空闲手动状态升级流程/配方；不支持机构、IO、互锁热替换。</div>
+          </div>
+          <div class="card template-card"><div class="card-head"><div><h2>③ 批量创建工站</h2><p>只新增，不覆盖；最多五个 / 次</p></div><span class="pill neutral">Simulation</span></div>
+            <label class="field-label" for="templateNewIds">新工站 ID（逗号分隔）</label><input id="templateNewIds" class="login-input" value="C,D" placeholder="C,D,E" />
+            <button class="btn btn-primary full" data-template-action="deploy">使用已发布模板创建工站</button>
+            <div class="control-hint">仅管理员可创建。后端配置会持久化；离线模式的数据只在当前页面会话存在。批量部署并非跨文件系统原子事务。</div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:18px"><div class="card-head"><div><h2>④ 配置差异预览</h2><p>只读比较模板与目标工站；不修改已有 Runtime</p></div><span id="templateDiffCount" class="pill neutral">0 项差异</span></div>
+          <div class="template-compare"><select id="templateCompareStation" class="select-field" aria-label="目标工站"></select><button class="btn btn-light" data-template-action="compare">比较配置</button></div>
+          <div class="table-scroll"><table class="data-table"><thead><tr><th>配置路径</th><th>目标工站当前值</th><th>模板目标值</th></tr></thead><tbody id="templateDiffRows"><tr><td colspan="3">尚无对比</td></tr></tbody></table></div>
+          <div id="templateError" class="template-error" role="alert"></div>
+        </div>
+        <div class="card" style="margin-top:18px" id="upgradeDashboard">
+          <div class="card-head"><div><h2>⑤ 已有工站 · 受控软件升级与回滚</h2><p>只替换已发布的流程与配方；机构、信号、轴、气缸、互锁必须保持一致。预检令牌有效 10 分钟。</p></div><span class="pill neutral">V1.8 · Admin 发布</span></div>
+          <div class="upgrade-grid">
+            <div><label class="field-label" for="upgradeStation">目标工站</label><select id="upgradeStation" class="select-field"><option value="A">工站 A</option><option value="B">工站 B</option></select></div>
+            <div><label class="field-label">① 检查状态与版本</label><button class="btn btn-light full" data-upgrade="preflight">执行升级预检</button></div>
+            <div><label class="field-label">② 确认部署</label><button class="btn btn-primary full" data-upgrade="apply">发布到已有工站</button></div>
+          </div>
+          <div id="upgradePreflight" class="upgrade-status">尚未预检</div>
+          <div class="divider"></div>
+          <div class="card-head"><div><h2>部署历史与人工回滚</h2><p>记录部署前的已发布流程与配方版本；后续另有发布时拒绝盲目回滚。</p></div><button class="btn btn-light" data-upgrade="refresh">刷新记录</button></div>
+          <div class="upgrade-grid upgrade-evidence">
+            <select id="upgradeHistory" class="select-field" aria-label="历史部署记录"><option value="">暂无记录</option></select>
+            <button class="btn btn-light" data-upgrade="rollback">回滚到部署前</button>
+            <div id="upgradeEvidence" class="control-hint">尚无部署历史。</div>
+          </div>
+          <div id="upgradeError" class="template-error" role="alert"></div>
+          <div class="control-hint">部署为逐站发布，不是流程数据库与配方数据库的全局事务；中断后必须人工核查、恢复。离线浏览器记录不会持久化。</div>
+        </div>
+        <div class="card" style="margin-top:18px" id="rolloutDashboard">
+          <div class="card-head"><div><h2>⑥ 灰度部署 · 维护窗口 / 诊断 / 人工恢复</h2><p>选择上方已发布模板，先部署一个试点；运行真实离线仿真周期并验证质量，再放行下一批。</p></div><span class="pill neutral">V1.8 · Admin</span></div>
+          <div class="rollout-grid">
+            <div><label class="field-label" for="rolloutIds">参与工站（逗号分隔，2–12 站）</label><input id="rolloutIds" class="login-input" value="A,B" placeholder="A,B,C,D" /></div>
+            <div><label class="field-label" for="rolloutPilot">试点工站</label><select id="rolloutPilot" class="select-field"><option value="A">工站 A</option></select></div>
+            <div><label class="field-label" for="rolloutWaveSize">后续每批台数</label><select id="rolloutWaveSize" class="select-field"><option value="1">1 台</option><option value="2" selected>2 台</option><option value="3">3 台</option></select></div>
+          </div>
+          <div class="rollout-grid"><div><label class="field-label" for="rolloutWindowStart">维护窗口开始（本地时间，可选）</label><input class="login-input" type="datetime-local" id="rolloutWindowStart" /></div><div><label class="field-label" for="rolloutWindowEnd">维护窗口结束（本地时间，可选）</label><input class="login-input" type="datetime-local" id="rolloutWindowEnd" /></div></div>
+          <div class="control-hint">留空表示无需窗口限制；设置时要求开始与结束同时填写、最长 7 天。服务端统一保存 UTC。不会定时自动升级。</div>
+          <div class="btn-row"><button class="btn btn-primary" data-rollout="create">创建灰度批次</button><button class="btn btn-light" data-rollout="refresh">刷新状态</button></div>
+          <div class="divider"></div>
+          <label class="field-label" for="rolloutHistory">历史灰度批次</label><select id="rolloutHistory" class="select-field"><option>暂无批次</option></select>
+          <div id="rolloutProgress" class="rollout-progress">尚未创建灰度批次。</div>
+          <div id="rolloutWindowState" class="control-hint">可选维护窗口</div>
+          <div id="rolloutSteps" class="rollout-steps"></div>
+          <div class="btn-row rollout-actions"><button class="btn btn-primary" data-rollout="advance">升级当前批次</button><button class="btn btn-light" data-rollout="inspect">检查周期与质量证据</button><button class="btn btn-primary" data-rollout="verify">确认批次验收</button></div>
+          <div class="divider"></div><div class="card-head"><div><h2>⑦ 故障诊断与人工恢复</h2><p>检查工站模式、版本、报警、部署日志；仅在确认原始基线安全后解除失败步骤。</p></div><button class="btn btn-light" data-rollout="diagnose">诊断批次</button></div>
+          <div id="rolloutDiagnostics" class="rollout-steps"><div class="control-hint">选择批次后点击诊断。</div></div>
+          <div class="rollout-grid"><div><label class="field-label">待核对工站</label><select class="select-field" id="rolloutReconcileStation"></select></div><div><label class="field-label">人工核对说明（不少于 8 字）</label><input class="login-input" id="rolloutReconcileNote" placeholder="核对部署日志、原始版本及报警状态" /></div></div>
+          <div class="btn-row"><button class="btn btn-light" data-rollout="reconcile">核对并解除失败步骤</button></div>
+          <div class="control-hint">核对只将失败步骤恢复为待部署，不会自动重试。存在未知版本或未处理单站部署日志时必须先单站恢复或关闭批次。</div>
+          <div class="rollout-grid rollout-admin"><div><label class="field-label" for="rolloutReason">暂停 / 结束原因</label><input id="rolloutReason" class="login-input" placeholder="说明原因（建议填写）" /></div><div class="btn-row"><button class="btn btn-light" data-rollout="pause">暂停</button><button class="btn btn-light" data-rollout="resume">继续</button><button class="btn btn-light" data-rollout="abort">关闭批次</button></div></div>
+          <div class="divider"></div><div class="card-head"><div><h2>⑧ 重启恢复与一致性演练</h2><p>检查批次中断、单站部署日志、版本一致性与备份哈希。演练只修改隔离的临时数据，不会改变真实工站状态。</p></div><span class="pill neutral">Read-only · V1.8</span></div>
+          <div class="btn-row"><button class="btn btn-light" data-rollout="recovery-report">检查恢复报告</button>
+            <select class="select-field" id="recoveryScenario" aria-label="故障演练场景"><option value="crash-after-intent">中断于写入部署意图之后</option><option value="split-versions">流程已升级但配方未升级</option><option value="corrupt-backup">SQLite 备份哈希不匹配</option></select>
+            <button class="btn btn-light" data-rollout="drill">运行隔离演练</button></div>
+          <div id="rolloutRecovery" class="rollout-steps" aria-live="polite"><div class="control-hint">选择批次查询只读恢复报告，或运行不影响任何工站的故障演练。</div></div>
+          <div class="control-hint">红色异常只提供诊断，不会自动恢复。服务重启会将未完成部署标为 Interrupted 并持久化，需人工处理。</div>
+          <div class="divider"></div>
+          <div class="card-head"><div><h2>⑨ 隔离备份检查 · V2.0 RC</h2><p>在临时副本上验证 SHA-256、SQLite 完整性与部署前版本；只输出检查结果，永不回写生产数据。</p></div><span class="pill neutral">诊断专用</span></div>
+          <div class="btn-row"><button class="btn btn-light" id="sandboxInspectBtn">检查「已有工站升级」中选定的部署</button></div>
+          <div id="sandboxReport" class="rollout-steps" aria-live="polite"><div class="control-hint">请先在上方「⑤ 已有工站升级」选择部署历史，然后点击检查。离线 HTML 不包含实际 SQLite 备份，不能代替真实数据库验收。</div></div>
+          <div class="control-hint">沙箱检查通过也不代表允许自动恢复；必须人工审查版本、日志及工站状态。当前没有自动恢复接口。</div>
+          <div id="rolloutMessage" class="template-error" role="status"></div>
+          <div class="control-hint">不自动触发周期、绕过互锁或跨工站统一回滚。服务器部署记录持久化；浏览器离线模式仅供演示、刷新即丢失。</div>
+        </div>
+      </section>
+
+      <section id="panel-stations" class="panel">
+        <div class="section-intro"><h2>多工站调度中心</h2><p>多个独立的软件 Runtime：工站 A 兼容既有界面，B 及模板新增工站各有独立的流程、配方、历史和故障状态。不同工站可以并行运行，只有声明共享资源的节点相互排队。</p></div>
+        <div class="fleet-summary">
+          <div class="stat-card"><span class="stat-label">在线工站</span><div class="stat-value" id="fleetCount">2</div><small>仿真软件实例</small></div>
+          <div class="stat-card"><span class="stat-label">运行中</span><div class="stat-value" id="fleetRunning">0</div><small>按当前软件快照</small></div>
+          <div class="stat-card"><span class="stat-label">异常工站</span><div class="stat-value" id="fleetFaults">0</div><small>故障或待恢复</small></div>
+          <div class="stat-card"><span class="stat-label">共享资源 CELL-SHARED</span><div class="stat-value fleet-owner" id="fleetOwner">空闲</div><small>节点级 FIFO · 非安全级</small></div>
+        </div>
+        <div class="card fleet-resource-board"><div class="card-head"><div><h2>共享资源实时占用与等待队列</h2><p>资源在节点结束、异常或软件取消后释放。整个队列公平 FIFO；分配在软件进程内完成。</p></div><span class="pill neutral" id="fleetQueueCount">等待 0</span></div><div id="fleetResourceRows" class="fleet-resource-rows">尚未请求资源</div></div>
+        <div class="fleet-stations" id="fleetStations" aria-live="polite"></div>
+        <div class="card fleet-log"><div class="card-head"><div><h2>调度与验证记录</h2><p>该页面仅展示软件仿真动作。禁止同时占用共享资源；单站故障不自动控制另一站。</p></div><button id="fleetRefresh" class="btn btn-light">刷新全部工站</button></div><div id="fleetLog" class="fleet-log-rows">尚无操作记录</div></div>
+      </section>
+
+      <section id="panel-dashboard" class="panel active">
+        <div class="four-grid kpi-grid">
+          <div class="stat-card"><div class="stat-label">设备状态</div><div class="stat-value"><span id="stateDot" class="state-dot"></span><span id="stateValue">—</span></div><small id="stateSubtitle">等待连接</small></div>
+          <div class="stat-card"><div class="stat-label">生产模式</div><div class="stat-value" id="modeValue">—</div><small>手动 / 自动模式互锁</small></div>
+          <div class="stat-card"><div class="stat-label">完成周期</div><div class="stat-value" id="cyclesValue">0</div><small>单周期仿真运行</small></div>
+          <div class="stat-card"><div class="stat-label">运动轴位置</div><div class="stat-value"><span id="axisValue">0.000</span><span class="unit">mm</span></div><small id="axisSub">X Axis</small></div>
+        </div>
+        <div class="dashboard-grid">
+          <div class="card production-card">
+            <div class="card-head"><div><h2>设备操作</h2><p>按照状态进行模式切换与单周期控制</p></div><span class="pill" id="recoveryTag">正常待机</span></div>
+            <div class="mode-toggle"><button data-mode="Manual" class="selected" id="modeManual">手动模式</button><button data-mode="Auto" id="modeAuto">自动模式</button></div>
+            <div class="action-grid"><button class="btn btn-primary" data-action="cycle-start">▶ 运行单周期</button><button class="btn btn-danger" data-action="cycle-stop">■ 请求停止</button></div>
+            <div class="action-grid"><button class="btn btn-light" data-action="fault-reset">报警复位</button><button class="btn btn-light" data-action="recovery-confirm">恢复确认</button></div>
+            <div class="control-hint" id="actionHint">手动使能与回零后，切换自动模式启动。</div>
+          </div>
+          <div class="card machine-card">
+            <div class="card-head"><div><h2>工位状态</h2><p>示意机构，不对应真实机械几何结构</p></div><span class="subtle" id="diagramStationLabel">STATION A</span></div>
+            <div class="machine-diagram">
+              <div class="camera-sim"><span class="camera-shape">◉</span><span>CAMERA-01</span></div>
+              <div class="axis-track"><div class="axis-origin">0</div><div class="axis-end">200 mm</div><div id="axisCarriage" class="axis-carriage" style="left:0%"><div class="carriage-head"></div><div class="carriage-label">X</div></div></div>
+              <div class="machine-bottom"><div class="cylinder-sim"><div class="cylinder-body"><div id="piston" class="cylinder-rod"></div></div><span>CLAMP-01</span></div><div id="productSymbol" class="product-symbol">▣<small>工件</small></div></div>
+            </div>
+            <div class="device-health"><div><span class="tiny-indicator" id="guardLed"></span>防护门状态</div><div><span class="tiny-indicator" id="airLed"></span>气压反馈</div><div><span class="tiny-indicator" id="partLed"></span>产品检测</div></div>
+          </div>
+        </div>
+        <div class="card progress-card"><div class="card-head"><div><h2>当前执行步骤</h2><p>实时显示设备顺序流程状态</p></div><span class="pill neutral" id="flowStatus">未启动</span></div><div class="current-step"><span class="step-icon">↳</span><strong id="stepValue">等待操作</strong></div><div class="progress-rail"><div id="stepProgress"></div></div><div class="step-foot"><span>单周期流程</span><span id="visionValue">视觉：尚未触发</span></div></div>
+      </section>
+
+      <section id="panel-manual" class="panel">
+        <div class="section-intro"><h2>多机构手动调试</h2><p>选择不同轴和气缸查看对应状态；手动动作同样遵守统一普通互锁，不允许绕过设备控制服务。</p></div>
+        <div class="two-grid">
+          <div class="card"><div class="card-head"><div><h2>运动轴调试</h2><p>设备配置驱动轴量程、速度和回零位</p></div><span id="axisBadge" class="pill neutral">未使能</span></div>
+            <label class="field-label" for="axisSelect">选择运动轴</label><select id="axisSelect" class="select-field"></select>
+            <div class="readout"><span>当前位置</span><strong><span id="axisReadout">0.000</span><small> mm</small></strong></div>
+            <div class="keyvalue"><span>回零状态</span><b id="homedReadout">未回零</b></div>
+            <div class="keyvalue"><span>速度 / 范围</span><b id="axisLimits">—</b></div>
+            <div class="btn-row"><button class="btn btn-primary" data-action="servo-on">使能</button><button class="btn btn-light" data-action="servo-off">去使能</button><button class="btn btn-light" data-action="axis-home">回零</button></div>
+            <label class="field-label" for="moveTarget">目标位置 (mm)</label><div class="input-row"><input id="moveTarget" type="number" value="80" step="0.1"><button class="btn btn-primary" data-action="axis-move">移动到目标</button></div>
+            <div class="control-hint">手动指令为离散绝对定位，不是长按点动；真机点动需要专门的保持运行及安全设计。</div>
+          </div>
+          <div class="card"><div class="card-head"><div><h2>气缸与视觉</h2><p>两个气缸分别绑定输出与传感器反馈</p></div><span id="cylinderBadge" class="pill neutral">—</span></div>
+            <label class="field-label" for="cylinderSelect">选择气缸</label><select id="cylinderSelect" class="select-field"></select>
+            <div class="readout"><span>当前状态</span><strong id="cylinderReadout">—</strong></div>
+            <div class="keyvalue"><span>伸出反馈</span><b id="extendReadout">OFF</b></div><div class="keyvalue"><span>缩回反馈</span><b id="retractReadout">OFF</b></div>
+            <div class="btn-row"><button class="btn btn-primary" data-action="cylinder-extend">伸出</button><button class="btn btn-light" data-action="cylinder-retract">缩回</button></div>
+            <div class="control-hint" id="mechanismHint">Clamp 伸出依赖 Stopper 伸出；X/Y 运动要求两个气缸均缩回。</div>
+            <div class="divider"></div><div class="card-head"><div><h2>视觉触发</h2><p>模拟返回 X = 80.000 mm</p></div></div><button class="btn btn-light full" data-action="vision-trigger">触发视觉检测</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:18px"><div class="card-head"><div><h2>全部机构状态</h2><p>由设备快照动态生成</p></div></div><div id="mechanismOverview" class="mini-grid"></div></div>
+      </section>
+
+      <section id="panel-io" class="panel">
+        <div class="section-intro"><h2>IO 信号与仿真注入</h2><p>DI 与 DO 采用配置文件绑定物理地址。仅白名单外部仿真 DI 可切换，气缸到位反馈禁止直接写入。</p></div>
+        <div class="two-grid">
+          <div class="card"><div class="card-head"><h2>数字输入 DI</h2><span class="subtle">只读反馈 + 可注入外部信号</span></div><div id="inputRows" class="signal-list"></div></div>
+          <div class="card"><div class="card-head"><h2>数字输出 DO</h2><span class="subtle">由设备命令自动管理</span></div><div id="outputRows" class="signal-list"></div><div class="divider"></div><div class="card-head"><h2>故障注入</h2><span class="subtle">仅仿真有效</span></div><div id="faultRows" class="signal-list"></div></div>
+        </div>
+      </section>
+
+      <section id="panel-config" class="panel">
+        <div class="section-intro"><h2>机构配置与普通互锁</h2><p>后端读取 station.json；以下是只读映射，可通过修改配置文件调整设备机构。软件联锁不是功能安全。</p></div>
+        <div class="card"><div class="card-head"><div><h2>机构档案</h2><p id="profileDescription">从配置文件加载</p></div><span class="pill neutral">仅仿真驱动</span></div><div id="configMechanisms" class="mini-grid"></div></div>
+        <div class="two-grid" style="margin-top:18px"><div class="card"><div class="card-head"><h2>IO 通道映射</h2></div><div id="mappingRows" class="mapping-table"></div></div><div class="card"><div class="card-head"><h2>普通互锁矩阵</h2></div><div id="interlockRows" class="interlock-list"></div></div></div>
+      </section>
+      <section id="panel-sequence" class="panel">
+        <div class="section-intro"><h2>流程调试器 · V1.0</h2><p>已发布版本驱动执行，支持并行分组、逻辑资源锁、断点与单步。暂停只会发生在<span class="text-accent">下一顶层步骤开始之前</span>，不是瞬时冻结运动。</p></div>
+        <div class="flow-toolbar card">
+          <div class="flow-meta"><span class="eyebrow">当前执行计划</span><h2 id="flowVersion">flow-v0.5.0</h2><div class="subtle" id="flowDetail">正在加载执行器状态</div></div>
+          <span class="pill" id="flowDebugStatus">待机</span>
+          <div class="btn-row flow-actions"><button class="btn btn-light" data-debug="pause">在下一步暂停</button><button class="btn btn-primary" data-debug="resume">继续</button><button class="btn btn-light" data-debug="step">单步</button><button class="btn btn-light" data-debug="retry">重试当前错误</button><button class="btn btn-danger" data-debug="abort">中止错误等待</button></div>
+        </div>
+        <div class="flow-layout">
+          <div class="card"><div class="card-head"><div><h2>执行图</h2><p>点击圆点设置断点。并行子节点在同一分组中同时调度。</p></div><span class="pill neutral" id="sequenceStatus">未运行</span></div><div id="sequenceSteps" class="sequence-list"></div></div>
+          <div class="flow-right">
+            <div class="card"><div class="card-head"><div><h2>运行变量与资源</h2><p>显示流程内的资源拥有者与暂停原因</p></div></div><div id="flowVariables" class="flow-vars"></div><div id="flowResources" class="resource-list"></div></div>
+            <div class="card"><div class="card-head"><div><h2>节点执行轨迹</h2><p>最新步骤优先，记录耗时、尝试次数及结果</p></div></div><div id="flowTraces" class="flow-traces"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-workflow" class="panel">
+        <div class="section-intro"><h2>可视化流程设计器</h2><p>用拖拽调整顺序；条件分支 TRUE / FALSE、并行分支均明确连接。版本为不可变快照，编辑必须另存草稿后验证和发布。</p></div>
+        <div class="card studio-bar"><div><span class="eyebrow">当前生产流程</span><h2 id="studioActiveVersion">—</h2><small id="studioWorkspace">正在加载工作区</small></div><div class="btn-row"><button class="btn btn-light" data-editor-action="reset">恢复工作区</button><button class="btn btn-light" data-editor-action="save">保存新草稿</button><button class="btn btn-light" data-editor-action="validate">验证选中版本</button><button class="btn btn-primary" data-editor-action="publish">发布选中版本</button><button class="btn btn-light" data-editor-action="rollback">回滚选中版本</button></div></div>
+        <div class="card studio-tools"><div class="btn-row"><button class="btn btn-light" id="studioUndo" data-editor-action="undo">↶ 撤销</button><button class="btn btn-light" id="studioRedo" data-editor-action="redo">↷ 重做</button><button class="btn btn-light" id="studioCopy" data-editor-action="copy">复制节点</button><button class="btn btn-light" id="studioPaste" data-editor-action="paste">粘贴</button><button class="btn btn-light" id="studioDuplicate" data-editor-action="duplicate">创建副本</button></div><small>支持 Ctrl+Z / Ctrl+Y / Ctrl+C / Ctrl+V（仅画布聚焦时，输入框保留原生快捷键）。最多保留 80 步编辑历史。</small></div>
+        <div class="studio-layout">
+          <div class="studio-left">
+            <div class="card"><div class="card-head"><div><h2>动作库</h2><p>点击添加到流程末尾</p></div></div><div class="studio-palette"><button data-editor-add="WaitInput">◉ 等待输入</button><button data-editor-add="AxisMove">↔ 轴定位</button><button data-editor-add="CylinderExtend">⇥ 气缸伸出</button><button data-editor-add="CylinderRetract">⇤ 气缸缩回</button><button data-editor-add="VisionLocate">◎ 视觉检测</button><button data-editor-add="Delay">◷ 延时</button><button data-editor-add="Parallel">⇉ 并行分组</button><button data-editor-add="Condition">◇ 条件分支</button></div></div>
+            <div class="card"><div class="card-head"><div><h2>流程版本</h2><p>点击版本查看或作为工作区来源</p></div></div><div id="studioVersionList" class="studio-versions"></div><small id="studioStateNote" class="subtle"></small></div>
+          </div>
+          <div class="card studio-graph"><div class="card-head"><div><h2>工艺流程画布</h2><p>拖动节点调整顺序；箭头表示控制流</p></div><span class="pill neutral">DAG · 单层分支</span></div><div class="studio-start">▶ START</div><div class="studio-link">↓</div><div id="studioCanvas"></div><div class="studio-link">↓</div><div class="studio-end">■ END</div></div>
+          <div class="studio-right"><div class="card"><div class="card-head"><div><h2>节点属性</h2><p>选择画布节点进行修改</p></div></div><div id="studioInspector"></div></div><div class="card"><div class="card-head"><div><h2>静态验证</h2><p>编辑过程实时验证，可发布前再次校验</p></div></div><div id="studioValidation" class="studio-validation"></div></div><div class="card"><div class="card-head"><div><h2>与已发布流程差异</h2><p>基于节点 ID 比较新增、移除、属性和顺序变化</p></div></div><div id="studioDiff" class="studio-diff"></div></div></div>
+        </div>
+      </section>
+
+
+      <section id="panel-quality" class="panel">
+        <div class="section-intro"><h2>流程质量门禁与周期性能分析</h2><p>对当前流程工作区执行静态类型校验、场景测试和预期对照；不运行仿真设备动作。下方性能数据来自已记录的真实仿真周期。</p></div>
+        <div class="card quality-header"><div><span class="eyebrow">WORKFLOW QUALITY GATE</span><h2>发布前自动验收 <span id="qualityStatus" class="pill neutral">待执行</span></h2><p>正常 / 缺料 / 气压异常 / 视觉 NG + 自定义 DI 场景</p></div><div class="btn-row"><button class="btn btn-primary" data-quality-action="run">▶ 运行质量门禁</button><button class="btn btn-light" data-quality-action="export">导出测试报告</button></div></div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-head"><div><h2>跨 Runtime 契约自检</h2><p>验证浏览器本地模型的标准场景基线；与后端报告是两份独立结果，不声称已经进行实时联调。</p></div>
+          <button class="btn btn-light" data-quality-action="contract">▶ 运行契约自检</button></div>
+          <div id="qualityContractStatus" class="control-hint">尚未执行 · C# API 的验证报告在 /api/flows/{id}/quality 查询</div>
+          <div id="qualityContractCases" class="quality-schema"></div>
+        </div>
+        <div class="four-grid kpi-grid" style="margin:18px 0"><div class="stat-card"><div class="stat-label">场景数量</div><div class="stat-value" id="qualityTotal">—</div></div><div class="stat-card"><div class="stat-label">符合预期</div><div class="stat-value" id="qualityPassed">—</div></div><div class="stat-card"><div class="stat-label">模型估算周期</div><div class="stat-value" id="qualityEstimate">—</div></div><div class="stat-card"><div class="stat-label">质量检查范围</div><div class="stat-value" style="font-size:18px">纯软件</div><small>仅模型级验证</small></div></div>
+        <div class="two-grid"><div class="card"><div class="card-head"><div><h2>测试场景结果</h2><p>实际模型结果与预期结果逐项对比</p></div></div><div id="qualityScenarios"></div></div><div class="card"><div class="card-head"><div><h2>静态检查与风险提示</h2><p>约束、变量来源、并行资源冲突</p></div></div><div id="qualityProblems"></div></div></div>
+        <div class="two-grid" style="margin-top:18px"><div class="card"><div class="card-head"><div><h2>自定义测试场景</h2><p>最多 30 条，只能注入可写的仿真 DI</p></div></div><div class="quality-form"><label class="field-label">名称<input class="login-input" id="qualityCaseName" placeholder="例如：检测信号断开"></label><label class="field-label">修改信号<select class="select-field" id="qualityCaseSignal"></select></label><label class="field-label">信号值<select class="select-field" id="qualityCaseState"><option value="false">FALSE</option><option value="true">TRUE</option></select></label><label class="field-label">预期结果<select class="select-field" id="qualityCaseExpected"><option value="Rejected">启动拒绝</option><option value="Failed">流程失败</option><option value="Completed">流程成功</option></select></label></div><div class="btn-row"><button class="btn btn-primary" data-quality-action="add">＋ 添加场景</button><button class="btn btn-light" data-quality-action="clear">清空自定义</button></div><div id="qualityCustom"></div></div><div class="card"><div class="card-head"><div><h2>类型化变量与配方约束</h2><p>工作流引用必须符合类型和范围</p></div></div><div class="quality-schema"><div><b>recipe.visionOffsetMm</b><small>Number · -10～10 mm</small></div><div><b>recipe.extraDwellMs</b><small>Integer · 0～1000 ms</small></div><div><b>vision.ok</b><small>Boolean</small></div><div><b>vision.targetXmm</b><small>Number · 0～200 mm，必须先经过视觉节点</small></div><div><b>DI.*</b><small>Boolean · 来自配置文件，仅模拟输入</small></div></div></div></div>
+        <div class="card" style="margin-top:18px"><div class="card-head"><div><h2>历史周期性能画像</h2><p>仅依据当前会话或 API 返回的已记录周期，不把模型估计混为实际耗时</p></div><span id="qualityCycleCount" class="pill neutral">0 条运行记录</span></div><div class="quality-metrics-grid" style="margin:14px 0"><div class="stat-card"><div class="stat-label">P50 周期</div><div class="stat-value" id="qualityP50">—</div></div><div class="stat-card"><div class="stat-label">P95 周期</div><div class="stat-value" id="qualityP95">—</div></div><div class="stat-card"><div class="stat-label">周期成功率</div><div class="stat-value" id="qualitySuccess">—</div></div></div><h3>步骤耗时热点 · 总占用时间</h3><div id="qualityBottlenecks"></div></div>
+      </section>
+      <section id="panel-replay" class="panel">
+        <div class="section-intro"><h2>历史执行回放与变量监视</h2><p>只读：从已完成周期记录中逐步查看执行轨迹。不会向运行时发送任何动作指令；没有记录的变量不会被推断。</p></div>
+        <div class="card replay-info"><div><span class="eyebrow">选中运行记录</span><h2 id="replayMeta">尚无记录</h2></div><span class="pill neutral">只读回放 · Simulation</span></div>
+        <div class="replay-layout">
+          <div class="card"><div class="card-head"><div><h2>历史周期</h2><p>最近 100 个单周期</p></div></div><div id="replayRuns" class="replay-runs"></div></div>
+          <div class="card"><div class="card-head"><div><h2>执行时间线</h2><p>可选择历史节点、逐步回放</p></div></div><div class="replay-controls"><div class="btn-row"><button class="btn btn-light" id="replayPrev" data-replay-action="prev">← 上一步</button><button class="btn btn-primary" id="replayPlay" data-replay-action="play">▶ 自动回放</button><button class="btn btn-light" id="replayNext" data-replay-action="next">下一步 →</button></div><input id="replayRange" type="range" min="0" max="0" value="0"><span id="replayIndex" class="subtle">0 / 0</span></div><div id="replayTimeline" class="replay-timeline"></div></div>
+          <div class="card"><div class="card-head"><div><h2>变量观察</h2><p>来源于执行节点结束时的记录快照</p></div><span class="pill neutral" id="replayStepStatus">—</span></div><h3 id="replayStepLabel">—</h3><div id="replayWatch" class="replay-watch"></div><p id="replayError" class="control-hint"></p></div>
+        </div>
+      </section>
+      <section id="panel-analytics" class="panel">
+        <div class="section-intro"><h2>生产周期分析</h2><p>记录每个周期的结果、耗时和逐步骤执行记录。C# 版本完成周期后会追加到本地 JSONL 文件；离线预览仅保留当前页面会话。</p></div>
+        <div class="four-grid kpi-grid">
+          <div class="stat-card"><div class="stat-label">累计记录</div><div class="stat-value" id="histTotal">0</div><small>最多显示最近 100 条</small></div>
+          <div class="stat-card"><div class="stat-label">成功率</div><div class="stat-value" id="histSuccess">—</div><small>以已记录周期计算</small></div>
+          <div class="stat-card"><div class="stat-label">平均用时</div><div class="stat-value"><span id="histMean">—</span><span class="unit">s</span></div><small>最近成功周期</small></div>
+          <div class="stat-card"><div class="stat-label">异常周期</div><div class="stat-value" id="histFailures">0</div><small>失败与主动停止</small></div>
+        </div>
+        <div class="two-grid" style="margin-top:18px">
+          <div class="card"><div class="card-head"><div><h2>周期历史</h2><p>选择某次运行查看步骤用时</p></div><button class="btn btn-light" data-action="export-history">导出 CSV</button></div>
+            <label class="field-label" for="historyFilter">筛选结果</label><select id="historyFilter" class="select-field"><option value="All">全部周期</option><option value="Completed">成功</option><option value="Failed">失败</option><option value="Stopped">主动停止</option></select>
+            <div id="historyRows" class="history-list"></div>
+          </div>
+          <div class="card"><div class="card-head"><div><h2>逐步骤耗时</h2><p id="selectedRunLabel">选择周期以查看详情</p></div><span class="pill neutral" id="selectedRunStatus">—</span></div><div id="stepTimingRows" class="timing-list"></div></div>
+        </div>
+      </section>
+      <section id="panel-recovery" class="panel">
+        <div class="section-intro"><h2>引导式故障恢复</h2><p>按“故障识别 → 报警复位 → 检查条件 → 机构回归 → 人工确认”逐步处理。仅用于软件仿真。</p></div>
+        <div class="two-grid">
+          <div class="card"><div class="card-head"><div><h2>恢复检查清单</h2><p>状态来自控制运行时，不能通过 UI 勾选伪造通过</p></div><span id="recoveryStatus" class="pill neutral">无需恢复</span></div><div id="recoveryChecklist" class="checklist"></div><div class="control-hint" id="recoveryAdvice">未发现待恢复状态。</div></div>
+          <div class="card"><div class="card-head"><div><h2>建议处理流程</h2><p>每步均有可验证的状态，不会自动跳过</p></div></div>
+            <div class="recovery-step"><span>01</span><div><b>识别故障</b><small id="guideAlarm">查看活动报警代码与原因</small></div></div>
+            <div class="recovery-step"><span>02</span><div><b>解除故障原因，复位报警</b><small>在设备总览中执行报警复位；恢复动作必须在手动模式下进行</small></div></div>
+            <div class="recovery-step"><span>03</span><div><b>检查气缸与运动轴</b><small>确保气缸缩回、轴使能且回到零位；可转至手动调试界面操作</small></div></div>
+            <div class="recovery-step"><span>04</span><div><b>确认恢复</b><small>仅当所有检查均满足时允许最终确认</small></div></div>
+            <button class="btn btn-light full" data-tab="manual" style="margin-top:18px">进入手动调试</button>
+            <button class="btn btn-primary full" id="guideConfirm" data-action="recovery-confirm" style="margin-top:9px">执行恢复确认</button>
+          </div>
+        </div>
+      </section>
+      <section id="panel-governance" class="panel">
+        <div class="section-intro"><h2>软件工艺配方与操作审计</h2><p>独立于站点硬件映射。新配方只在设备空闲、恢复完成后发布；发布后下个周期才生效。</p></div>
+        <div class="three-governance">
+          <div class="card"><div class="card-head"><div><h2>当前生效配方</h2><p>运行周期固定绑定发布时的配方快照</p></div><span class="pill" id="activeRecipeTag">—</span></div><div id="activeRecipeInfo" class="recipe-details"></div><div class="divider"></div><h2>创建草稿</h2>
+            <label class="field-label" for="recipeName">配方名称</label><input id="recipeName" class="login-input" value="产品 A · 优化工艺" maxlength="50">
+            <label class="field-label" for="recipeOffset">视觉目标 X 偏移 (mm) · -10 至 10</label><input id="recipeOffset" class="login-input" type="number" value="2" min="-10" max="10" step="0.1">
+            <label class="field-label" for="recipeDwell">流程额外延时 (ms) · 0 至 1000</label><input id="recipeDwell" class="login-input" type="number" value="100" min="0" max="1000" step="10">
+            <button class="btn btn-primary full" data-governance="draft" style="margin-top:18px">保存新草稿</button>
+            <div class="control-hint">工程师可创建和验证；发布及回滚必须由管理员执行。</div>
+          </div>
+          <div class="card"><div class="card-head"><div><h2>版本历史</h2><p>选中版本，校验、发布或生成回滚版本</p></div></div><div id="recipeVersions" class="recipe-version-list"></div><div class="btn-row">
+            <button class="btn btn-light" data-governance="validate">验证草稿</button>
+            <button class="btn btn-primary" data-governance="publish">发布选中</button>
+            <button class="btn btn-light" data-governance="rollback">回滚到选中</button>
+          </div><div class="divider"></div><h2>与当前版本差异</h2><div id="recipeDiff" class="recipe-details"></div></div>
+        </div>
+        <div class="card" style="margin-top:18px"><div class="card-head"><div><h2>操作审计记录</h2><p>后端包含操作人、角色、路径、结果码与 TraceId；不记录密码与令牌</p></div><div class="btn-row" style="margin-top:0"><button class="btn btn-light" data-governance="audit-refresh">刷新</button><button class="btn btn-light" data-governance="audit-export">导出 CSV</button></div></div>
+          <div class="audit-scroll"><table class="audit-table"><thead><tr><th>时间</th><th>用户 / 角色</th><th>命令</th><th>结果</th><th>TraceId</th></tr></thead><tbody id="auditRows"></tbody></table></div>
+          <div class="audit-pages"><span id="auditMeta">—</span><div><button class="btn btn-light" data-governance="audit-prev">上一页</button><button class="btn btn-light" data-governance="audit-next">下一页</button></div></div>
+        </div>
+      </section>
+      <section id="panel-events" class="panel">
+        <div class="section-intro"><h2>报警与事件追踪</h2><p>运行中的事件日志为内存缓存；每次完成或中断的周期历史在 C# 服务中写入本地 JSONL。该记录不是防篡改审计日志。</p></div>
+        <div class="card"><div class="card-head"><h2>当前报警</h2><span class="pill" id="alarmStatus">无报警</span></div><div id="alarmDetails" class="alarm-empty">当前没有活动报警</div><div id="alarmDiagnosis" class="alarm-guidance hidden"></div></div>
+        <div class="card"><div class="card-head"><h2>事件日志</h2><span class="subtle">最新记录优先</span></div><div id="eventsRows" class="event-list"></div></div>
+      </section>
+    </div>
+    <footer class="footer"><span>Device Control Platform · Simulation Prototype</span><span>V1.8 | 恢复诊断 · 纯仿真</span></footer>
+  </main>
+</div>
+<script src="./station-data.js"></script>
+<script src="./station-workspace.js"></script>
+<script src="./shared-resource-coordinator.js"></script>
+<script src="./workflow-engine.js"></script>
+<script src="./mock-runtime.js"></script>
+<script src="./workflow-studio.js"></script>
+<script src="./governance-mock.js"></script>
+<script src="./workflow-edit-history.js"></script>
+<script src="./workflow-replay.js"></script>
+<script src="./workflow-quality.js"></script>
+<script src="./workflow-quality-ui.js"></script>
+<script src="./flow-editor.js"></script>
+<script src="./station-console.js"></script>
+<script src="./station-template-studio.js"></script>
+<script src="./station-upgrade-studio.js"></script>
+<script src="./deployment-recovery.js"></script>
+<script src="./fleet-rollout-studio.js"></script>
+<script src="./deployment-sandbox-ui.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>

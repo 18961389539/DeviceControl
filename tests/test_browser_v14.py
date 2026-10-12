@@ -1,0 +1,81 @@
+"""V1.4 browser: template snapshot lifecycle, guarded deployment, data independence."""
+import asyncio, shutil
+from pathlib import Path
+from playwright.async_api import async_playwright
+ROOT=Path(__file__).resolve().parents[1]
+async def run():
+ async with async_playwright() as pw:
+  args={'headless':True,'args':['--no-sandbox']}
+  if shutil.which('chromium'): args['executable_path']=shutil.which('chromium')
+  browser=await pw.chromium.launch(**args)
+  page=await browser.new_page(viewport={'width':1600,'height':950})
+  errors=[];page.on('pageerror',lambda e: errors.append(str(e)))
+  await page.set_content((ROOT/'tests'/'fixtures'/'DeviceControl_V1.4_Preview.html').read_text(encoding='utf8'),wait_until='load')
+  # Engineer may capture and validate, but never publish or deploy.
+  await page.locator('#loginForm button').click()
+  await page.locator('#loginOverlay').wait_for(state='hidden')
+  await page.locator('[data-tab=templates]').click()
+  assert await page.locator('[data-template-action=capture]').is_enabled()
+  assert await page.locator('[data-template-action=deploy]').is_disabled()
+  await page.locator('#templateName').fill('Test Vision Template')
+  await page.locator('[data-template-action=capture]').click()
+  await page.wait_for_function("() => document.querySelector('#templateSelect option')?.textContent.includes('Test Vision Template')",timeout=5000)
+  assert 'Draft' in await page.locator('#templateSummary').inner_text()
+  await page.locator('[data-template-action=validate]').click()
+  await page.wait_for_function("() => document.getElementById('templateSummary').textContent.includes('Validated')",timeout=5000)
+  assert await page.locator('[data-template-action=publish]').is_disabled()
+  # Before approved deployment compare A/B (baseline may be equivalent).
+  await page.locator('[data-template-action=compare]').click()
+  assert await page.locator('#templateDiffRows tr').count()>=1
+  # Admin can approve published version and create C, D independently.
+  await page.locator('#logoutButton').click()
+  await page.locator('#loginUser').select_option('admin')
+  await page.locator('#loginForm button').click()
+  await page.locator('#loginOverlay').wait_for(state='hidden')
+  await page.locator('[data-tab=templates]').click()
+  await page.locator('[data-template-action=publish]').click()
+  await page.wait_for_function("() => document.getElementById('templateSummary').textContent.includes('Published')",timeout=5000)
+  await page.locator('#templateNewIds').fill('C,D')
+  await page.locator('[data-template-action=deploy]').click()
+  await page.wait_for_function("() => [...document.querySelectorAll('#workspaceStation option')].some(x=>x.value==='D')",timeout=7000)
+  await page.locator('[data-tab=stations]').click()
+  await page.wait_for_function("() => document.querySelectorAll('[data-fleet-station]').length===4",timeout=5000)
+  await page.locator('#workspaceStation').select_option('C')
+  await page.wait_for_function("() => document.getElementById('workspaceTag').textContent==='工作区 C'",timeout=7000)
+  await page.locator('[data-tab=io]').click()
+  await page.locator('#inputRows [data-signal-name=PartPresent]').click()
+  await page.wait_for_function("() => document.querySelector('#inputRows [data-signal-name=PartPresent]').dataset.next==='true'",timeout=6000)
+  await page.locator('#workspaceStation').select_option('D')
+  await page.wait_for_function("() => document.getElementById('workspaceTag').textContent==='工作区 D'",timeout=7000)
+  assert await page.locator('#inputRows [data-signal-name=PartPresent]').get_attribute('data-next')=='false'
+  await page.locator('#workspaceStation').select_option('C')
+  await page.wait_for_function("() => document.getElementById('workspaceTag').textContent==='工作区 C'")
+  await page.locator('[data-tab=workflow]').click()
+  await page.locator('#studioCanvas [data-editor-select]').first.wait_for(state='visible')
+  await page.locator('#studioCanvas [data-editor-select]').first.click()
+  inp=page.locator('#studioInspector [data-editor-input=label]')
+  await inp.fill('仅工站C草稿节点');await inp.dispatch_event('change')
+  assert '仅工站C草稿节点' in await page.locator('#studioCanvas').inner_text()
+  await page.locator('#workspaceStation').select_option('D')
+  await page.wait_for_function("() => document.getElementById('workspaceTag').textContent==='工作区 D'")
+  await page.locator('#studioCanvas [data-editor-select]').first.wait_for(state='visible')
+  assert '仅工站C草稿节点' not in await page.locator('#studioCanvas').inner_text()
+  await page.locator('#workspaceStation').select_option('C')
+  await page.wait_for_function("() => document.getElementById('workspaceTag').textContent==='工作区 C'")
+  assert '仅工站C草稿节点' in await page.locator('#studioCanvas').inner_text()
+  await page.locator('[data-tab=quality]').click()
+  await page.locator('[data-quality-action=contract]').click()
+  assert '4 / 4' in await page.locator('#qualityContractStatus').inner_text()
+  await page.locator('[data-tab=templates]').click()
+  await page.locator('#templateCompareStation').select_option('D')
+  await page.locator('[data-template-action=compare]').click()
+  await page.screenshot(path=str(ROOT/'DeviceControl_V1.4_Templates.png'),full_page=True)
+  # Cannot overwrite current C when attempting a second deployment.
+  await page.locator('[data-tab=templates]').click()
+  await page.locator('#templateNewIds').fill('C')
+  await page.locator('[data-template-action=deploy]').click()
+  await page.wait_for_function("() => document.getElementById('templateError').textContent.includes('已存在')",timeout=7000)
+  assert not errors,errors
+  await browser.close()
+  print('PASS V1.4 Chromium: engineer/admin RBAC, capture/validate/publish, A/B diff, C/D creation, DI/editor isolation, quality and duplicate rejection')
+if __name__=='__main__':asyncio.run(run())

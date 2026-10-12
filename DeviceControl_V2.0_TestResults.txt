@@ -1,0 +1,26 @@
+DeviceControl V2.0 RC | 2026-10-12
+
+RELEASE APPROVED: NO
+Scope: software-only simulation, no physical control, no safety certification.
+
+PASSED (individually executed)
+- Node workflow/governance/replay/multi-station/resource cases: 13 PASS entries in captured offline run.
+- SQLite schema, v08 migration, reliability, v09 migration, v10 migration: 5/5 PASS.
+- V2.0 Python sandbox provenance checks: PASS.
+- V1.9 Python isolated recovery fixture: PASS.
+- V2.0 C# static inspection (not compilation): PASS.
+- Chromium V1.9 sandbox UI: PASS.
+- Chromium V1.8 recovery drills: PASS.
+- Chromium V1.7 maintenance and reconciliation: PASS.
+- Chromium V1.6 staged rollout: PASS.
+- Chromium V2.0 preview login and recovery panel: PASS.
+
+NOT VERIFIED / BLOCKED
+- Complete uninterrupted offline aggregate suite (previous run interrupted; three obsolete static version assertions corrected afterward).
+- .NET 10 API compilation: SDK not available in this environment, download host unreachable.
+- .NET contract runner: not executed.
+- Real C# HTTP role/upgrade/restart integration: not executed.
+
+IMPORTANT: C# hardening changes have been statically inspected, not compiled.
+Run `python tools/release_gate_v20.py --profile release` in SDK-enabled CI.
+Only zero failed, zero blocked, and a clean gate report can authorize release.

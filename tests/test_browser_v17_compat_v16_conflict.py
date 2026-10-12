@@ -1,0 +1,65 @@
+"""Offline rollout: stale baseline, auto-mode and RBAC blocking, no unsafe resume."""
+import asyncio,shutil
+from pathlib import Path
+from playwright.async_api import async_playwright
+ROOT=Path(__file__).resolve().parents[1]
+async def run():
+ async with async_playwright() as pw:
+  opts={'headless':True,'args':['--no-sandbox']}
+  if shutil.which('chromium'):opts['executable_path']=shutil.which('chromium')
+  browser=await pw.chromium.launch(**opts)
+  page=await browser.new_page(viewport={'width':1550,'height':920});errors=[]
+  page.on('pageerror',lambda e:errors.append(str(e)))
+  await page.set_content((ROOT/'tests'/'fixtures'/'DeviceControl_V1.7_Preview.html').read_text(),wait_until='load')
+  await page.locator('#loginForm button').click();await page.locator('#loginOverlay').wait_for(state='hidden')
+  await page.locator('[data-tab=templates]').click()
+  assert await page.locator('[data-rollout=create]').is_disabled() # Engineer cannot create
+  await page.locator('#logoutButton').click();await page.locator('#loginUser').select_option('admin')
+  await page.locator('#loginForm button').click();await page.locator('#loginOverlay').wait_for(state='hidden')
+  await page.locator('[data-tab=templates]').click()
+  await page.locator('[data-template-action=capture]').click()
+  await page.wait_for_function("() => document.getElementById('templateSummary').textContent.includes('Draft')")
+  await page.locator('[data-template-action=validate]').click()
+  await page.wait_for_function("() => document.getElementById('templateSummary').textContent.includes('Validated')")
+  await page.locator('[data-template-action=publish]').click()
+  await page.wait_for_function("() => document.getElementById('templateSummary').textContent.includes('Published')")
+  await page.locator('#rolloutIds').fill('A,B')
+  await page.locator('#rolloutPilot').select_option('B')
+  await page.locator('[data-rollout=create]').click()
+  await page.wait_for_function("() => document.getElementById('rolloutProgress').textContent.includes('PilotPending')")
+  await page.locator('#workspaceStation').select_option('B')
+  await page.wait_for_function("() => document.getElementById('workspaceTag').textContent==='工作区 B'")
+  await page.locator('[data-tab=dashboard]').click()
+  await page.locator('[data-mode=Auto]').click()
+  await page.wait_for_function("() => document.getElementById('modeValue').textContent==='自动'")
+  await page.locator('[data-tab=templates]').click()
+  await page.locator('[data-rollout=advance]').click()
+  await page.wait_for_function("() => document.getElementById('rolloutProgress').textContent.includes('Paused')",timeout=7000)
+  assert '手动模式' in await page.locator('#rolloutSteps').inner_text()
+  await page.locator('[data-rollout=resume]').click()
+  await page.wait_for_function("() => document.getElementById('rolloutMessage').textContent.includes('人工处理')",timeout=7000)
+  await page.locator('[data-rollout=abort]').click()
+  await page.wait_for_function("() => document.getElementById('rolloutProgress').textContent.includes('Aborted')")
+  assert await page.locator('[data-rollout=advance]').is_disabled()
+  # A fresh rollout must not overwrite a newer independently published B recipe.
+  await page.locator('[data-tab=dashboard]').click()
+  await page.locator('[data-mode=Manual]').click()
+  await page.wait_for_function("() => document.getElementById('modeValue').textContent==='手动'")
+  await page.locator('[data-tab=templates]').click()
+  await page.locator('[data-rollout=create]').click()
+  await page.wait_for_function("() => document.getElementById('rolloutProgress').textContent.includes('PilotPending')")
+  await page.locator('[data-tab=governance]').click()
+  await page.locator('#recipeName').fill('独立更新的配方')
+  await page.locator('[data-governance=draft]').click()
+  await page.wait_for_function("() => document.querySelectorAll('#recipeVersions .recipe-item').length===2")
+  await page.locator('[data-governance=validate]').click()
+  await page.wait_for_function("() => document.querySelector('#recipeVersions .recipe-item.selected').textContent.includes('已验证')")
+  await page.locator('[data-governance=publish]').click()
+  await page.wait_for_function("() => document.querySelector('#activeRecipeInfo').textContent.includes('独立更新的配方')",timeout=7000)
+  await page.locator('[data-tab=templates]').click()
+  await page.locator('[data-rollout=advance]').click()
+  await page.wait_for_function("() => document.getElementById('rolloutProgress').textContent.includes('Paused')")
+  assert '版本冲突' in await page.locator('#rolloutSteps').inner_text()
+  assert not errors,errors
+  await browser.close();print('PASS V1.6 Chromium: Engineer RBAC, pilot mode conflict, pause & unsafe retry blocked, abort')
+if __name__=='__main__':asyncio.run(run())

@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFileSync} from 'node:fs';
+const w={};w.window=w;
+vm.runInNewContext(readFileSync('frontend/station-upgrade-studio.js','utf8'),{window:w,structuredClone:globalThis.structuredClone});
+const {structure,checks}=w.StationUpgradeRules;
+const base={driver:'Simulation',profileId:'A',flowVersion:'f',signals:[{name:'A'}],axes:[{id:'X'}],cylinders:[],interlocks:[],sequence:[{id:'a'}]};
+const template={status:'Published',config:structuredClone(base)};
+const station={machine:{cfg:{...base,profileId:'B',flowVersion:'old',sequence:[{id:'b'}]},snapshot:()=>({state:'Idle',busy:false,mode:'Manual',recoveryRequired:false,alarm:null})}};
+assert.equal(structure(base),structure(station.machine.cfg));
+assert.equal(checks(template,station).length,0);
+assert.ok(checks(template,{machine:{...station.machine,snapshot:()=>({...station.machine.snapshot(),state:'Running',busy:true})}}).some(x=>x.includes('空闲')));
+assert.ok(checks(template,{machine:{...station.machine,snapshot:()=>({...station.machine.snapshot(),mode:'Auto'})}}).some(x=>x.includes('手动')));
+assert.ok(checks(template,{machine:{...station.machine,cfg:{...base,axes:[{id:'Y'}]}}}).some(x=>x.includes('机构')));
+assert.ok(checks({...template,status:'Draft'},station).some(x=>x.includes('已发布')));
+console.log('PASS V1.5 offline upgrade pure rules: compatible, busy, mode, structure, publication');

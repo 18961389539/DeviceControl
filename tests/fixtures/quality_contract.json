@@ -1,0 +1,634 @@
+{
+  "contractVersion": 1,
+  "source": "frontend/workflow-quality.js",
+  "cases": [
+    {
+      "id": "normal",
+      "definition": [
+        {
+          "type": "WaitInput",
+          "label": "等待产品到位",
+          "device": "PartPresent",
+          "timeoutMs": 2000,
+          "id": "part"
+        },
+        {
+          "type": "VisionLocate",
+          "label": "视觉定位",
+          "id": "vision",
+          "onError": "Retry",
+          "maxRetries": 1,
+          "sharedResources": [
+            "CELL-SHARED"
+          ],
+          "resourceWaitTimeoutMs": 2500
+        },
+        {
+          "id": "xy-approach",
+          "type": "Parallel",
+          "label": "X/Y 双轴并行定位",
+          "children": [
+            {
+              "type": "AxisMove",
+              "label": "X 轴视觉定位",
+              "device": "X",
+              "useVisionX": true,
+              "id": "x-place"
+            },
+            {
+              "type": "AxisMove",
+              "label": "Y 轴工艺定位",
+              "device": "Y",
+              "positionMm": 40,
+              "id": "y-place"
+            }
+          ]
+        },
+        {
+          "type": "CylinderExtend",
+          "label": "阻挡气缸伸出",
+          "device": "Stopper",
+          "id": "stopper-extend"
+        },
+        {
+          "type": "CylinderExtend",
+          "label": "夹紧气缸伸出",
+          "device": "Clamp",
+          "id": "clamp-extend"
+        },
+        {
+          "type": "Delay",
+          "label": "工艺保持",
+          "durationMs": 250,
+          "id": "dwell"
+        },
+        {
+          "type": "CylinderRetract",
+          "label": "夹紧气缸缩回",
+          "device": "Clamp",
+          "id": "clamp-retract"
+        },
+        {
+          "type": "CylinderRetract",
+          "label": "阻挡气缸缩回",
+          "device": "Stopper",
+          "id": "stopper-retract"
+        },
+        {
+          "id": "xy-return",
+          "type": "Parallel",
+          "label": "X/Y 双轴并行复归",
+          "children": [
+            {
+              "type": "AxisMove",
+              "label": "Y 轴返回等待位",
+              "device": "Y",
+              "positionMm": 0,
+              "id": "y-return"
+            },
+            {
+              "type": "AxisMove",
+              "label": "X 轴返回等待位",
+              "device": "X",
+              "positionMm": 0,
+              "id": "x-return"
+            }
+          ]
+        }
+      ],
+      "expectedPass": true,
+      "expectedCases": [
+        {
+          "id": "normal",
+          "outcome": "Completed",
+          "pass": true
+        },
+        {
+          "id": "missing",
+          "outcome": "Rejected",
+          "pass": true
+        },
+        {
+          "id": "air",
+          "outcome": "Rejected",
+          "pass": true
+        },
+        {
+          "id": "camera",
+          "outcome": "Failed",
+          "pass": true
+        }
+      ],
+      "expectedWarnings": 0
+    },
+    {
+      "id": "unbound-vision",
+      "definition": [
+        {
+          "type": "WaitInput",
+          "label": "等待产品到位",
+          "device": "PartPresent",
+          "timeoutMs": 2000,
+          "id": "part"
+        },
+        {
+          "id": "xy-approach",
+          "type": "Parallel",
+          "label": "X/Y 双轴并行定位",
+          "children": [
+            {
+              "type": "AxisMove",
+              "label": "X 轴视觉定位",
+              "device": "X",
+              "useVisionX": true,
+              "id": "x-place"
+            },
+            {
+              "type": "AxisMove",
+              "label": "Y 轴工艺定位",
+              "device": "Y",
+              "positionMm": 40,
+              "id": "y-place"
+            }
+          ]
+        },
+        {
+          "type": "CylinderExtend",
+          "label": "阻挡气缸伸出",
+          "device": "Stopper",
+          "id": "stopper-extend"
+        },
+        {
+          "type": "CylinderExtend",
+          "label": "夹紧气缸伸出",
+          "device": "Clamp",
+          "id": "clamp-extend"
+        },
+        {
+          "type": "Delay",
+          "label": "工艺保持",
+          "durationMs": 250,
+          "id": "dwell"
+        },
+        {
+          "type": "CylinderRetract",
+          "label": "夹紧气缸缩回",
+          "device": "Clamp",
+          "id": "clamp-retract"
+        },
+        {
+          "type": "CylinderRetract",
+          "label": "阻挡气缸缩回",
+          "device": "Stopper",
+          "id": "stopper-retract"
+        },
+        {
+          "id": "xy-return",
+          "type": "Parallel",
+          "label": "X/Y 双轴并行复归",
+          "children": [
+            {
+              "type": "AxisMove",
+              "label": "Y 轴返回等待位",
+              "device": "Y",
+              "positionMm": 0,
+              "id": "y-return"
+            },
+            {
+              "type": "AxisMove",
+              "label": "X 轴返回等待位",
+              "device": "X",
+              "positionMm": 0,
+              "id": "x-return"
+            }
+          ]
+        },
+        {
+          "type": "VisionLocate",
+          "label": "视觉定位",
+          "id": "vision",
+          "onError": "Retry",
+          "maxRetries": 1,
+          "sharedResources": [
+            "CELL-SHARED"
+          ],
+          "resourceWaitTimeoutMs": 2500
+        }
+      ],
+      "expectedPass": false,
+      "expectedCases": [
+        {
+          "id": "normal",
+          "outcome": "Failed",
+          "pass": false
+        },
+        {
+          "id": "missing",
+          "outcome": "Rejected",
+          "pass": true
+        },
+        {
+          "id": "air",
+          "outcome": "Rejected",
+          "pass": true
+        },
+        {
+          "id": "camera",
+          "outcome": "Failed",
+          "pass": true
+        }
+      ],
+      "expectedWarnings": 1
+    },
+    {
+      "id": "same-resource-warning",
+      "definition": [
+        {
+          "type": "WaitInput",
+          "label": "等待产品到位",
+          "device": "PartPresent",
+          "timeoutMs": 2000,
+          "id": "part"
+        },
+        {
+          "type": "VisionLocate",
+          "label": "视觉定位",
+          "id": "vision",
+          "onError": "Retry",
+          "maxRetries": 1,
+          "sharedResources": [
+            "CELL-SHARED"
+          ],
+          "resourceWaitTimeoutMs": 2500
+        },
+        {
+          "id": "xy-approach",
+          "type": "Parallel",
+          "label": "X/Y 双轴并行定位",
+          "children": [
+            {
+              "type": "AxisMove",
+              "label": "X 轴视觉定位",
+              "device": "X",
+              "useVisionX": true,
+              "id": "x-place"
+            },
+            {
+              "type": "AxisMove",
+              "label": "Y 轴工艺定位",
+              "device": "X",
+              "positionMm": 40,
+              "id": "y-place"
+            }
+          ]
+        },
+        {
+          "type": "CylinderExtend",
+          "label": "阻挡气缸伸出",
+          "device": "Stopper",
+          "id": "stopper-extend"
+        },
+        {
+          "type": "CylinderExtend",
+          "label": "夹紧气缸伸出",
+          "device": "Clamp",
+          "id": "clamp-extend"
+        },
+        {
+          "type": "Delay",
+          "label": "工艺保持",
+          "durationMs": 250,
+          "id": "dwell"
+        },
+        {
+          "type": "CylinderRetract",
+          "label": "夹紧气缸缩回",
+          "device": "Clamp",
+          "id": "clamp-retract"
+        },
+        {
+          "type": "CylinderRetract",
+          "label": "阻挡气缸缩回",
+          "device": "Stopper",
+          "id": "stopper-retract"
+        },
+        {
+          "id": "xy-return",
+          "type": "Parallel",
+          "label": "X/Y 双轴并行复归",
+          "children": [
+            {
+              "type": "AxisMove",
+              "label": "Y 轴返回等待位",
+              "device": "Y",
+              "positionMm": 0,
+              "id": "y-return"
+            },
+            {
+              "type": "AxisMove",
+              "label": "X 轴返回等待位",
+              "device": "X",
+              "positionMm": 0,
+              "id": "x-return"
+            }
+          ]
+        }
+      ],
+      "expectedPass": true,
+      "expectedCases": [
+        {
+          "id": "normal",
+          "outcome": "Completed",
+          "pass": true
+        },
+        {
+          "id": "missing",
+          "outcome": "Rejected",
+          "pass": true
+        },
+        {
+          "id": "air",
+          "outcome": "Rejected",
+          "pass": true
+        },
+        {
+          "id": "camera",
+          "outcome": "Failed",
+          "pass": true
+        }
+      ],
+      "expectedWarnings": 1
+    },
+    {
+      "id": "unsatisfied-wait",
+      "definition": [
+        {
+          "type": "WaitInput",
+          "label": "等待产品到位",
+          "device": "ClampExtended",
+          "timeoutMs": 2000,
+          "id": "part"
+        },
+        {
+          "type": "VisionLocate",
+          "label": "视觉定位",
+          "id": "vision",
+          "onError": "Retry",
+          "maxRetries": 1,
+          "sharedResources": [
+            "CELL-SHARED"
+          ],
+          "resourceWaitTimeoutMs": 2500
+        },
+        {
+          "id": "xy-approach",
+          "type": "Parallel",
+          "label": "X/Y 双轴并行定位",
+          "children": [
+            {
+              "type": "AxisMove",
+              "label": "X 轴视觉定位",
+              "device": "X",
+              "useVisionX": true,
+              "id": "x-place"
+            },
+            {
+              "type": "AxisMove",
+              "label": "Y 轴工艺定位",
+              "device": "Y",
+              "positionMm": 40,
+              "id": "y-place"
+            }
+          ]
+        },
+        {
+          "type": "CylinderExtend",
+          "label": "阻挡气缸伸出",
+          "device": "Stopper",
+          "id": "stopper-extend"
+        },
+        {
+          "type": "CylinderExtend",
+          "label": "夹紧气缸伸出",
+          "device": "Clamp",
+          "id": "clamp-extend"
+        },
+        {
+          "type": "Delay",
+          "label": "工艺保持",
+          "durationMs": 250,
+          "id": "dwell"
+        },
+        {
+          "type": "CylinderRetract",
+          "label": "夹紧气缸缩回",
+          "device": "Clamp",
+          "id": "clamp-retract"
+        },
+        {
+          "type": "CylinderRetract",
+          "label": "阻挡气缸缩回",
+          "device": "Stopper",
+          "id": "stopper-retract"
+        },
+        {
+          "id": "xy-return",
+          "type": "Parallel",
+          "label": "X/Y 双轴并行复归",
+          "children": [
+            {
+              "type": "AxisMove",
+              "label": "Y 轴返回等待位",
+              "device": "Y",
+              "positionMm": 0,
+              "id": "y-return"
+            },
+            {
+              "type": "AxisMove",
+              "label": "X 轴返回等待位",
+              "device": "X",
+              "positionMm": 0,
+              "id": "x-return"
+            }
+          ]
+        }
+      ],
+      "expectedPass": false,
+      "expectedCases": [
+        {
+          "id": "normal",
+          "outcome": "Failed",
+          "pass": false
+        },
+        {
+          "id": "missing",
+          "outcome": "Rejected",
+          "pass": true
+        },
+        {
+          "id": "air",
+          "outcome": "Rejected",
+          "pass": true
+        },
+        {
+          "id": "camera",
+          "outcome": "Failed",
+          "pass": true
+        }
+      ],
+      "expectedWarnings": 0
+    },
+    {
+      "id": "conditional-path",
+      "definition": [
+        {
+          "type": "WaitInput",
+          "label": "等待产品到位",
+          "device": "PartPresent",
+          "timeoutMs": 2000,
+          "id": "part"
+        },
+        {
+          "type": "VisionLocate",
+          "label": "视觉定位",
+          "id": "vision",
+          "onError": "Retry",
+          "maxRetries": 1,
+          "sharedResources": [
+            "CELL-SHARED"
+          ],
+          "resourceWaitTimeoutMs": 2500
+        },
+        {
+          "id": "xy-approach",
+          "type": "Parallel",
+          "label": "X/Y 双轴并行定位",
+          "children": [
+            {
+              "type": "AxisMove",
+              "label": "X 轴视觉定位",
+              "device": "X",
+              "useVisionX": true,
+              "id": "x-place"
+            },
+            {
+              "type": "AxisMove",
+              "label": "Y 轴工艺定位",
+              "device": "Y",
+              "positionMm": 40,
+              "id": "y-place"
+            }
+          ]
+        },
+        {
+          "type": "CylinderExtend",
+          "label": "阻挡气缸伸出",
+          "device": "Stopper",
+          "id": "stopper-extend"
+        },
+        {
+          "type": "CylinderExtend",
+          "label": "夹紧气缸伸出",
+          "device": "Clamp",
+          "id": "clamp-extend"
+        },
+        {
+          "type": "Delay",
+          "label": "工艺保持",
+          "durationMs": 250,
+          "id": "dwell"
+        },
+        {
+          "type": "CylinderRetract",
+          "label": "夹紧气缸缩回",
+          "device": "Clamp",
+          "id": "clamp-retract"
+        },
+        {
+          "type": "CylinderRetract",
+          "label": "阻挡气缸缩回",
+          "device": "Stopper",
+          "id": "stopper-retract"
+        },
+        {
+          "id": "xy-return",
+          "type": "Parallel",
+          "label": "X/Y 双轴并行复归",
+          "children": [
+            {
+              "type": "AxisMove",
+              "label": "Y 轴返回等待位",
+              "device": "Y",
+              "positionMm": 0,
+              "id": "y-return"
+            },
+            {
+              "type": "AxisMove",
+              "label": "X 轴返回等待位",
+              "device": "X",
+              "positionMm": 0,
+              "id": "x-return"
+            }
+          ]
+        },
+        {
+          "id": "condition-contract",
+          "label": "条件分支",
+          "type": "Condition",
+          "onError": "Abort",
+          "device": "PartPresent",
+          "children": [
+            {
+              "id": "contract-true",
+              "label": "条件满足",
+              "type": "Delay",
+              "onError": "Abort",
+              "device": "",
+              "children": [],
+              "sharedResources": [],
+              "resourceWaitTimeoutMs": 2500,
+              "durationMs": 200
+            },
+            {
+              "id": "contract-false",
+              "label": "条件不满足",
+              "type": "Delay",
+              "onError": "Abort",
+              "device": "",
+              "children": [],
+              "sharedResources": [],
+              "resourceWaitTimeoutMs": 2500,
+              "durationMs": 200
+            }
+          ],
+          "sharedResources": [],
+          "resourceWaitTimeoutMs": 2500
+        }
+      ],
+      "expectedPass": true,
+      "expectedCases": [
+        {
+          "id": "normal",
+          "outcome": "Completed",
+          "pass": true
+        },
+        {
+          "id": "missing",
+          "outcome": "Rejected",
+          "pass": true
+        },
+        {
+          "id": "air",
+          "outcome": "Rejected",
+          "pass": true
+        },
+        {
+          "id": "camera",
+          "outcome": "Failed",
+          "pass": true
+        }
+      ],
+      "expectedWarnings": 0
+    }
+  ]
+}

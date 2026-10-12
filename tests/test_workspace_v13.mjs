@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+const win={};win.window=win;
+vm.runInNewContext(readFileSync(new URL('../frontend/station-workspace.js',import.meta.url),'utf8'),{window:win});
+const {StationWorkspace,route}=win.StationWorkspace;
+assert.equal(route('A','/api/flows'),'/api/stations/A/flows');
+assert.equal(route('B','/api/flow/debug'),'/api/stations/B/flow/debug');
+assert.equal(route('B','/api/manual/axes/X/move'),'/api/stations/B/manual/axes/X/move');
+assert.equal(route('A','/api/audit?page=2'),'/api/stations/A/audit?page=2');
+assert.throws(()=>route('../B','/api/flows'));
+assert.throws(()=>route('B','/api/stations/A/recipes'));
+assert.throws(()=>route('B','/not-an-api'));
+const scope=new StationWorkspace(),old=scope.context();
+assert(scope.isCurrent(old));
+scope.select('B');assert(!scope.isCurrent(old));
+assert.equal(scope.route('/api/recipes'),' /api/stations/B/recipes'.trim());
+console.log('PASS V1.3 station path whitelist, per-station routes and stale async generation');

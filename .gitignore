@@ -1,0 +1,7 @@
+backend/DeviceControl.Api/data/
+*.log
+*.tmp
+__pycache__/
+bin/
+obj/
+.workbuddy/

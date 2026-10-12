@@ -1,0 +1,1972 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Device Control V1.2 · 设备控制实验台</title>
+  <style>
+:root{--ink:#16243b;--muted:#7b8b9f;--accent:#3264e5;--accent-dark:#204bb7;--border:#e6ebf1;--bg:#f4f6fa;--green:#139a65;--red:#d34c58;--amber:#b47a26;--sidebar:#142035}*{box-sizing:border-box}body{margin:0;font:14px/1.55 Inter,'Segoe UI','Microsoft YaHei',Arial,sans-serif;color:var(--ink);background:var(--bg)}button,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.48;cursor:not-allowed}.app-shell{display:flex;min-height:100vh}.sidebar{width:244px;background:var(--sidebar);color:#c1cbdc;flex-shrink:0;display:flex;flex-direction:column;padding:26px 14px 18px}.brand{padding:4px 12px 34px;display:flex;align-items:center;gap:11px;color:white}.brand b{display:block;font-weight:730;font-size:15px;line-height:1.15}.brand small{display:block;color:#8393aa;font-size:9px;letter-spacing:1.45px;margin-top:7px}.brand-mark{width:39px;height:39px;background:#386aee;border-radius:12px;color:white;display:grid;place-items:center;font-size:25px;font-weight:750}.section-label{font-size:10px;letter-spacing:2px;color:#7b8ba4;padding:0 15px 12px}.navigation{display:grid;gap:5px}.nav-item{border:0;background:none;color:#a4b2ca;display:flex;align-items:center;text-align:left;gap:13px;border-radius:9px;padding:12px 15px;font-size:13px}.nav-item:hover{background:#263650;color:white}.nav-item.active{background:#294369;color:white;font-weight:650}.nav-icon{font-size:20px;width:20px;text-align:center;line-height:1}.sidebar-bottom{margin-top:auto;padding:16px 13px 0;border-top:1px solid #304158;font-size:11px;color:#cbd5e5;display:grid;grid-template-columns:9px 1fr;gap:6px;align-items:center}.connection-dot{width:8px;height:8px;background:#36cb91;border-radius:50%}.sidebar-bottom small{grid-column:1/3;color:#7387a4;font-size:10px;margin-top:6px}.main{min-width:0;display:flex;flex:1;flex-direction:column}.topbar{height:96px;background:white;border-bottom:1px solid var(--border);padding:22px 36px;display:flex;justify-content:space-between;align-items:center}.topbar h1{font-size:23px;font-weight:740;line-height:1.2;margin:4px 0 0}.eyebrow{letter-spacing:1.5px;text-transform:uppercase;font-size:10px;font-weight:600;color:#90a1b4}.topright{display:flex;align-items:center;gap:20px}.mode-chip{background:#edf2ff;color:var(--accent-dark);padding:7px 12px;border-radius:6px;font-weight:650;font-size:11px}.clock{color:var(--muted);font-variant-numeric:tabular-nums;font-weight:550}.content{padding:25px 36px;max-width:1560px;width:100%;margin:0 auto;flex:1}.notice{padding:11px 16px;background:#edf2fd;border:1px solid #dce7fc;border-radius:9px;display:flex;align-items:center;gap:10px;color:#50729e;font-size:12px;margin-bottom:22px}.notice-icon{background:#6794df;color:white;border-radius:50%;width:16px;height:16px;display:grid;place-items:center;font-size:11px;font-weight:bold;flex-shrink:0}.text-button{margin-left:auto;border:0;background:transparent;color:#3364a7;text-decoration:underline}.help-panel{padding:13px 17px;background:white;border-radius:8px;border:1px solid var(--border);color:#567;margin:-12px 0 19px}.hidden{display:none!important}.panel{display:none}.panel.active{display:block}.four-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.stat-card,.card{background:white;border:1px solid var(--border);border-radius:12px;box-shadow:0 2px 10px #21344805}.stat-card{padding:20px 22px}.stat-label{font-size:12px;color:var(--muted)}.stat-value{margin:8px 0 3px;font-size:28px;font-weight:750;letter-spacing:-.7px;line-height:1.25;display:flex;align-items:center;gap:9px;font-variant-numeric:tabular-nums}.stat-card small{color:#91a0af;font-size:11px}.state-dot,.tiny-indicator{display:inline-block;border-radius:50%;width:10px;height:10px;background:#a6b3c5;flex-shrink:0}.state-dot.ok,.tiny-indicator.ok{background:#13a76b;box-shadow:0 0 0 4px #e3f7ed}.state-dot.running{background:#3568ed;box-shadow:0 0 0 4px #e8eeff}.state-dot.error,.tiny-indicator.error{background:#e15862;box-shadow:0 0 0 4px #fbe9eb}.unit{font-size:13px;color:var(--muted);align-self:end;padding-bottom:6px}.dashboard-grid{display:grid;grid-template-columns:minmax(315px,.92fr) minmax(400px,1.25fr);gap:18px;margin-top:18px}.card{padding:23px}.card-head{display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:21px}.card-head h2,.section-intro h2{font-size:15px;margin:0 0 4px;font-weight:750}.card-head p,.section-intro p{margin:0;color:var(--muted);font-size:12px}.pill{padding:5px 9px;background:#e8f6ef;color:#179562;border-radius:20px;font-size:11px;white-space:nowrap;font-weight:650}.pill.neutral{background:#f2f4f7;color:#65778e}.pill.alert{background:#fff0f0;color:#d84855}.mode-toggle{background:#f2f5fa;border-radius:9px;padding:5px;display:flex;margin:18px 0 20px}.mode-toggle button{border:0;background:none;flex:1;padding:11px 12px;color:#7b8ba1;border-radius:7px;font-weight:650}.mode-toggle button.selected{background:white;box-shadow:0 1px 6px #09244414;color:#305fd4}.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:11px}.btn{border:1px solid transparent;border-radius:8px;padding:11px 14px;font-size:12px;font-weight:700;transition:background .15s}.btn:hover:not(:disabled){filter:brightness(.97)}.btn-primary{background:#3264e5;color:white}.btn-danger{background:#fff0f1;border-color:#ffe0e3;color:#ca4c56}.btn-light{background:#f6f8fb;border-color:#e7ebf1;color:#465c77}.control-hint{background:#f8fafd;color:#8191a7;padding:12px;border-radius:7px;font-size:11px;margin-top:14px}.machine-diagram{background:linear-gradient(180deg,#f8faff,#f3f7fc);border:1px dashed #d7e0ed;border-radius:10px;min-height:190px;padding:14px 25px 12px;position:relative;overflow:hidden}.camera-sim{display:flex;align-items:center;flex-direction:column;font-size:9px;letter-spacing:1px;color:#92a2b7;gap:2px}.camera-shape{display:grid;place-items:center;width:44px;height:29px;background:#304d79;color:white;border-radius:6px 6px 10px 10px;font-size:24px;box-shadow:0 4px 13px #18263c28}.axis-track{margin:22px 24px 8px;height:6px;background:#c9d5e9;border-radius:4px;position:relative}.axis-track:before{content:'';position:absolute;height:15px;left:0;right:0;top:-4px;border-left:3px solid #879eba;border-right:3px solid #879eba}.axis-origin,.axis-end{position:absolute;top:14px;font-size:9px;color:#90a3b9}.axis-end{right:0}.axis-carriage{position:absolute;top:-7px;width:28px;height:20px;background:#386ae6;border:3px solid white;border-radius:5px;box-shadow:0 3px 9px #234c9a4a;transform:translateX(-50%);transition:left .15s linear;z-index:2}.carriage-label{font-size:9px;color:#4271d2;position:absolute;top:-18px;left:6px;font-weight:700}.machine-bottom{display:flex;justify-content:space-between;align-items:center;padding:25px 48px 0}.cylinder-sim{display:grid;gap:7px;justify-items:center;color:#90a1b6;font-size:9px}.cylinder-body{height:18px;width:76px;background:#a8b9d1;border:3px solid #819ab6;border-radius:4px;position:relative}.cylinder-rod{position:absolute;width:39px;height:6px;background:#7793bf;left:66px;top:3px;transition:width .3s}.cylinder-rod.extended{width:60px}.product-symbol{display:grid;place-items:center;border:2px solid #9fbee6;background:#e5effc;width:54px;height:40px;border-radius:7px;color:#4d7ec3;font-size:24px;position:relative}.product-symbol small{font-size:9px;position:absolute;bottom:-19px;color:#91a2b6}.product-symbol.absent{opacity:.15}.device-health{display:flex;gap:19px;padding-top:18px;font-size:11px;color:#657890;flex-wrap:wrap}.device-health>div{display:flex;align-items:center;gap:9px}.tiny-indicator{width:7px;height:7px}.progress-card{margin-top:18px}.progress-card .card-head{margin-bottom:10px}.current-step{display:flex;align-items:center;gap:12px;font-size:15px;margin:14px 0}.step-icon{display:grid;place-items:center;background:#eef3ff;color:#3f6de2;border-radius:9px;width:35px;height:35px;font-size:22px}.progress-rail{height:7px;background:#edf1f7;border-radius:12px;overflow:hidden}.progress-rail div{height:100%;background:#4272e9;width:0%;transition:width .2s}.step-foot{display:flex;justify-content:space-between;margin-top:13px;font-size:11px;color:#8a9aae}.section-intro{margin-bottom:22px}.section-intro h2{font-size:20px}.section-intro p{font-size:13px}.two-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.readout{background:#f6f8fc;border-radius:9px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;margin:15px 0}.readout span{color:#75869c;font-size:12px}.readout strong{font-size:25px;color:#233a5a}.readout strong small{font-size:12px;color:#9baabe}.keyvalue{padding:10px 0;display:flex;justify-content:space-between;color:#7e8fa3;font-size:12px;border-bottom:1px solid #eef1f5}.keyvalue b{color:#365072;font-weight:650}.btn-row{display:flex;gap:9px;margin-top:19px;flex-wrap:wrap}.btn-row button{flex:1}.field-label{font-size:12px;color:#74859c;display:block;margin:21px 0 9px}.input-row{display:flex;gap:9px}.input-row input{width:100%;min-width:0;border:1px solid #dbe3ee;border-radius:8px;padding:11px 12px;outline:none}.input-row input:focus{border-color:#6589ed}.full{width:100%}.divider{border-top:1px solid #eef1f5;margin:22px 0}.signal-list{display:grid;gap:3px}.signal-row{display:grid;grid-template-columns:25px 1fr auto;align-items:center;gap:11px;border-bottom:1px solid #f0f2f6;padding:13px 0}.signal-index{font-size:10px;color:#9caabe}.signal-text b{display:block;font-size:12px}.signal-text small{display:block;font-size:10px;color:#8fa0b5;margin-top:2px}.signal-control{display:flex;gap:13px;align-items:center}.signal-indicator{display:flex;align-items:center;gap:7px;font-size:11px;color:#8698ae;font-weight:700}.led{width:9px;height:9px;border-radius:50%;background:#d6dce7}.led.on{background:#27b584;box-shadow:0 0 0 3px #e7f8ef}.switch{width:34px;height:19px;background:#ccd7e4;border:0;border-radius:11px;position:relative;transition:background .2s}.switch:before{content:'';position:absolute;width:13px;height:13px;border-radius:50%;background:white;top:3px;left:3px;transition:left .2s}.switch.on{background:#4273e9}.switch.on:before{left:18px}.sequence-list{display:grid;gap:0}.sequence-row{display:flex;gap:15px;align-items:center;padding:14px 7px;border-bottom:1px solid #edf1f5;color:#8c9aab}.sequence-number{display:grid;place-items:center;width:30px;height:30px;border:1px solid #dbe2ec;border-radius:50%;font-size:11px;flex-shrink:0}.sequence-row.current{color:#2c5ed7;background:#f5f8ff;font-weight:700}.sequence-row.current .sequence-number{background:#3e70eb;color:white;border-color:#3e70eb}.sequence-label{flex:1}.sequence-row small{font-size:11px}.event-list{max-height:500px;overflow:auto}.event-row{display:grid;grid-template-columns:94px 70px 1fr;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #edf1f5;font-size:12px}.event-row time{color:#93a2b6;font-variant-numeric:tabular-nums}.loglevel{font-size:10px;font-weight:750;color:#4b709c}.loglevel.Error{color:#dc4a55}.loglevel.Warning{color:#ae7a25}.alarm-empty{padding:16px;background:#f6f8fb;color:#8191a3;border-radius:8px}.alarm-active{padding:16px;background:#fff2f1;color:#bd4552;border-radius:8px}.footer{display:flex;justify-content:space-between;padding:16px 36px;border-top:1px solid var(--border);font-size:11px;color:#9aa9b8}.toast{position:fixed;bottom:22px;right:22px;padding:13px 18px;max-width:380px;border-radius:9px;background:#233950;color:white;box-shadow:0 6px 25px #17274130;z-index:20}.toast.error{background:#b83a46}@media(max-width:1100px){.sidebar{width:210px}.topbar{padding:22px}.content{padding:20px}.four-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-grid{grid-template-columns:1fr}.machine-diagram{min-height:190px}}@media(max-width:700px){.app-shell{display:block}.sidebar{width:100%;padding:12px}.brand{padding:4px 5px 12px}.section-label,.sidebar-bottom{display:none}.navigation{display:flex;overflow:auto;gap:2px}.nav-item{white-space:nowrap;padding:9px 10px;font-size:11px}.nav-icon{display:none}.topbar{height:85px;padding:13px}.topbar h1{font-size:21px}.topright{gap:7px}.clock{display:none}.content{padding:14px}.four-grid{gap:9px}.stat-card{padding:15px}.stat-value{font-size:22px}.two-grid{grid-template-columns:1fr}.card{padding:17px}.footer{padding:13px}.notice{font-size:11px}.machine-bottom{padding-left:10px;padding-right:10px}}
+
+.select-field{width:100%;background:white;border:1px solid #dbe3ee;border-radius:8px;padding:10px 12px;color:#253e5e;outline:none}.mini-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.mini-item{background:#f6f8fc;border:1px solid #e9eef5;border-radius:9px;padding:14px}.mini-item b{display:block;font-size:13px}.mini-item small{display:block;color:#8293ab;margin-top:5px;font-size:11px}.mini-item strong{display:block;margin-top:11px;font-size:17px;color:#3264e5}.mapping-table{max-height:650px;overflow:auto}.mapping-row{display:grid;grid-template-columns:48px 1fr 55px;gap:9px;align-items:center;padding:11px 1px;border-bottom:1px solid #edf1f5;font-size:12px}.mapping-row b{display:block;font-size:12px}.mapping-row small{display:block;color:#8c9fb4;font-size:10px}.map-chip{background:#eff3fb;border-radius:5px;color:#45638d;padding:3px 5px;text-align:center;font-size:10px}.interlock-card{border-bottom:1px solid #edf1f5;padding:12px 1px}.interlock-card b{font-size:12px}.interlock-card small{display:block;color:#8193a8;font-size:11px;margin-top:4px}.interlock-card .pass{color:#149968}.interlock-card .block{color:#d45460}.connection-error{background:#fff1f1;color:#ac3949;border:1px solid #ffdadd;border-radius:8px;padding:13px;margin:10px 0}.top-chip{display:inline-flex;gap:6px;align-items:center}.param-note{font-size:11px;color:#8293ab}.section-intro{display:block}
+
+/* V0.3 simulation cycle analytics */
+.history-list{display:grid;gap:7px;margin-top:16px;max-height:520px;overflow:auto}
+.history-row{width:100%;border:1px solid #e8edf5;text-align:left;border-radius:9px;padding:12px;background:white;display:grid;grid-template-columns:minmax(100px,1fr) 65px 60px;gap:9px;align-items:center;color:#233950}
+.history-row:hover,.history-row.selected{background:#f1f5ff;border-color:#a9bdf9}
+.history-row small{display:block;font-size:10px;font-weight:400;color:#91a1b5;margin-top:3px}
+.history-row strong{font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+.outcome{font-size:10px;color:#697e99;font-weight:700}
+.outcome.Completed{color:#169b6b}.outcome.Failed{color:#ca4753}.outcome.Stopped,.outcome.Canceled{color:#a77825}
+.timing-list{max-height:620px;overflow:auto}.timing-row{border-bottom:1px solid #e8edf5;padding:14px 0}.timing-top{display:flex;gap:8px;align-items:center;font-size:11px}.timing-top b:first-child{flex:1}.timing-top b:last-child{color:#536f96;white-space:nowrap}
+.timing-rail{height:6px;background:#edf2f9;border-radius:6px;margin:10px 0 5px}.timing-rail>div{height:100%;background:#5a80df;border-radius:6px;min-width:2px}
+.error-line{color:#c44c56;font-size:11px}.empty-state{color:#93a0b0;font-size:12px;padding:20px 8px;text-align:center}
+.alarm-guidance{border:1px solid #f4d5b8;background:#fff9f0;border-radius:8px;padding:16px;margin-top:11px}
+.alarm-guidance b{color:#a36a20;display:block}.alarm-guidance span{display:block;font-size:11px;color:#9d8b73;margin:4px 0}
+.alarm-guidance p{color:#69563c;margin:8px 0 0;font-size:12px}
+@media(max-width:700px){.history-row{grid-template-columns:minmax(65px,1fr) 50px 50px;padding:9px}.timing-top{flex-wrap:wrap}}
+
+/* V0.4 software governance */
+.login-overlay{position:fixed;inset:0;z-index:100;background:rgba(18,34,58,.64);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px}
+.login-overlay.hidden{display:none}.login-dialog{width:min(440px,100%);background:white;border-radius:16px;box-shadow:0 28px 90px #07182b47;padding:30px;color:#203653}
+.login-logo{background:#386be1;color:white;border-radius:11px;display:grid;place-items:center;width:49px;height:49px;font-weight:800;font-size:25px;margin-bottom:19px}
+.login-dialog h2{font-size:23px;margin:0 0 9px}.login-dialog p{font-size:12px;color:#8392a6}.login-dialog small{display:block;color:#8191a4;margin-top:19px;font-size:11px;line-height:1.7}
+.login-input{padding:11px 12px;border:1px solid #dbe3ee;border-radius:8px;display:block;width:100%;font-size:13px;color:#263b59;background:white;box-sizing:border-box}.login-input:focus{outline:2px solid #bdd0ff;outline-offset:1px}
+.login-error{font-size:12px;color:#cf3948;margin-top:9px;min-height:18px}
+.three-governance{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:18px}
+.recipe-details{display:grid;gap:9px;margin:15px 0}.recipe-details .keyvalue{margin:0}.recipe-version-list{max-height:340px;overflow:auto;display:grid;gap:8px}
+.recipe-item{padding:12px;border:1px solid #e1e8f3;border-radius:9px;background:#fff;width:100%;text-align:left;display:grid;gap:4px;color:#304861}
+.recipe-item:hover,.recipe-item.selected{border-color:#6290e5;background:#f1f6ff}.recipe-item strong{font-size:13px}.recipe-item small{font-size:10px;color:#8194aa}.recipe-item .pill{justify-self:start;font-size:10px}
+.audit-scroll{overflow:auto;max-height:380px}.audit-table{width:100%;border-collapse:collapse;min-width:730px;text-align:left;font-size:11px}.audit-table th{background:#f5f7fc;color:#74859e;font-size:10px;padding:10px;position:sticky;top:0}.audit-table td{padding:11px 10px;border-bottom:1px solid #eef1f5;vertical-align:top;color:#4d647f}.audit-table .denied{color:#d94d55;font-weight:700}.audit-pages{margin-top:13px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:11px;color:#8c9bae}.audit-pages>div{display:flex;gap:8px}
+.checklist{display:grid;gap:8px}.check-row{display:flex;gap:10px;align-items:center;padding:12px;border:1px solid #e9edf5;border-radius:8px;font-size:12px}.check-row .check-icon{font-size:14px;width:21px;text-align:center}.check-row.pass .check-icon{color:#18a875}.check-row.fail .check-icon{color:#cb5f52}.recovery-step{display:flex;align-items:start;gap:12px;padding:13px 0;border-bottom:1px solid #edf0f5}.recovery-step>span{background:#edf4ff;color:#4772d8;padding:7px;border-radius:8px;font-size:11px}.recovery-step b{font-size:12px;display:block}.recovery-step small{display:block;font-size:11px;color:#8495aa;margin-top:5px}
+@media(max-width:1050px){.three-governance{grid-template-columns:1fr}.login-dialog{padding:20px}}
+
+/* V0.5 flow debug workspace */
+.flow-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:16px;}
+.flow-meta{flex:1;min-width:200px}.flow-meta h2{margin:3px 0 5px;font-size:18px}.flow-actions{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+.flow-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.92fr);gap:16px;align-items:start}
+.flow-right{display:grid;gap:16px;min-width:0}
+.flow-node{border:1px solid var(--border,#e4e9f0);border-radius:11px;padding:11px 12px;margin:6px 0;background:#fff;position:relative}
+.flow-node.active{border-color:#4690d7;background:#f1f8ff;box-shadow:0 0 0 2px rgba(58,134,210,.10)}
+.flow-node.finished{border-color:#bde3cc;background:#fbfffc}
+.flow-node.failed{border-color:#f3bcc1;background:#fff7f7}
+.flow-node.paused{border-color:#edcb81;background:#fffaf0}
+.flow-node-main{display:flex;align-items:center;gap:11px;min-width:0}.flow-node-main>.flow-title{flex:1;min-width:0}
+.flow-title strong{display:block;font-size:13px}.flow-title small{display:block;font-size:11px;color:#77849a;padding-top:3px}
+.flow-index{font-family:monospace;min-width:23px;color:#8a98aa;font-size:11px}
+.break-dot{width:22px;height:22px;border:1px solid #ccd6e2;border-radius:50%;background:white;cursor:pointer;color:#94a1b2;font-size:12px}
+.break-dot.on{background:#ce4b5c;border-color:#ce4b5c;color:white}
+.break-dot:disabled{opacity:.4;cursor:not-allowed}
+.flow-children{margin:10px 0 0 34px;padding-left:12px;border-left:2px dashed #b7cee6}
+.flow-child{font-size:12px;display:flex;gap:9px;align-items:center;padding:7px 6px;margin:4px 0;background:#eef5fb;border-radius:7px}
+.flow-child strong{font-weight:600}.flow-status-text{font-size:11px;color:#61748b;white-space:nowrap}
+.flow-vars{display:grid;gap:9px}.flow-var{display:flex;align-items:start;justify-content:space-between;gap:12px;border-bottom:1px solid #edf0f6;padding:8px 0;font-size:12px}
+.flow-var span{color:#75849a}.flow-var b{max-width:65%;text-align:right;overflow-wrap:anywhere}
+.resource-list{margin-top:14px;display:flex;gap:6px;flex-wrap:wrap}.resource-chip{font-size:11px;padding:6px 9px;border-radius:7px;background:#f0f4fa;color:#53708e}
+.flow-traces{display:grid;gap:7px;max-height:450px;overflow-y:auto}.trace-row{border:1px solid #e8edf4;border-radius:9px;padding:9px;font-size:11px;line-height:1.7}
+.trace-top{display:flex;justify-content:space-between;gap:8px;align-items:center}.trace-top b{font-size:12px}.trace-row small{color:#77849a}.trace-failed{color:#a72e45}.trace-completed{color:#28845c}.trace-canceled{color:#ac6635}
+@media(max-width:1100px){.flow-layout{grid-template-columns:1fr}}
+
+/* V0.6 workflow studio */
+.nav-beta{margin-left:auto;font-size:9px;border-radius:4px;background:#e7f0ff;color:#3266c0;padding:2px 4px}
+.studio-bar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:15px;flex-wrap:wrap}.studio-bar h2{margin:5px 0}.studio-bar small{color:#8896ac}
+.studio-layout{display:grid;grid-template-columns:minmax(210px,.77fr) minmax(300px,1.5fr) minmax(220px,.88fr);gap:14px;align-items:start}
+.studio-left,.studio-right{display:grid;gap:14px;min-width:0}.studio-palette{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.studio-palette button{font-family:inherit;background:#f7faff;border:1px solid #dce7f7;color:#446283;font-size:11px;padding:11px 7px;border-radius:9px;text-align:left;cursor:pointer}
+.studio-palette button:hover{border-color:#78a0e4;background:#ecf4ff}
+.studio-palette button:disabled{opacity:.45;cursor:not-allowed}
+.studio-versions{display:grid;gap:7px;max-height:350px;overflow:auto;margin-bottom:10px}
+.studio-version{text-align:left;border:1px solid #e2eaf4;background:#fff;border-radius:8px;padding:9px;display:grid;grid-template-columns:1fr auto;gap:5px;color:#51657d;cursor:pointer}
+.studio-version.selected{border-color:#5b8be9;background:#f1f7ff}.studio-version b{font-size:12px;color:#344e70}.studio-version small{grid-column:1/-1;font-size:10px;color:#8292a4}
+.studio-graph{min-height:570px}.studio-start,.studio-end{margin:0 auto;text-align:center;border-radius:7px;padding:8px;max-width:140px;font-weight:750;letter-spacing:.12em;font-size:11px;color:#4772bf;background:#eff5ff}
+.studio-end{background:#eef8f4;color:#16855f}.studio-link{height:27px;display:flex;justify-content:center;align-items:center;color:#7da1d2;font-size:19px;position:relative}
+.studio-link:before{content:"";position:absolute;height:14px;border-left:2px solid #abc5e3;top:0;left:50%;z-index:0}.studio-link span{z-index:1;background:#fff}
+.studio-node{border:1px solid #dce5f0;border-radius:11px;background:#fff;display:flex;align-items:center;padding:5px;gap:3px;box-shadow:0 3px 12px #213b550a}
+.studio-node.chosen{border-color:#5e90e8;background:#f5f9ff;box-shadow:0 0 0 2px #6b9bf321}.studio-node-body{border:0;background:none;display:flex;align-items:center;gap:12px;text-align:left;flex:1;padding:9px;min-width:0;cursor:pointer}
+.studio-node-body b{display:block;color:#304a69;font-size:12px}.studio-node-body small{display:block;color:#8191a6;font-size:10px;margin-top:4px}.studio-index{color:#8a9db4;font-size:10px;font-family:monospace}.studio-node-icon{background:#eaf2ff;border-radius:8px;width:27px;height:27px;display:grid;place-items:center;color:#4c7cce}
+.studio-grip{cursor:grab;color:#a4b0c0;padding:8px}.studio-branch-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:10px 10px 3px;position:relative}
+.studio-branch-grid:before{content:"";position:absolute;top:-10px;left:25%;right:25%;border-top:2px solid #b1c9e4}.studio-branch{border:1px dashed #afc5df;background:#f7faff;color:#49617a;cursor:pointer;border-radius:8px;padding:8px;min-width:0;text-align:left;display:grid;gap:4px}
+.studio-branch.chosen{border-style:solid;border-color:#5d8feb}.studio-branch span{font-size:9px;color:#5484bb}.studio-branch strong{font-size:11px}.studio-branch small{font-size:9px;overflow-wrap:anywhere}
+.studio-inspector-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px}.studio-inspector-title strong{font-size:12px;color:#5075a0}.studio-inspector-title .btn{padding:6px 8px}
+#studioInspector .field-label{display:block;margin-bottom:10px}#studioInspector .field-label input,#studioInspector .field-label select{margin-top:5px}.studio-validation{display:grid;gap:9px}.studio-valid{color:#17885e;font-size:12px}.studio-invalid,.studio-error{color:#c25163;font-size:12px}.studio-validation small{font-size:11px;color:#8191a1}
+@media(max-width:1350px){.studio-layout{grid-template-columns:minmax(210px,1fr) minmax(360px,2fr)}.studio-right{grid-column:1/-1;grid-template-columns:1fr 1fr}}@media(max-width:830px){.studio-layout{grid-template-columns:1fr}.studio-right{grid-column:auto;grid-template-columns:1fr}}
+
+/* V0.7 editing and historical replay */
+.studio-tools{padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}.studio-tools small{color:var(--muted);font-size:11px}.studio-diff{display:grid;gap:8px;max-height:290px;overflow:auto}.diff-summary{font-size:11px;color:var(--muted);margin-bottom:6px}.diff-entry{display:flex;gap:9px;align-items:flex-start;padding:8px;border:1px solid var(--border);border-radius:8px;background:#f9fbfd}.diff-entry span{font-size:11px;font-weight:700;min-width:32px;color:#5266ae}.diff-entry.added span{color:#188d61}.diff-entry.removed span{color:#c65662}.diff-entry.moved span{color:#ac7c23}.diff-entry small{color:#506077;overflow-wrap:anywhere}
+.replay-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding:16px 20px;gap:12px}.replay-info h2{font-size:13px;margin:5px 0 0}.replay-layout{display:grid;grid-template-columns:minmax(200px,.95fr) minmax(370px,1.65fr) minmax(275px,1.3fr);gap:16px;align-items:start}.replay-runs{display:grid;gap:8px;max-height:620px;overflow:auto}.replay-run,.replay-event{border:1px solid var(--border);border-radius:9px;background:#fff;text-align:left;padding:10px 12px;color:var(--ink);display:flex;gap:8px;align-items:center;width:100%}.replay-run{display:grid}.replay-run b,.replay-event b{font-size:12px}.replay-run span,.replay-event small{font-size:11px;color:var(--muted);display:block}.replay-run.selected,.replay-event.selected{border-color:#86a7ed;background:#eef4ff}.replay-timeline{max-height:460px;overflow:auto;display:grid;gap:7px}.replay-order{font-weight:750;background:#f0f3f9;border-radius:6px;padding:5px 8px;color:#7184a1}.replay-controls{border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:12px}.replay-controls .btn-row{flex-wrap:wrap}.replay-controls input[type=range]{width:85%;margin:14px 0 0}.replay-watch{max-height:490px;overflow:auto}.replay-watch-grid{display:grid;gap:6px}.replay-watch-row{padding:8px;background:#f7f9fd;border:1px solid var(--border);border-radius:7px;display:grid;grid-template-columns:1fr 1fr;gap:9px;align-items:center}.replay-watch-row b{font-size:11px;font-weight:650;word-break:break-word}.replay-watch-row code{font-size:11px;color:#2a579a;text-align:right;overflow-wrap:anywhere}@media(max-width:1380px){.replay-layout{grid-template-columns:1fr 1.5fr}.replay-layout>.card:last-child{grid-column:1/-1}}@media(max-width:850px){.replay-layout{grid-template-columns:1fr}.replay-layout>.card:last-child{grid-column:auto}}
+
+/* V0.8 quality dashboard */
+.quality-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.quality-header h2{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.quality-case,.quality-custom{display:flex;align-items:center;gap:12px;padding:12px 3px;border-bottom:1px solid #edf0f4}
+.quality-case>div,.quality-custom>div{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+.quality-case small,.quality-custom small{color:#778191;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.quality-check{width:27px;height:27px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;background:#ebf7ef;color:#25864b}
+.quality-case.fail .quality-check{background:#fff0ed;color:#bd443b}
+.quality-issue{padding:11px 12px;border-radius:8px;background:#f3f6fc;font-size:13px;margin-bottom:9px;line-height:1.5}
+.quality-issue.bad{background:#fff1f0;color:#ae3230}.quality-issue.good{background:#eff9f3;color:#21864b}
+.quality-form{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px}
+.quality-schema>div{padding:12px 0;display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #edf0f4;flex-wrap:wrap}
+.quality-schema small{color:#7b8696}
+.quality-bar-row{display:grid;grid-template-columns:minmax(200px,1fr) 45%;align-items:center;gap:16px;padding:10px 0;border-bottom:1px solid #f0f2f5}
+.quality-bar-row>div:first-child{display:flex;flex-direction:column;gap:4px}.quality-bar-row small{font-size:11px;color:#7a8796}
+.quality-track{height:10px;border-radius:8px;background:#eef3fa;overflow:hidden}.quality-track>div{height:100%;background:#3d76c8;border-radius:8px}
+@media(max-width:820px){.quality-form{grid-template-columns:1fr}.quality-bar-row{grid-template-columns:1fr}}
+
+.quality-metrics-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+@media(max-width:700px){.quality-metrics-grid{grid-template-columns:1fr}}
+
+/* V1.1 multiple software station overview */
+.fleet-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0}
+.fleet-owner{font-size:19px;min-height:36px;word-break:break-word}
+.fleet-stations{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:18px}
+.fleet-station{border:1px solid #e3eaf4;border-radius:13px;background:white;padding:22px;min-width:0;box-shadow:0 4px 18px #13274b08}
+.fleet-station.problem{border-color:#edc4c5}.fleet-station.running{border-color:#a9c6ef}
+.fleet-station-head{display:flex;align-items:flex-start;gap:12px;justify-content:space-between}
+.fleet-station-head h2{font-size:19px;margin:3px 0}.fleet-station-head small{color:#8494aa;font-size:11px;display:block}
+.fleet-station-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:17px 0}
+.fleet-station-metrics>div{background:#f5f8fc;border-radius:9px;padding:12px 10px;min-width:0}
+.fleet-station-metrics small{color:#8b9ab0;font-size:10px;display:block}.fleet-station-metrics b{font-size:15px;overflow-wrap:anywhere;display:block;margin:5px 0}
+.fleet-step{background:#edf4fe;color:#49658a;border-radius:8px;padding:10px 12px;font-size:12px;margin:10px 0 16px;display:flex;justify-content:space-between;gap:8px}
+.fleet-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.fleet-buttons .btn{padding:10px 7px}
+.fleet-info{display:grid;gap:8px;margin-top:14px;font-size:11px;color:#6f8099}.fleet-info code{font-size:10px;word-break:break-all;color:#496681}
+.fleet-info .alarm{color:#bc4753}.fleet-log-rows{display:grid;gap:7px;max-height:200px;overflow:auto;color:#63758d;font-size:12px}
+.fleet-log-entry{border-bottom:1px solid #edf1f6;padding:9px 2px}.fleet-log-entry.error{color:#c04858}
+@media(max-width:1120px){.fleet-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.fleet-stations{grid-template-columns:1fr}}
+@media(max-width:600px){.fleet-summary{grid-template-columns:1fr 1fr}.fleet-station{padding:14px}.fleet-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* V1.2 shared logical-resource monitor */
+.fleet-resource-board{margin-bottom:16px}.fleet-resource-rows{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fleet-resource-lane{border:1px solid #e4ebf5;background:#f8faff;border-radius:10px;padding:14px;min-height:90px}
+.fleet-resource-lane h3{font-size:12px;color:#4d678c;margin:0 0 9px}.fleet-resource-line{font-size:12px;padding:7px;background:white;margin-top:6px;border-radius:7px;color:#334b6d;display:flex;justify-content:space-between;gap:10px}
+.fleet-resource-line small{color:#7385a1}.fleet-resource-empty{color:#8294aa;font-size:12px;margin-top:15px}
+@media(max-width:680px){.fleet-resource-rows{grid-template-columns:1fr}}
+
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">D</div><div><b>Device Control</b><small>CONTROL STUDIO · V1.2</small></div></div>
+    <div class="section-label">工作空间</div>
+    <nav class="navigation" aria-label="页面导航">
+      <button data-tab="dashboard" class="nav-item active"><span class="nav-icon">▦</span>生产总览</button>
+      <button data-tab="stations" class="nav-item"><span class="nav-icon">▥</span>多工站调度 <span class="nav-beta">V1.2</span></button>
+      <button data-tab="manual" class="nav-item"><span class="nav-icon">⚙</span>手动调试</button>
+      <button data-tab="io" class="nav-item"><span class="nav-icon">◉</span>IO 监控</button>
+      <button data-tab="config" class="nav-item"><span class="nav-icon">▤</span>机构与互锁</button>
+      <button data-tab="sequence" class="nav-item"><span class="nav-icon">↳</span>流程调试</button>
+      <button data-tab="workflow" class="nav-item"><span class="nav-icon">◇</span>流程设计器 <span class="nav-beta">NEW</span></button>
+      <button data-tab="quality" class="nav-item"><span class="nav-icon">✓</span>流程质量门禁 <span class="nav-beta">NEW</span></button>
+      <button data-tab="replay" class="nav-item"><span class="nav-icon">▣</span>历史回放 <span class="nav-beta">NEW</span></button>
+      <button data-tab="analytics" class="nav-item"><span class="nav-icon">▥</span>运行分析</button>
+      <button data-tab="events" class="nav-item"><span class="nav-icon">≡</span>报警与日志</button>
+      <button data-tab="recovery" class="nav-item"><span class="nav-icon">✚</span>故障恢复向导</button>
+      <button data-tab="governance" class="nav-item"><span class="nav-icon">♙</span>配方版本与审计</button>
+    </nav>
+    <div class="sidebar-bottom"><div class="connection-dot"></div><span id="connectionLabel">检查服务连接…</span><small>仅供仿真 · 非安全控制系统</small></div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <div><div class="eyebrow">设备 / DEMO-DUAL-STATION</div><h1 id="pageTitle">生产总览</h1></div>
+      <div class="topright"><span class="mode-chip" id="sourceMode">初始化中</span><span class="mode-chip" id="userLabel">未登录</span><button id="logoutButton" class="btn btn-light" style="padding:8px 11px" disabled>退出</button><span class="clock" id="clock">--:--:--</span></div>
+    </header>
+    <div class="content">
+      <div class="notice"><span class="notice-icon">i</span><span>V1.2 多工站：节点级共享资源 FIFO 排队、超时、取消释放及流程调试。纯仿真，不具备生产级安全能力。</span><button id="helpToggle" class="text-button">说明</button></div>
+      <div id="help" class="help-panel hidden">离线打开时使用浏览器内置仿真。启动 .NET 后端并由 5173 静态服务访问前端时，连接本地 API 仿真。控制动作都由软件普通互锁约束，但这不能替代机械安全系统。后端连接丢失时会锁定控制，禁止无提示自动切换到另一台模拟设备。</div>
+      <div id="toast" role="status" class="toast hidden"></div>
+      <div id="loginOverlay" class="login-overlay">
+        <div class="login-dialog">
+          <div class="login-logo">D</div><h2>登录 Device Control</h2>
+          <p>本地仿真实验台 · 演示身份，不用于真实系统认证</p>
+          <form id="loginForm">
+            <label class="field-label" for="loginUser">演示角色</label>
+            <select id="loginUser" class="select-field"><option value="operator">操作员 · Operator</option><option value="engineer" selected>调试工程师 · Engineer</option><option value="admin">管理员 · Admin</option></select>
+            <label class="field-label" for="loginPassword">演示密码</label>
+            <input id="loginPassword" class="login-input" type="password" value="demo123" autocomplete="off" required>
+            <button class="btn btn-primary full" type="submit" style="margin-top:19px">进入仿真实验台</button>
+            <div id="loginError" class="login-error" role="alert"></div>
+          </form><small>Operator：生产操作　|　Engineer：调试、验证　|　Admin：发布、回滚</small>
+        </div>
+      </div>
+
+      <section id="panel-stations" class="panel">
+        <div class="section-intro"><h2>多工站调度中心</h2><p>两个独立的软件 Runtime：工站 A 兼容既有界面，工站 B 具有独立流程、配方、周期历史与故障状态。不同工站可以并行运行，只有声明共享资源的节点相互排队。</p></div>
+        <div class="fleet-summary">
+          <div class="stat-card"><span class="stat-label">在线工站</span><div class="stat-value" id="fleetCount">2</div><small>仿真软件实例</small></div>
+          <div class="stat-card"><span class="stat-label">运行中</span><div class="stat-value" id="fleetRunning">0</div><small>按当前软件快照</small></div>
+          <div class="stat-card"><span class="stat-label">异常工站</span><div class="stat-value" id="fleetFaults">0</div><small>故障或待恢复</small></div>
+          <div class="stat-card"><span class="stat-label">共享资源 CELL-SHARED</span><div class="stat-value fleet-owner" id="fleetOwner">空闲</div><small>节点级 FIFO · 非安全级</small></div>
+        </div>
+        <div class="card fleet-resource-board"><div class="card-head"><div><h2>共享资源实时占用与等待队列</h2><p>资源在节点结束、异常或软件取消后释放。整个队列公平 FIFO；分配在软件进程内完成。</p></div><span class="pill neutral" id="fleetQueueCount">等待 0</span></div><div id="fleetResourceRows" class="fleet-resource-rows">尚未请求资源</div></div>
+        <div class="fleet-stations" id="fleetStations" aria-live="polite"></div>
+        <div class="card fleet-log"><div class="card-head"><div><h2>调度与验证记录</h2><p>该页面仅展示软件仿真动作。禁止同时占用共享资源；单站故障不自动控制另一站。</p></div><button id="fleetRefresh" class="btn btn-light">刷新全部工站</button></div><div id="fleetLog" class="fleet-log-rows">尚无操作记录</div></div>
+      </section>
+
+      <section id="panel-dashboard" class="panel active">
+        <div class="four-grid kpi-grid">
+          <div class="stat-card"><div class="stat-label">设备状态</div><div class="stat-value"><span id="stateDot" class="state-dot"></span><span id="stateValue">—</span></div><small id="stateSubtitle">等待连接</small></div>
+          <div class="stat-card"><div class="stat-label">生产模式</div><div class="stat-value" id="modeValue">—</div><small>手动 / 自动模式互锁</small></div>
+          <div class="stat-card"><div class="stat-label">完成周期</div><div class="stat-value" id="cyclesValue">0</div><small>单周期仿真运行</small></div>
+          <div class="stat-card"><div class="stat-label">运动轴位置</div><div class="stat-value"><span id="axisValue">0.000</span><span class="unit">mm</span></div><small id="axisSub">X Axis</small></div>
+        </div>
+        <div class="dashboard-grid">
+          <div class="card production-card">
+            <div class="card-head"><div><h2>设备操作</h2><p>按照状态进行模式切换与单周期控制</p></div><span class="pill" id="recoveryTag">正常待机</span></div>
+            <div class="mode-toggle"><button data-mode="Manual" class="selected" id="modeManual">手动模式</button><button data-mode="Auto" id="modeAuto">自动模式</button></div>
+            <div class="action-grid"><button class="btn btn-primary" data-action="cycle-start">▶ 运行单周期</button><button class="btn btn-danger" data-action="cycle-stop">■ 请求停止</button></div>
+            <div class="action-grid"><button class="btn btn-light" data-action="fault-reset">报警复位</button><button class="btn btn-light" data-action="recovery-confirm">恢复确认</button></div>
+            <div class="control-hint" id="actionHint">手动使能与回零后，切换自动模式启动。</div>
+          </div>
+          <div class="card machine-card">
+            <div class="card-head"><div><h2>工位状态</h2><p>示意机构，不对应真实机械几何结构</p></div><span class="subtle">STATION 01</span></div>
+            <div class="machine-diagram">
+              <div class="camera-sim"><span class="camera-shape">◉</span><span>CAMERA-01</span></div>
+              <div class="axis-track"><div class="axis-origin">0</div><div class="axis-end">200 mm</div><div id="axisCarriage" class="axis-carriage" style="left:0%"><div class="carriage-head"></div><div class="carriage-label">X</div></div></div>
+              <div class="machine-bottom"><div class="cylinder-sim"><div class="cylinder-body"><div id="piston" class="cylinder-rod"></div></div><span>CLAMP-01</span></div><div id="productSymbol" class="product-symbol">▣<small>工件</small></div></div>
+            </div>
+            <div class="device-health"><div><span class="tiny-indicator" id="guardLed"></span>防护门状态</div><div><span class="tiny-indicator" id="airLed"></span>气压反馈</div><div><span class="tiny-indicator" id="partLed"></span>产品检测</div></div>
+          </div>
+        </div>
+        <div class="card progress-card"><div class="card-head"><div><h2>当前执行步骤</h2><p>实时显示设备顺序流程状态</p></div><span class="pill neutral" id="flowStatus">未启动</span></div><div class="current-step"><span class="step-icon">↳</span><strong id="stepValue">等待操作</strong></div><div class="progress-rail"><div id="stepProgress"></div></div><div class="step-foot"><span>单周期流程</span><span id="visionValue">视觉：尚未触发</span></div></div>
+      </section>
+
+      <section id="panel-manual" class="panel">
+        <div class="section-intro"><h2>多机构手动调试</h2><p>选择不同轴和气缸查看对应状态；手动动作同样遵守统一普通互锁，不允许绕过设备控制服务。</p></div>
+        <div class="two-grid">
+          <div class="card"><div class="card-head"><div><h2>运动轴调试</h2><p>设备配置驱动轴量程、速度和回零位</p></div><span id="axisBadge" class="pill neutral">未使能</span></div>
+            <label class="field-label" for="axisSelect">选择运动轴</label><select id="axisSelect" class="select-field"></select>
+            <div class="readout"><span>当前位置</span><strong><span id="axisReadout">0.000</span><small> mm</small></strong></div>
+            <div class="keyvalue"><span>回零状态</span><b id="homedReadout">未回零</b></div>
+            <div class="keyvalue"><span>速度 / 范围</span><b id="axisLimits">—</b></div>
+            <div class="btn-row"><button class="btn btn-primary" data-action="servo-on">使能</button><button class="btn btn-light" data-action="servo-off">去使能</button><button class="btn btn-light" data-action="axis-home">回零</button></div>
+            <label class="field-label" for="moveTarget">目标位置 (mm)</label><div class="input-row"><input id="moveTarget" type="number" value="80" step="0.1"><button class="btn btn-primary" data-action="axis-move">移动到目标</button></div>
+            <div class="control-hint">手动指令为离散绝对定位，不是长按点动；真机点动需要专门的保持运行及安全设计。</div>
+          </div>
+          <div class="card"><div class="card-head"><div><h2>气缸与视觉</h2><p>两个气缸分别绑定输出与传感器反馈</p></div><span id="cylinderBadge" class="pill neutral">—</span></div>
+            <label class="field-label" for="cylinderSelect">选择气缸</label><select id="cylinderSelect" class="select-field"></select>
+            <div class="readout"><span>当前状态</span><strong id="cylinderReadout">—</strong></div>
+            <div class="keyvalue"><span>伸出反馈</span><b id="extendReadout">OFF</b></div><div class="keyvalue"><span>缩回反馈</span><b id="retractReadout">OFF</b></div>
+            <div class="btn-row"><button class="btn btn-primary" data-action="cylinder-extend">伸出</button><button class="btn btn-light" data-action="cylinder-retract">缩回</button></div>
+            <div class="control-hint" id="mechanismHint">Clamp 伸出依赖 Stopper 伸出；X/Y 运动要求两个气缸均缩回。</div>
+            <div class="divider"></div><div class="card-head"><div><h2>视觉触发</h2><p>模拟返回 X = 80.000 mm</p></div></div><button class="btn btn-light full" data-action="vision-trigger">触发视觉检测</button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:18px"><div class="card-head"><div><h2>全部机构状态</h2><p>由设备快照动态生成</p></div></div><div id="mechanismOverview" class="mini-grid"></div></div>
+      </section>
+
+      <section id="panel-io" class="panel">
+        <div class="section-intro"><h2>IO 信号与仿真注入</h2><p>DI 与 DO 采用配置文件绑定物理地址。仅白名单外部仿真 DI 可切换，气缸到位反馈禁止直接写入。</p></div>
+        <div class="two-grid">
+          <div class="card"><div class="card-head"><h2>数字输入 DI</h2><span class="subtle">只读反馈 + 可注入外部信号</span></div><div id="inputRows" class="signal-list"></div></div>
+          <div class="card"><div class="card-head"><h2>数字输出 DO</h2><span class="subtle">由设备命令自动管理</span></div><div id="outputRows" class="signal-list"></div><div class="divider"></div><div class="card-head"><h2>故障注入</h2><span class="subtle">仅仿真有效</span></div><div id="faultRows" class="signal-list"></div></div>
+        </div>
+      </section>
+
+      <section id="panel-config" class="panel">
+        <div class="section-intro"><h2>机构配置与普通互锁</h2><p>后端读取 station.json；以下是只读映射，可通过修改配置文件调整设备机构。软件联锁不是功能安全。</p></div>
+        <div class="card"><div class="card-head"><div><h2>机构档案</h2><p id="profileDescription">从配置文件加载</p></div><span class="pill neutral">仅仿真驱动</span></div><div id="configMechanisms" class="mini-grid"></div></div>
+        <div class="two-grid" style="margin-top:18px"><div class="card"><div class="card-head"><h2>IO 通道映射</h2></div><div id="mappingRows" class="mapping-table"></div></div><div class="card"><div class="card-head"><h2>普通互锁矩阵</h2></div><div id="interlockRows" class="interlock-list"></div></div></div>
+      </section>
+      <section id="panel-sequence" class="panel">
+        <div class="section-intro"><h2>流程调试器 · V1.0</h2><p>已发布版本驱动执行，支持并行分组、逻辑资源锁、断点与单步。暂停只会发生在<span class="text-accent">下一顶层步骤开始之前</span>，不是瞬时冻结运动。</p></div>
+        <div class="flow-toolbar card">
+          <div class="flow-meta"><span class="eyebrow">当前执行计划</span><h2 id="flowVersion">flow-v0.5.0</h2><div class="subtle" id="flowDetail">正在加载执行器状态</div></div>
+          <span class="pill" id="flowDebugStatus">待机</span>
+          <div class="btn-row flow-actions"><button class="btn btn-light" data-debug="pause">在下一步暂停</button><button class="btn btn-primary" data-debug="resume">继续</button><button class="btn btn-light" data-debug="step">单步</button><button class="btn btn-light" data-debug="retry">重试当前错误</button><button class="btn btn-danger" data-debug="abort">中止错误等待</button></div>
+        </div>
+        <div class="flow-layout">
+          <div class="card"><div class="card-head"><div><h2>执行图</h2><p>点击圆点设置断点。并行子节点在同一分组中同时调度。</p></div><span class="pill neutral" id="sequenceStatus">未运行</span></div><div id="sequenceSteps" class="sequence-list"></div></div>
+          <div class="flow-right">
+            <div class="card"><div class="card-head"><div><h2>运行变量与资源</h2><p>显示流程内的资源拥有者与暂停原因</p></div></div><div id="flowVariables" class="flow-vars"></div><div id="flowResources" class="resource-list"></div></div>
+            <div class="card"><div class="card-head"><div><h2>节点执行轨迹</h2><p>最新步骤优先，记录耗时、尝试次数及结果</p></div></div><div id="flowTraces" class="flow-traces"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-workflow" class="panel">
+        <div class="section-intro"><h2>可视化流程设计器</h2><p>用拖拽调整顺序；条件分支 TRUE / FALSE、并行分支均明确连接。版本为不可变快照，编辑必须另存草稿后验证和发布。</p></div>
+        <div class="card studio-bar"><div><span class="eyebrow">当前生产流程</span><h2 id="studioActiveVersion">—</h2><small id="studioWorkspace">正在加载工作区</small></div><div class="btn-row"><button class="btn btn-light" data-editor-action="reset">恢复工作区</button><button class="btn btn-light" data-editor-action="save">保存新草稿</button><button class="btn btn-light" data-editor-action="validate">验证选中版本</button><button class="btn btn-primary" data-editor-action="publish">发布选中版本</button><button class="btn btn-light" data-editor-action="rollback">回滚选中版本</button></div></div>
+        <div class="card studio-tools"><div class="btn-row"><button class="btn btn-light" id="studioUndo" data-editor-action="undo">↶ 撤销</button><button class="btn btn-light" id="studioRedo" data-editor-action="redo">↷ 重做</button><button class="btn btn-light" id="studioCopy" data-editor-action="copy">复制节点</button><button class="btn btn-light" id="studioPaste" data-editor-action="paste">粘贴</button><button class="btn btn-light" id="studioDuplicate" data-editor-action="duplicate">创建副本</button></div><small>支持 Ctrl+Z / Ctrl+Y / Ctrl+C / Ctrl+V（仅画布聚焦时，输入框保留原生快捷键）。最多保留 80 步编辑历史。</small></div>
+        <div class="studio-layout">
+          <div class="studio-left">
+            <div class="card"><div class="card-head"><div><h2>动作库</h2><p>点击添加到流程末尾</p></div></div><div class="studio-palette"><button data-editor-add="WaitInput">◉ 等待输入</button><button data-editor-add="AxisMove">↔ 轴定位</button><button data-editor-add="CylinderExtend">⇥ 气缸伸出</button><button data-editor-add="CylinderRetract">⇤ 气缸缩回</button><button data-editor-add="VisionLocate">◎ 视觉检测</button><button data-editor-add="Delay">◷ 延时</button><button data-editor-add="Parallel">⇉ 并行分组</button><button data-editor-add="Condition">◇ 条件分支</button></div></div>
+            <div class="card"><div class="card-head"><div><h2>流程版本</h2><p>点击版本查看或作为工作区来源</p></div></div><div id="studioVersionList" class="studio-versions"></div><small id="studioStateNote" class="subtle"></small></div>
+          </div>
+          <div class="card studio-graph"><div class="card-head"><div><h2>工艺流程画布</h2><p>拖动节点调整顺序；箭头表示控制流</p></div><span class="pill neutral">DAG · 单层分支</span></div><div class="studio-start">▶ START</div><div class="studio-link">↓</div><div id="studioCanvas"></div><div class="studio-link">↓</div><div class="studio-end">■ END</div></div>
+          <div class="studio-right"><div class="card"><div class="card-head"><div><h2>节点属性</h2><p>选择画布节点进行修改</p></div></div><div id="studioInspector"></div></div><div class="card"><div class="card-head"><div><h2>静态验证</h2><p>编辑过程实时验证，可发布前再次校验</p></div></div><div id="studioValidation" class="studio-validation"></div></div><div class="card"><div class="card-head"><div><h2>与已发布流程差异</h2><p>基于节点 ID 比较新增、移除、属性和顺序变化</p></div></div><div id="studioDiff" class="studio-diff"></div></div></div>
+        </div>
+      </section>
+
+
+      <section id="panel-quality" class="panel">
+        <div class="section-intro"><h2>流程质量门禁与周期性能分析</h2><p>对当前流程工作区执行静态类型校验、场景测试和预期对照；不运行仿真设备动作。下方性能数据来自已记录的真实仿真周期。</p></div>
+        <div class="card quality-header"><div><span class="eyebrow">WORKFLOW QUALITY GATE</span><h2>发布前自动验收 <span id="qualityStatus" class="pill neutral">待执行</span></h2><p>正常 / 缺料 / 气压异常 / 视觉 NG + 自定义 DI 场景</p></div><div class="btn-row"><button class="btn btn-primary" data-quality-action="run">▶ 运行质量门禁</button><button class="btn btn-light" data-quality-action="export">导出测试报告</button></div></div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-head"><div><h2>跨 Runtime 契约自检</h2><p>验证浏览器本地模型的标准场景基线；与后端报告是两份独立结果，不声称已经进行实时联调。</p></div>
+          <button class="btn btn-light" data-quality-action="contract">▶ 运行契约自检</button></div>
+          <div id="qualityContractStatus" class="control-hint">尚未执行 · C# API 的验证报告在 /api/flows/{id}/quality 查询</div>
+          <div id="qualityContractCases" class="quality-schema"></div>
+        </div>
+        <div class="four-grid kpi-grid" style="margin:18px 0"><div class="stat-card"><div class="stat-label">场景数量</div><div class="stat-value" id="qualityTotal">—</div></div><div class="stat-card"><div class="stat-label">符合预期</div><div class="stat-value" id="qualityPassed">—</div></div><div class="stat-card"><div class="stat-label">模型估算周期</div><div class="stat-value" id="qualityEstimate">—</div></div><div class="stat-card"><div class="stat-label">质量检查范围</div><div class="stat-value" style="font-size:18px">纯软件</div><small>仅模型级验证</small></div></div>
+        <div class="two-grid"><div class="card"><div class="card-head"><div><h2>测试场景结果</h2><p>实际模型结果与预期结果逐项对比</p></div></div><div id="qualityScenarios"></div></div><div class="card"><div class="card-head"><div><h2>静态检查与风险提示</h2><p>约束、变量来源、并行资源冲突</p></div></div><div id="qualityProblems"></div></div></div>
+        <div class="two-grid" style="margin-top:18px"><div class="card"><div class="card-head"><div><h2>自定义测试场景</h2><p>最多 30 条，只能注入可写的仿真 DI</p></div></div><div class="quality-form"><label class="field-label">名称<input class="login-input" id="qualityCaseName" placeholder="例如：检测信号断开"></label><label class="field-label">修改信号<select class="select-field" id="qualityCaseSignal"></select></label><label class="field-label">信号值<select class="select-field" id="qualityCaseState"><option value="false">FALSE</option><option value="true">TRUE</option></select></label><label class="field-label">预期结果<select class="select-field" id="qualityCaseExpected"><option value="Rejected">启动拒绝</option><option value="Failed">流程失败</option><option value="Completed">流程成功</option></select></label></div><div class="btn-row"><button class="btn btn-primary" data-quality-action="add">＋ 添加场景</button><button class="btn btn-light" data-quality-action="clear">清空自定义</button></div><div id="qualityCustom"></div></div><div class="card"><div class="card-head"><div><h2>类型化变量与配方约束</h2><p>工作流引用必须符合类型和范围</p></div></div><div class="quality-schema"><div><b>recipe.visionOffsetMm</b><small>Number · -10～10 mm</small></div><div><b>recipe.extraDwellMs</b><small>Integer · 0～1000 ms</small></div><div><b>vision.ok</b><small>Boolean</small></div><div><b>vision.targetXmm</b><small>Number · 0～200 mm，必须先经过视觉节点</small></div><div><b>DI.*</b><small>Boolean · 来自配置文件，仅模拟输入</small></div></div></div></div>
+        <div class="card" style="margin-top:18px"><div class="card-head"><div><h2>历史周期性能画像</h2><p>仅依据当前会话或 API 返回的已记录周期，不把模型估计混为实际耗时</p></div><span id="qualityCycleCount" class="pill neutral">0 条运行记录</span></div><div class="quality-metrics-grid" style="margin:14px 0"><div class="stat-card"><div class="stat-label">P50 周期</div><div class="stat-value" id="qualityP50">—</div></div><div class="stat-card"><div class="stat-label">P95 周期</div><div class="stat-value" id="qualityP95">—</div></div><div class="stat-card"><div class="stat-label">周期成功率</div><div class="stat-value" id="qualitySuccess">—</div></div></div><h3>步骤耗时热点 · 总占用时间</h3><div id="qualityBottlenecks"></div></div>
+      </section>
+      <section id="panel-replay" class="panel">
+        <div class="section-intro"><h2>历史执行回放与变量监视</h2><p>只读：从已完成周期记录中逐步查看执行轨迹。不会向运行时发送任何动作指令；没有记录的变量不会被推断。</p></div>
+        <div class="card replay-info"><div><span class="eyebrow">选中运行记录</span><h2 id="replayMeta">尚无记录</h2></div><span class="pill neutral">只读回放 · Simulation</span></div>
+        <div class="replay-layout">
+          <div class="card"><div class="card-head"><div><h2>历史周期</h2><p>最近 100 个单周期</p></div></div><div id="replayRuns" class="replay-runs"></div></div>
+          <div class="card"><div class="card-head"><div><h2>执行时间线</h2><p>可选择历史节点、逐步回放</p></div></div><div class="replay-controls"><div class="btn-row"><button class="btn btn-light" id="replayPrev" data-replay-action="prev">← 上一步</button><button class="btn btn-primary" id="replayPlay" data-replay-action="play">▶ 自动回放</button><button class="btn btn-light" id="replayNext" data-replay-action="next">下一步 →</button></div><input id="replayRange" type="range" min="0" max="0" value="0"><span id="replayIndex" class="subtle">0 / 0</span></div><div id="replayTimeline" class="replay-timeline"></div></div>
+          <div class="card"><div class="card-head"><div><h2>变量观察</h2><p>来源于执行节点结束时的记录快照</p></div><span class="pill neutral" id="replayStepStatus">—</span></div><h3 id="replayStepLabel">—</h3><div id="replayWatch" class="replay-watch"></div><p id="replayError" class="control-hint"></p></div>
+        </div>
+      </section>
+      <section id="panel-analytics" class="panel">
+        <div class="section-intro"><h2>生产周期分析</h2><p>记录每个周期的结果、耗时和逐步骤执行记录。C# 版本完成周期后会追加到本地 JSONL 文件；离线预览仅保留当前页面会话。</p></div>
+        <div class="four-grid kpi-grid">
+          <div class="stat-card"><div class="stat-label">累计记录</div><div class="stat-value" id="histTotal">0</div><small>最多显示最近 100 条</small></div>
+          <div class="stat-card"><div class="stat-label">成功率</div><div class="stat-value" id="histSuccess">—</div><small>以已记录周期计算</small></div>
+          <div class="stat-card"><div class="stat-label">平均用时</div><div class="stat-value"><span id="histMean">—</span><span class="unit">s</span></div><small>最近成功周期</small></div>
+          <div class="stat-card"><div class="stat-label">异常周期</div><div class="stat-value" id="histFailures">0</div><small>失败与主动停止</small></div>
+        </div>
+        <div class="two-grid" style="margin-top:18px">
+          <div class="card"><div class="card-head"><div><h2>周期历史</h2><p>选择某次运行查看步骤用时</p></div><button class="btn btn-light" data-action="export-history">导出 CSV</button></div>
+            <label class="field-label" for="historyFilter">筛选结果</label><select id="historyFilter" class="select-field"><option value="All">全部周期</option><option value="Completed">成功</option><option value="Failed">失败</option><option value="Stopped">主动停止</option></select>
+            <div id="historyRows" class="history-list"></div>
+          </div>
+          <div class="card"><div class="card-head"><div><h2>逐步骤耗时</h2><p id="selectedRunLabel">选择周期以查看详情</p></div><span class="pill neutral" id="selectedRunStatus">—</span></div><div id="stepTimingRows" class="timing-list"></div></div>
+        </div>
+      </section>
+      <section id="panel-recovery" class="panel">
+        <div class="section-intro"><h2>引导式故障恢复</h2><p>按“故障识别 → 报警复位 → 检查条件 → 机构回归 → 人工确认”逐步处理。仅用于软件仿真。</p></div>
+        <div class="two-grid">
+          <div class="card"><div class="card-head"><div><h2>恢复检查清单</h2><p>状态来自控制运行时，不能通过 UI 勾选伪造通过</p></div><span id="recoveryStatus" class="pill neutral">无需恢复</span></div><div id="recoveryChecklist" class="checklist"></div><div class="control-hint" id="recoveryAdvice">未发现待恢复状态。</div></div>
+          <div class="card"><div class="card-head"><div><h2>建议处理流程</h2><p>每步均有可验证的状态，不会自动跳过</p></div></div>
+            <div class="recovery-step"><span>01</span><div><b>识别故障</b><small id="guideAlarm">查看活动报警代码与原因</small></div></div>
+            <div class="recovery-step"><span>02</span><div><b>解除故障原因，复位报警</b><small>在设备总览中执行报警复位；恢复动作必须在手动模式下进行</small></div></div>
+            <div class="recovery-step"><span>03</span><div><b>检查气缸与运动轴</b><small>确保气缸缩回、轴使能且回到零位；可转至手动调试界面操作</small></div></div>
+            <div class="recovery-step"><span>04</span><div><b>确认恢复</b><small>仅当所有检查均满足时允许最终确认</small></div></div>
+            <button class="btn btn-light full" data-tab="manual" style="margin-top:18px">进入手动调试</button>
+            <button class="btn btn-primary full" id="guideConfirm" data-action="recovery-confirm" style="margin-top:9px">执行恢复确认</button>
+          </div>
+        </div>
+      </section>
+      <section id="panel-governance" class="panel">
+        <div class="section-intro"><h2>软件工艺配方与操作审计</h2><p>独立于站点硬件映射。新配方只在设备空闲、恢复完成后发布；发布后下个周期才生效。</p></div>
+        <div class="three-governance">
+          <div class="card"><div class="card-head"><div><h2>当前生效配方</h2><p>运行周期固定绑定发布时的配方快照</p></div><span class="pill" id="activeRecipeTag">—</span></div><div id="activeRecipeInfo" class="recipe-details"></div><div class="divider"></div><h2>创建草稿</h2>
+            <label class="field-label" for="recipeName">配方名称</label><input id="recipeName" class="login-input" value="产品 A · 优化工艺" maxlength="50">
+            <label class="field-label" for="recipeOffset">视觉目标 X 偏移 (mm) · -10 至 10</label><input id="recipeOffset" class="login-input" type="number" value="2" min="-10" max="10" step="0.1">
+            <label class="field-label" for="recipeDwell">流程额外延时 (ms) · 0 至 1000</label><input id="recipeDwell" class="login-input" type="number" value="100" min="0" max="1000" step="10">
+            <button class="btn btn-primary full" data-governance="draft" style="margin-top:18px">保存新草稿</button>
+            <div class="control-hint">工程师可创建和验证；发布及回滚必须由管理员执行。</div>
+          </div>
+          <div class="card"><div class="card-head"><div><h2>版本历史</h2><p>选中版本，校验、发布或生成回滚版本</p></div></div><div id="recipeVersions" class="recipe-version-list"></div><div class="btn-row">
+            <button class="btn btn-light" data-governance="validate">验证草稿</button>
+            <button class="btn btn-primary" data-governance="publish">发布选中</button>
+            <button class="btn btn-light" data-governance="rollback">回滚到选中</button>
+          </div><div class="divider"></div><h2>与当前版本差异</h2><div id="recipeDiff" class="recipe-details"></div></div>
+        </div>
+        <div class="card" style="margin-top:18px"><div class="card-head"><div><h2>操作审计记录</h2><p>后端包含操作人、角色、路径、结果码与 TraceId；不记录密码与令牌</p></div><div class="btn-row" style="margin-top:0"><button class="btn btn-light" data-governance="audit-refresh">刷新</button><button class="btn btn-light" data-governance="audit-export">导出 CSV</button></div></div>
+          <div class="audit-scroll"><table class="audit-table"><thead><tr><th>时间</th><th>用户 / 角色</th><th>命令</th><th>结果</th><th>TraceId</th></tr></thead><tbody id="auditRows"></tbody></table></div>
+          <div class="audit-pages"><span id="auditMeta">—</span><div><button class="btn btn-light" data-governance="audit-prev">上一页</button><button class="btn btn-light" data-governance="audit-next">下一页</button></div></div>
+        </div>
+      </section>
+      <section id="panel-events" class="panel">
+        <div class="section-intro"><h2>报警与事件追踪</h2><p>运行中的事件日志为内存缓存；每次完成或中断的周期历史在 C# 服务中写入本地 JSONL。该记录不是防篡改审计日志。</p></div>
+        <div class="card"><div class="card-head"><h2>当前报警</h2><span class="pill" id="alarmStatus">无报警</span></div><div id="alarmDetails" class="alarm-empty">当前没有活动报警</div><div id="alarmDiagnosis" class="alarm-guidance hidden"></div></div>
+        <div class="card"><div class="card-head"><h2>事件日志</h2><span class="subtle">最新记录优先</span></div><div id="eventsRows" class="event-list"></div></div>
+      </section>
+    </div>
+    <footer class="footer"><span>Device Control Platform · Simulation Prototype</span><span>V1.2 | A/B 双工站 · 无实机驱动</span></footer>
+  </main>
+</div>
+<script>
+// Generated from backend/DeviceControl.Api/config/station.json; offline simulation only.
+window.STATION_CONFIG={"profileId":"DEMO-DUAL-STATION","driver":"Simulation","signals":[{"name":"PartPresent","direction":"DI","channel":"DI0","description":"产品到位","initial":true,"injectable":true},{"name":"GuardClosed","direction":"DI","channel":"DI1","description":"普通防护门状态（非安全）","initial":true,"injectable":true},{"name":"AirPressureOk","direction":"DI","channel":"DI2","description":"气压正常","initial":true,"injectable":true},{"name":"ClampExtended","direction":"DI","channel":"DI3","description":"夹紧气缸伸出到位","initial":false},{"name":"ClampRetracted","direction":"DI","channel":"DI4","description":"夹紧气缸缩回到位","initial":true},{"name":"StopperExtended","direction":"DI","channel":"DI5","description":"阻挡气缸伸出到位","initial":false},{"name":"StopperRetracted","direction":"DI","channel":"DI6","description":"阻挡气缸缩回到位","initial":true},{"name":"ClampExtend","direction":"DO","channel":"DO0","description":"夹紧伸出电磁阀"},{"name":"ClampRetract","direction":"DO","channel":"DO1","description":"夹紧缩回电磁阀"},{"name":"StopperExtend","direction":"DO","channel":"DO2","description":"阻挡伸出电磁阀"},{"name":"StopperRetract","direction":"DO","channel":"DO3","description":"阻挡缩回电磁阀"}],"axes":[{"id":"X","label":"X 定位轴","minMm":0,"maxMm":200,"homeMm":0,"speedMmPerSec":100},{"id":"Y","label":"Y 工艺轴","minMm":0,"maxMm":150,"homeMm":0,"speedMmPerSec":85}],"cylinders":[{"id":"Clamp","label":"夹紧气缸","extendOutput":"ClampExtend","retractOutput":"ClampRetract","extendedInput":"ClampExtended","retractedInput":"ClampRetracted","timeoutMs":1800},{"id":"Stopper","label":"阻挡气缸","extendOutput":"StopperExtend","retractOutput":"StopperRetract","extendedInput":"StopperExtended","retractedInput":"StopperRetracted","timeoutMs":1800}],"interlocks":[{"action":"AxisMove","device":"*","signal":"ClampRetracted","required":true,"message":"移动轴前夹紧气缸必须缩回"},{"action":"AxisMove","device":"*","signal":"StopperRetracted","required":true,"message":"移动轴前阻挡气缸必须缩回"},{"action":"CylinderExtend","device":"Clamp","signal":"StopperExtended","required":true,"message":"夹紧前阻挡气缸必须伸出"}],"sequence":[{"type":"WaitInput","label":"等待产品到位","device":"PartPresent","timeoutMs":2000,"id":"part"},{"type":"VisionLocate","label":"视觉定位","id":"vision","onError":"Retry","maxRetries":1,"sharedResources":["CELL-SHARED"],"resourceWaitTimeoutMs":2500},{"id":"xy-approach","type":"Parallel","label":"X/Y 双轴并行定位","children":[{"type":"AxisMove","label":"X 轴视觉定位","device":"X","useVisionX":true,"id":"x-place"},{"type":"AxisMove","label":"Y 轴工艺定位","device":"Y","positionMm":40,"id":"y-place"}]},{"type":"CylinderExtend","label":"阻挡气缸伸出","device":"Stopper","id":"stopper-extend"},{"type":"CylinderExtend","label":"夹紧气缸伸出","device":"Clamp","id":"clamp-extend"},{"type":"Delay","label":"工艺保持","durationMs":250,"id":"dwell"},{"type":"CylinderRetract","label":"夹紧气缸缩回","device":"Clamp","id":"clamp-retract"},{"type":"CylinderRetract","label":"阻挡气缸缩回","device":"Stopper","id":"stopper-retract"},{"id":"xy-return","type":"Parallel","label":"X/Y 双轴并行复归","children":[{"type":"AxisMove","label":"Y 轴返回等待位","device":"Y","positionMm":0,"id":"y-return"},{"type":"AxisMove","label":"X 轴返回等待位","device":"X","positionMm":0,"id":"x-return"}]}],"flowVersion":"flow-v0.5.0"};
+
+</script>
+<script>
+/* V1.2 purely simulated in-process atomic FIFO resource scheduler.
+ * Same logical contract as the C# SharedResourceCoordinator, not a safety lock. */
+(function(global){
+  class SharedResourceCoordinator {
+    constructor(){this.held=new Map();this.queue=[];this.events=[];this.nextTicket=0;}
+    static keysFor(node){return SharedResourceCoordinator.keys([...(node.sharedResources||[]),...(node.type==='VisionLocate'?['CELL-SHARED']:[])]);}
+    static keys(items){
+      const keys=[...new Set(items.map(x=>String(x).trim().toUpperCase()))].sort();
+      if(keys.length>8||keys.some(x=>!/^[A-Z][A-Z0-9_-]{0,31}$/.test(x)))throw Error('共享资源名称无效');
+      return keys;
+    }
+    event(action,req){this.events.unshift({at:new Date().toISOString(),action,stationId:req.stationId,nodeId:req.nodeId,ticket:req.ticket,resources:req.resources});this.events.length=Math.min(60,this.events.length)}
+    drain(){
+      while(this.queue.length){
+        const q=this.queue[0];if(q.resources.some(key=>this.held.has(key)))break;
+        this.queue.shift();q.granted=true;
+        for(const key of q.resources)this.held.set(key,q);
+        this.event('granted',q);q.finish(null,()=>this.release(q));
+      }
+    }
+    release(req){if(!req.granted)return;req.granted=false;
+      for(const key of req.resources)if(this.held.get(key)===req)this.held.delete(key);
+      this.event('released',req);this.drain();
+    }
+    acquire(stationId,nodeId,keys,timeoutMs=2500,canceled=()=>false){
+      const resources=SharedResourceCoordinator.keys(keys);
+      if(!resources.length)throw Error('空资源请求');
+      if(!Number.isInteger(timeoutMs)||timeoutMs<100||timeoutMs>30000)throw Error('资源等待超时参数不合法');
+      if(canceled())return Promise.reject(Error('STOP_REQUESTED'));
+      return new Promise((resolve,reject)=>{
+        const req={ticket:String(++this.nextTicket),stationId,nodeId,resources,granted:false};
+        let done=false,timeout,poll;
+        const cleanup=()=>{clearTimeout(timeout);clearInterval(poll)};
+        req.finish=(error,release)=>{
+          if(done){if(release)release();return;}
+          done=true;cleanup();error?reject(error):resolve(release);
+        };
+        const withdraw=error=>{
+          if(done)return;
+          this.queue=this.queue.filter(item=>item!==req);
+          if(req.granted)this.release(req);
+          this.event(error.message==='STOP_REQUESTED'?'canceled':'timed-out',req);
+          req.finish(error);this.drain();
+        };
+        this.queue.push(req);this.event('queued',req);
+        timeout=setTimeout(()=>withdraw(Error('资源等待超时：'+resources.join(','))),timeoutMs);
+        poll=setInterval(()=>{if(canceled())withdraw(Error('STOP_REQUESTED'))},15);
+        this.drain();
+      });
+    }
+    snapshot(){return {policy:'AtomicFIFO',mode:'Simulation',safetyRated:false,
+      leases:[...this.held].sort(([a],[b])=>a.localeCompare(b)).map(([resource,r])=>({resource,stationId:r.stationId,nodeId:r.nodeId,ticket:r.ticket})),
+      queue:this.queue.map((r,i)=>({position:i+1,stationId:r.stationId,nodeId:r.nodeId,ticket:r.ticket,resources:[...r.resources]})),
+      events:[...this.events]};}
+  }
+  global.SharedResourceCoordinator=SharedResourceCoordinator;
+})(window);
+
+</script>
+<script>
+/* V0.5 SIMULATION-ONLY workflow scheduler. Deterministic stage graph and trace APIs.
+ * Resource locks are business-process locks, NOT a safety system. */
+class WorkflowEngine {
+  constructor(runtime, sequence) {
+    this.m=runtime;
+    this.sequence=sequence;
+    this.breakpoints=new Set();
+    this.resourceOwners=new Map();
+    this.status='Idle';this.active=[];this.traces=[];this.pauseRequested=false;this.stepMode=false;
+    this.waiting=null;this.haltGroup=false;this.lastError=null;
+    this.version=runtime.cfg.flowVersion||'unversioned';
+    this.nodes=this.flatten(sequence);
+    this.validate(sequence);
+  }
+  flatten(nodes){return nodes.flatMap((node,i)=>[{id:node.id,label:node.label,type:node.type,resources:this.resources(node),children:(node.children||[]).map(x=>x.id)},...(node.children?this.flatten(node.children):[])]);}
+  resources(node){
+    if(node.type==='Parallel'||node.type==='Condition')return [...new Set((node.children||[]).flatMap(c=>this.resources(c)))].sort();
+    if(node.type==='AxisMove')return ['Axis:'+node.device];
+    if(node.type==='CylinderExtend'||node.type==='CylinderRetract')return ['Cylinder:'+node.device];
+    if(node.type==='VisionLocate')return ['Camera:Main'];
+    return [];
+  }
+  validate(nodes){
+    const ids=new Set(),seen=new Set(),safe=new Set(['WaitInput','VisionLocate','Delay']);
+    const visit=(nodes,level=0)=>{
+      if(level>1)throw Error('V0.5 最多支持一层并行分支');
+      for(const n of nodes){
+        if(!n.id||ids.has(n.id))throw Error('流程节点 ID 缺失或重复');ids.add(n.id);
+        if(!n.label||!n.type)throw Error('流程节点缺少名称或类型');
+        const policy=n.onError||'Abort';
+        if(!['Abort','Retry','WaitForOperator'].includes(policy))throw Error(n.id+' 不支持的错误策略');
+        if(policy!=='Abort'&&!safe.has(n.type))throw Error(n.id+' 非幂等动作禁止自动重试或操作员重试');
+        if(policy==='Retry'&&(!Number.isInteger(n.maxRetries)||n.maxRetries<1||n.maxRetries>2))throw Error(n.id+' 重试上限必须为 1~2');
+        if(n.sharedResources?.length){
+          if(n.type==='Parallel'||n.type==='Condition')throw Error('分支容器不得直接占用共享资源');
+          window.SharedResourceCoordinator.keys(n.sharedResources);
+        }
+        if(n.resourceWaitTimeoutMs!==undefined&&(!Number.isInteger(n.resourceWaitTimeoutMs)||n.resourceWaitTimeoutMs<100||n.resourceWaitTimeoutMs>30000))throw Error('资源等待超时参数不合法');
+        if(n.type==='Parallel'||n.type==='Condition'){
+          if(level||!n.children||(n.type==='Parallel'?(n.children.length<2||n.children.length>4):n.children.length!==2))throw Error('分支结构不合法');
+          visit(n.children,level+1);
+        }else if(!['WaitInput','VisionLocate','AxisMove','CylinderExtend','CylinderRetract','Delay'].includes(n.type))throw Error('未知流程节点 '+n.type);
+      }
+    };visit(nodes);
+  }
+  snapshot(){return {version:this.version,status:this.status,breakpoints:[...this.breakpoints].sort((a,b)=>a-b),active:this.active.map(x=>({...x})),traces:this.traces.slice(-180).map(x=>({...x})),resources:Object.fromEntries(this.resourceOwners),waiting:this.waiting?{kind:this.waiting.kind,index:this.waiting.index,message:this.waiting.message}:null,nodes:this.nodes};}
+  command(cmd,body={}){
+    if(cmd==='breakpoint'){
+      if(!Number.isInteger(body.index)||body.index<0||body.index>=this.sequence.length)throw Error('断点序号无效');
+      if(body.enabled)this.breakpoints.add(body.index);else this.breakpoints.delete(body.index);
+      return this.snapshot();
+    }
+    if(cmd==='pause'){
+      if(this.status!=='Running')throw Error('流程当前不可暂停');
+      this.pauseRequested=true;return this.snapshot();
+    }
+    if(cmd==='resume'||cmd==='step'){
+      if(this.status!=='Paused'||!this.waiting||this.waiting.kind!=='breakpoint')throw Error('流程当前不在可继续的断点');
+      this.stepMode=cmd==='step';this.pauseRequested=false;
+      const waiter=this.waiting;this.waiting=null;this.status='Running';waiter.resolve('continue');return this.snapshot();
+    }
+    if(cmd==='retry'||cmd==='abort'){
+      if(this.status!=='Paused'||!this.waiting||this.waiting.kind!=='error')throw Error('当前没有等待人工处理的异常');
+      const waiter=this.waiting;this.waiting=null;this.status='Running';waiter.resolve(cmd);return this.snapshot();
+    }
+    throw Error('未知流程调试指令 '+cmd);
+  }
+  releaseWait(){if(this.waiting){const w=this.waiting;this.waiting=null;w.resolve('abort');}}
+  async atBoundary(index,node){
+    if(!this.pauseRequested&&!this.breakpoints.has(index)&&!this.stepMode)return;
+    this.stepMode=false;this.pauseRequested=false;
+    this.status='Paused';this.m.d.step='断点暂停 · '+node.label;
+    const outcome=await new Promise(resolve=>{this.waiting={kind:'breakpoint',index,message:node.label,resolve}});
+    if(outcome==='abort'||this.m.cancel)throw Error('STOP_REQUESTED');
+  }
+  async operatorRetry(index,node,error){
+    this.status='Paused';this.lastError=error.message;
+    this.m.d.step='异常待人工处理 · '+node.label;
+    const decision=await new Promise(resolve=>{this.waiting={kind:'error',index,message:error.message,resolve}});
+    if(decision!=='retry'||this.m.cancel)throw Error('STOP_REQUESTED');
+  }
+  async withResources(node,fn){
+    const resources=this.resources(node);
+    const shared=window.SharedResourceCoordinator.keysFor(node);
+    let releaseShared=null;
+    const acquired=[];
+    try{
+      if(shared.length&&this.m.sharedCoordinator){
+        releaseShared=await this.m.sharedCoordinator.acquire(this.m.stationId||'A',node.id,shared,
+          node.resourceWaitTimeoutMs??2500,()=>this.m.cancel||this.haltGroup);
+      }
+      for(const r of resources){
+        while(this.resourceOwners.has(r)){
+          this.m.check();if(this.haltGroup)throw Error('GROUP_ABORTED');
+          await new Promise(resolve=>setTimeout(resolve,15));
+        }
+        this.resourceOwners.set(r,node.id);acquired.push(r);
+      }
+      return await fn();
+    }finally{
+      for(const r of acquired)if(this.resourceOwners.get(r)===node.id)this.resourceOwners.delete(r);
+      if(releaseShared)releaseShared();
+    }
+  }
+  async executeNode(node,index,parentId=null){
+    const started=Date.now(),trace={id:node.id,parentId,label:node.label,type:node.type,resources:this.resources(node),sharedResources:window.SharedResourceCoordinator.keysFor(node),index,attempt:0,status:'Running',startedAt:new Date().toISOString(),durationMs:0,variablesBefore:this.m.traceVariables?.()||null};
+    this.active.push(trace);this.traces.push(trace);if(this.traces.length>180)this.traces.shift();
+    let outcome='Completed',error=null;
+    try{
+      if(node.type==='Condition'){
+        const branch=this.m.d.inputs[node.device]?node.children[0]:node.children[1];
+        await this.executeNode(branch,index,node.id);
+      }else if(node.type==='Parallel'){
+        this.haltGroup=false;
+        const settled=await Promise.allSettled(node.children.map(child=>this.executeNode(child,index,node.id).catch(err=>{this.haltGroup=true;throw err})));
+        this.haltGroup=false;
+        const failed=settled.find(x=>x.status==='rejected');if(failed)throw failed.reason;
+      }else{
+        let attempt=0;
+        while(true){
+          this.m.check();if(this.haltGroup)throw Error('GROUP_ABORTED');
+          attempt++;trace.attempt=attempt;
+          try{await this.withResources(node,()=>this.m.executeStep(node));break}
+          catch(e){
+            if(this.m.cancel||e.message==='STOP_REQUESTED'||e.message==='GROUP_ABORTED')throw e;
+            if(node.onError==='Retry'&&!e.message.includes('资源等待超时')&&attempt<=node.maxRetries){this.m.log('Warning',node.label+' 第 '+attempt+' 次失败，执行安全重试');continue}
+            if(node.onError==='WaitForOperator'&&!e.message.includes('资源等待超时')) {await this.operatorRetry(index,node,e);continue}
+            throw e;
+          }
+        }
+      }
+    }catch(e){error=e;outcome=this.m.cancel||e.message==='STOP_REQUESTED'||e.message==='GROUP_ABORTED'?'Canceled':'Failed';throw e}
+    finally{
+      trace.status=outcome;trace.durationMs=Date.now()-started;trace.endedAt=new Date().toISOString();trace.variablesAfter=this.m.traceVariables?.()||null;
+      if(error)trace.error=error.message;
+      this.active=this.active.filter(x=>x!==trace);
+      this.m.recordStep(index,node,outcome,trace.durationMs,error?.message||null);
+    }
+  }
+  async run(){
+    this.status='Running';this.lastError=null;this.active=[];this.resourceOwners.clear();this.traces=[];this.pauseRequested=false;this.stepMode=false;
+    try{
+      for(const [index,node] of this.sequence.entries()){
+        this.m.check('Sequence','Station');
+        await this.atBoundary(index,node);this.m.check();
+        this.m.d.stepIndex=index;this.m.d.step=node.label;this.m.log('Info','流程步骤: '+node.label);
+        await this.executeNode(node,index);
+      }
+    }finally{this.status='Idle';this.releaseWait();this.resourceOwners.clear();this.active=[];this.haltGroup=false}
+  }
+}
+window.WorkflowEngine=WorkflowEngine;
+
+</script>
+<script>
+/* Browser-only station simulation. No real IO, motor or camera is controlled. */
+class MockRuntime {
+  constructor(config=window.STATION_CONFIG){
+    this.cfg=JSON.parse(JSON.stringify(config));this.stationId='A';this.sharedCoordinator=null;
+    if(this.cfg.driver!=='Simulation')throw Error('只允许 Simulation 驱动');
+    this.d={profileId:this.cfg.profileId,mode:'Manual',state:'Idle',step:'等待操作',stepIndex:-1,
+      cycles:0,busy:false,recoveryRequired:false,alarm:null,activeAlarm:null,stepHistory:[],cycleHistory:[],axes:{},cylinders:{},
+      inputs:{},outputs:{},faultInjection:{},interlocks:[],vision:null,events:[]};
+    for(const s of this.cfg.signals){if(s.direction==='DI')this.d.inputs[s.name]=!!s.initial;else this.d.outputs[s.name]=false}
+    for(const a of this.cfg.axes){this.d.axes[a.id]={enabled:false,homed:false,moving:false,positionMm:a.homeMm,error:''};this.d.faultInjection[a.id+'Stuck']=false}
+    for(const c of this.cfg.cylinders){this.d.cylinders[c.id]={position:'Retracted',extendedSensor:false,retractedSensor:true,busy:false};this.d.faultInjection[c.id+'Stuck']=false}
+    this.cycleRecipe={visionOffsetMm:0,extraDwellMs:0};this.cycleRecipeId=null;this.cancel=false;this.cycleId='';this.cycleStarted=0;this.currentSteps=[];
+    this.flow=new WorkflowEngine(this,this.cfg.sequence);
+    this.updateInterlocks();
+    this.log('Info','双轴双气缸仿真站点已加载，未连接物理板卡');
+  }
+  snapshot(){this.updateInterlocks();return JSON.parse(JSON.stringify(this.d))}
+  diagnostic(error,source){
+    const message=error?.message||String(error);
+    let code='SYS-UNCLASSIFIED',suggestion='查看步骤记录和错误信息，完成人工恢复。';
+    if(message.includes('气缸')&&message.includes('超时')){code='ACT-CYL-TIMEOUT';suggestion='检查卡滞模拟和气缸反馈，确认恢复条件。'}
+    else if(message.includes('轴')&&(message.includes('故障')||message.includes('超时'))){code='ACT-AXIS-FAULT';suggestion='检查轴模拟故障、当前位置和回零状态。'}
+    else if(message.includes('输入')&&message.includes('超时')){code='SEQ-WAIT-TIMEOUT';suggestion='检查输入状态与流程等待超时设置。'}
+    else if(message.includes('视觉')){code='VIS-RESULT-NG';suggestion='检查产品到位信号和视觉检测返回值。'}
+    else if(message.includes('互锁')||message.includes('联锁')){code='SEQ-INTERLOCK';suggestion='到机构与互锁页检查尚未满足的条件。'}
+    else if(message.includes('行程')||message.includes('范围')){code='ACT-LIMIT';suggestion='检查目标位置以及配置的轴行程。'}
+    return {code,message,suggestion,source,raisedAt:new Date().toISOString()};
+  }
+  traceVariables(){
+    const v={};
+    for(const [k,value] of Object.entries(this.d.inputs))v['DI.'+k]=!!value;
+    for(const [k,a] of Object.entries(this.d.axes))v['Axis.'+k]=Number(a.positionMm.toFixed(3));
+    for(const [k,c] of Object.entries(this.d.cylinders))v['Cylinder.'+k]=c.position;
+    v['Vision.OK']=this.d.vision?.ok??null;
+    v['Vision.TargetXmm']=this.d.vision?.targetXmm??null;
+    v['Recipe.VisionOffsetMm']=this.cycleRecipe?.visionOffsetMm??0;
+    return v;
+  }
+  recordStep(index,step,outcome,durationMs,error=null){
+    const row={index,label:step.label,type:step.type,device:step.device||'',outcome,durationMs,error};
+    this.currentSteps.push(row);this.d.stepHistory.unshift(row);this.d.stepHistory=this.d.stepHistory.slice(0,100);
+  }
+  recordCycle(outcome){
+    this.d.cycleHistory.unshift({flowVersion:this.cfg.flowVersion||'unversioned',id:this.cycleId,startedAt:new Date(this.cycleStarted).toISOString(),
+      endedAt:new Date().toISOString(),outcome,durationMs:Date.now()-this.cycleStarted,
+      steps:this.currentSteps.slice(),trace:this.flow.snapshot().traces,reason:this.d.alarm||(outcome==='Stopped'?'软件请求停止':null),recipeId:this.cycleRecipeId});
+    this.d.cycleHistory=this.d.cycleHistory.slice(0,100);
+  }
+  log(level,message){const t=new Date();this.d.events.unshift({time:t.toLocaleTimeString('zh-CN',{hour12:false})+'.'+String(t.getMilliseconds()).padStart(3,'0'),level,message});this.d.events=this.d.events.slice(0,160)}
+  cfgAxis(id){const x=this.cfg.axes.find(a=>a.id===id);if(!x)throw Error('未配置的运动轴：'+id);return x}
+  cfgCylinder(id){const c=this.cfg.cylinders.find(a=>a.id===id);if(!c)throw Error('未配置的气缸：'+id);return c}
+  updateInterlocks(){this.d.interlocks=this.cfg.interlocks.map(r=>({...r,actual:!!this.d.inputs[r.signal],satisfied:!!this.d.inputs[r.signal]===r.required}))}
+  idle(){if(this.d.state!=='Idle'||this.d.busy)throw Error('设备未处于空闲状态')}
+  guard(action='',id=''){
+    if(!this.d.inputs.GuardClosed)throw Error('普通联锁：防护门状态异常');
+    if(!this.d.inputs.AirPressureOk)throw Error('普通联锁：气压不足');
+    for(const r of this.cfg.interlocks)if(r.action===action&&(r.device==='*'||r.device===id)&&this.d.inputs[r.signal]!==r.required)throw Error('普通互锁：'+r.message);
+  }
+  manual(action='',id=''){this.idle();if(this.d.mode!=='Manual')throw Error('仅手动模式允许操作');this.guard(action,id)}
+  check(action='',id=''){if(this.cancel)throw Error('STOP_REQUESTED');if(this.flow?.haltGroup)throw Error('GROUP_ABORTED');this.guard(action,id)}
+  async sleep(ms){const start=Date.now();while(Date.now()-start<ms){this.check();await new Promise(r=>setTimeout(r,Math.min(35,Math.max(5,ms-(Date.now()-start)))))}this.check()}
+  invalidateAxes(){for(const a of Object.values(this.d.axes))a.homed=false}
+  async axisMove(id,position,homing=false){
+    const cfg=this.cfgAxis(id),a=this.d.axes[id];
+    if(!Number.isFinite(position)||position<cfg.minMm||position>cfg.maxMm)throw Error(id+' 位置超出行程');
+    if(!a.enabled)throw Error(id+' 尚未使能');
+    if(!homing&&!a.homed)throw Error(id+' 尚未回零');
+    this.guard('AxisMove',id);a.moving=true;const origin=a.positionMm,start=Date.now();
+    const duration=Math.max(200,1000*Math.abs(position-origin)/cfg.speedMmPerSec);
+    try{
+      while(Date.now()-start<duration||this.d.faultInjection[id+'Stuck']){
+        this.check('AxisMove',id);
+        if(this.d.faultInjection[id+'Stuck']){if(Date.now()-start>Math.max(2000,duration+1000))throw Error(id+' 轴模拟故障：位置未更新')}
+        else a.positionMm=origin+(position-origin)*Math.min(1,(Date.now()-start)/duration);
+        await new Promise(r=>setTimeout(r,35));
+      }
+      this.check('AxisMove',id);a.positionMm=position;if(homing)a.homed=true;
+    }catch(e){a.homed=false;throw e}finally{a.moving=false}
+  }
+  async cylinderAct(id,extend){
+    const cfg=this.cfgCylinder(id),c=this.d.cylinders[id],act=extend?'CylinderExtend':'CylinderRetract';
+    this.guard(act,id);c.busy=true;
+    try{
+      if(c.position===(extend?'Extended':'Retracted'))return;
+      this.d.outputs[cfg.extendOutput]=false;this.d.outputs[cfg.retractOutput]=false;
+      this.d.outputs[extend?cfg.extendOutput:cfg.retractOutput]=true;
+      this.d.inputs[cfg.extendedInput]=false;this.d.inputs[cfg.retractedInput]=false;
+      c.extendedSensor=false;c.retractedSensor=false;c.position='Unknown';
+      const start=Date.now();
+      while(Date.now()-start<cfg.timeoutMs){
+        this.check(act,id);
+        if(!this.d.faultInjection[id+'Stuck']&&Date.now()-start>=420){
+          this.d.inputs[cfg.extendedInput]=extend;this.d.inputs[cfg.retractedInput]=!extend;
+          c.extendedSensor=extend;c.retractedSensor=!extend;c.position=extend?'Extended':'Retracted';return;
+        }
+        await new Promise(r=>setTimeout(r,35));
+      }
+      throw Error(cfg.label+'动作超时：未收到到位反馈');
+    }finally{this.d.outputs[cfg.extendOutput]=false;this.d.outputs[cfg.retractOutput]=false;c.busy=false}
+  }
+  async vision(){await this.sleep(320);const ok=this.d.inputs.PartPresent;this.d.vision={ok,targetXmm:ok?80:0,score:ok?.987:0,message:ok?'模拟视觉定位 OK':'未检测到产品'};if(!ok)throw Error('视觉 NG：未检测到产品')}
+  async perform(label,action,id,fn){
+    this.manual(action,id);this.d.busy=true;this.d.step=label;this.d.stepIndex=-1;this.log('Info','开始 '+label);
+    try{await fn();this.log('Info','完成 '+label)}
+    catch(e){this.d.state='Fault';this.d.alarm=e.message;this.d.activeAlarm=this.diagnostic(e,label);this.d.recoveryRequired=true;this.invalidateAxes();this.log('Error',label+' 失败：'+e.message);throw e}
+    finally{this.d.busy=false;this.d.step=this.d.state==='Fault'?'故障待处理':'等待操作'}
+  }
+  async executeStep(s){
+    if(s.type==='WaitInput'){
+      const start=Date.now();while(!this.d.inputs[s.device]){this.check();if(Date.now()-start>s.timeoutMs)throw Error('等待输入 '+s.device+' 超时');await new Promise(r=>setTimeout(r,35))}return;
+    }
+    if(s.type==='VisionLocate')return this.vision();
+    if(s.type==='AxisMove')return this.axisMove(s.device,s.useVisionX?this.d.vision?.targetXmm+(this.cycleRecipe?.visionOffsetMm||0):s.positionMm);
+    if(s.type==='CylinderExtend')return this.cylinderAct(s.device,true);
+    if(s.type==='CylinderRetract')return this.cylinderAct(s.device,false);
+    if(s.type==='Delay')return this.sleep(s.durationMs+(this.cycleRecipe?.extraDwellMs||0));
+    throw Error('未知流程动作 '+s.type);
+  }
+  async runCycle(){
+    try{
+      await this.flow.run();
+      this.d.cycles++;this.d.state='Idle';this.d.step='单周期完成';this.d.stepIndex=this.cfg.sequence.length;this.log('Info','完成第 '+this.d.cycles+' 个周期');
+    }catch(e){
+      this.d.recoveryRequired=true;this.invalidateAxes();
+      if(this.cancel||['STOP_REQUESTED','GROUP_ABORTED'].includes(e.message)){
+        this.d.state='Idle';this.d.step='软件停止完成，需人工恢复';this.log('Warning','流程已取消，需检查机构状态');
+      }else{
+        this.d.state='Fault';this.d.step='故障待处理';this.d.alarm=e.message;this.d.activeAlarm=this.diagnostic(e,this.d.step);this.log('Error','流程中断：'+e.message);
+      }
+    }finally{
+      this.flow.releaseWait();
+      this.recordCycle(this.d.state==='Fault'?'Failed':this.d.recoveryRequired?'Stopped':'Completed');
+      this.cancel=false;this.d.busy=false;
+    }
+  }
+  async post(path,body={}){
+    if(path==='/api/flow/debug')return this.flow.command(body.command,body);
+    if(path==='/api/mode'){
+      this.idle();if(!['Manual','Auto'].includes(body.mode))throw Error('未知模式');if(body.mode==='Auto'&&this.d.recoveryRequired)throw Error('请先完成恢复确认');
+      this.d.mode=body.mode;this.d.step='等待操作';this.d.stepIndex=-1;this.log('Info','切换模式 '+body.mode);return;
+    }
+    if(path==='/api/sim/input'){
+      if(!this.cfg.signals.find(s=>s.name===body.name&&s.direction==='DI'&&s.injectable))throw Error('该输入不可修改');
+      this.d.inputs[body.name]=!!body.value;this.log('Warning','注入外部 DI '+body.name+' = '+body.value);return;
+    }
+    if(path==='/api/sim/fault'){
+      if(!Object.hasOwn(this.d.faultInjection,body.name))throw Error('未知故障注入项');
+      this.d.faultInjection[body.name]=!!body.value;this.log('Warning','注入故障 '+body.name+' = '+body.value);return;
+    }
+    let match=path.match(/^\/api\/manual\/axes\/([^/]+)\/(enable|home|move)$/);
+    if(match){
+      const [,id,cmd]=match;const a=this.d.axes[id];this.cfgAxis(id);
+      if(cmd==='enable')return this.perform(id+(body.enabled?' 使能':' 去使能'),'AxisEnable',id,async()=>{if(a.moving)throw Error('运动中禁止更改使能');a.enabled=!!body.enabled;if(!a.enabled)a.homed=false});
+      if(cmd==='home')return this.perform(id+' 回零','AxisMove',id,()=>this.axisMove(id,this.cfgAxis(id).homeMm,true));
+      return this.perform(id+' 绝对定位','AxisMove',id,()=>this.axisMove(id,body.positionMm));
+    }
+    match=path.match(/^\/api\/manual\/cylinders\/([^/]+)\/(extend|retract)$/);
+    if(match){const [,id,cmd]=match;this.cfgCylinder(id);return this.perform(id+(cmd==='extend'?' 伸出':' 缩回'),cmd==='extend'?'CylinderExtend':'CylinderRetract',id,()=>this.cylinderAct(id,cmd==='extend'))}
+    if(path==='/api/manual/vision/trigger')return this.perform('视觉触发','VisionLocate','Camera',()=>this.vision());
+    if(path==='/api/cycle/start'){
+      this.idle();if(this.d.mode!=='Auto')throw Error('请先切换自动模式');if(this.d.recoveryRequired)throw Error('先完成故障恢复确认');this.guard();
+      if(!this.d.inputs.PartPresent)throw Error('未检测到产品');
+      for(const a of this.cfg.axes)if(!this.d.axes[a.id].enabled||!this.d.axes[a.id].homed)throw Error(a.id+' 未使能或未回零');
+      for(const c of this.cfg.cylinders)if(this.d.cylinders[c.id].position!=='Retracted')throw Error(c.id+' 未缩回到位');
+      this.d.state='Running';this.d.busy=true;this.d.alarm=null;this.d.activeAlarm=null;this.d.vision=null;this.cancel=false;this.cycleId=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);this.cycleStarted=Date.now();this.currentSteps=[];this.d.step='准备开始';this.d.stepIndex=-1;this.log('Info','启动自动单周期');void this.runCycle();return;
+    }
+    if(path==='/api/cycle/stop'){if(!['Running','Stopping'].includes(this.d.state))throw Error('设备不在自动运行');this.cancel=true;this.flow.releaseWait();this.d.state='Stopping';this.d.step='停止请求处理中';this.log('Warning','请求软件停止，不是急停');return}
+    if(path==='/api/fault/reset'){
+      if(this.d.busy||this.d.state!=='Fault')throw Error('当前没有可复位故障');this.guard();
+      this.d.state='Idle';this.d.mode='Manual';this.d.alarm=null;this.d.activeAlarm=null;this.d.stepIndex=-1;this.d.step='进入人工恢复流程';this.log('Warning','报警复位，仍需机构复归');return;
+    }
+    if(path==='/api/recovery/confirm'){
+      this.idle();if(this.d.mode!=='Manual')throw Error('恢复需在手动模式');this.guard();
+      for(const a of this.cfg.axes){const s=this.d.axes[a.id];if(!s.enabled||!s.homed||Math.abs(s.positionMm-a.homeMm)>.01)throw Error(a.id+' 尚未回到零位')}
+      for(const c of this.cfg.cylinders)if(this.d.cylinders[c.id].position!=='Retracted')throw Error(c.id+' 尚未缩回');
+      this.d.recoveryRequired=false;this.d.step='恢复条件已确认';this.log('Info','仿真恢复确认完成');return;
+    }
+    throw Error('未知接口：'+path);
+  }
+}
+window.MockRuntime=MockRuntime;
+
+</script>
+<script>
+/* V0.6 simulation workflow revision store and validator. Browser storage is demo-only.
+ * No actual machine I/O is available through this module. */
+(function(global){
+  const clone = x => JSON.parse(JSON.stringify(x));
+  const ALLOWED = new Set(['WaitInput','VisionLocate','AxisMove','CylinderExtend','CylinderRetract','Delay','Parallel','Condition']);
+  const RETRYABLE = new Set(['WaitInput','VisionLocate','Delay']);
+  const key='devicecontrol.v06.workflows';
+  function validateFlow(nodes, cfg){
+    const errors=[], ids=new Set(), inputs=new Set(cfg.signals.filter(s=>s.direction==='DI').map(s=>s.name));
+    const axes=new Map(cfg.axes.map(a=>[a.id,a])),cylinders=new Set(cfg.cylinders.map(c=>c.id));
+    if(!Array.isArray(nodes)||nodes.length<1||nodes.length>60)return ['顶层节点数量必须为 1～60'];
+    function visit(n,depth){
+      if(!n||typeof n!=='object'){errors.push('节点不是对象');return}
+      if(!n.id||!/^[a-zA-Z0-9_-]{1,50}$/.test(n.id)||ids.has(n.id))errors.push('节点 ID 不合法或重复: '+n.id);
+      ids.add(n.id);
+      if(!String(n.label||'').trim()||n.label.length>90)errors.push(n.id+' 标签为空或过长');
+      if(!ALLOWED.has(n.type))errors.push(n.id+' 类型不受支持');
+      if(!['Abort','Retry','WaitForOperator'].includes(n.onError||'Abort'))errors.push(n.id+' 错误策略无效');
+      if((n.onError||'Abort')!=='Abort'&&!RETRYABLE.has(n.type))errors.push(n.id+' 执行动作不允许重试');
+      if(n.onError==='Retry'&&(!Number.isInteger(n.maxRetries)||n.maxRetries<1||n.maxRetries>2))errors.push(n.id+' 重试次数仅支持 1～2');
+      if(n.resourceWaitTimeoutMs!==undefined&&(!Number.isInteger(n.resourceWaitTimeoutMs)||n.resourceWaitTimeoutMs<100||n.resourceWaitTimeoutMs>30000))errors.push(n.id+' 共享资源等待超时必须为 100～30000 ms');
+      const resources=n.sharedResources||[];
+      if(!Array.isArray(resources)||resources.length>8||resources.some(k=>typeof k!=='string'||!/^[A-Z][A-Z0-9_-]{0,31}$/.test(k.toUpperCase()))||new Set(resources.map(k=>k.toUpperCase())).size!==resources.length)errors.push(n.id+' 共享资源列表不合法或重复');
+      if((n.type==='Parallel'||n.type==='Condition')&&resources.length)errors.push(n.id+' 分支容器不可直接锁共享资源');
+      if(n.type==='Parallel'||n.type==='Condition'){
+        if(depth!==0)errors.push(n.id+' 暂不支持嵌套分支');
+        const size=n.children?.length||0;
+        if(n.type==='Parallel'&&(size<2||size>4))errors.push(n.id+' 并行子节点必须为 2～4');
+        if(n.type==='Condition'&&size!==2)errors.push(n.id+' 条件分支必须有真/假两个子节点');
+        if(n.type==='Condition'&&!inputs.has(n.device))errors.push(n.id+' 条件输入不存在: '+n.device);
+        (n.children||[]).forEach(c=>visit(c,depth+1));
+      }else{
+        if(n.children?.length)errors.push(n.id+' 普通节点不能包含子节点');
+        if(n.type==='WaitInput'&&(!inputs.has(n.device)||!Number.isFinite(n.timeoutMs)||n.timeoutMs<100||n.timeoutMs>120000))errors.push(n.id+' 等待输入/超时配置无效');
+        if(n.type==='AxisMove'&&(!axes.has(n.device)||(!n.useVisionX&&(!Number.isFinite(n.positionMm)||n.positionMm<axes.get(n.device).minMm||n.positionMm>axes.get(n.device).maxMm))))errors.push(n.id+' 轴/定位目标无效');
+        if(['CylinderExtend','CylinderRetract'].includes(n.type)&&!cylinders.has(n.device))errors.push(n.id+' 气缸名称无效');
+        if(n.type==='Delay'&&(!Number.isFinite(n.durationMs)||n.durationMs<0||n.durationMs>30000))errors.push(n.id+' 延时必须为 0～30000 ms');
+      }
+    }
+    nodes.forEach(n=>visit(n,0));
+    if(ids.size>140)errors.push('节点总数不能超过 140');
+    return errors;
+  }
+  function newNode(type,config,id){
+    let n={id:id||'n_'+Math.random().toString(36).slice(2,9),label:{WaitInput:'等待输入',VisionLocate:'视觉定位',AxisMove:'轴定位',CylinderExtend:'气缸伸出',CylinderRetract:'气缸缩回',Delay:'延时',Parallel:'并行动作',Condition:'条件分支'}[type]||type,type,onError:'Abort',device:'',children:[],sharedResources:[],resourceWaitTimeoutMs:2500};
+    if(type==='WaitInput'){n.device='PartPresent';n.timeoutMs=1500}
+    if(type==='AxisMove'){n.device=config.axes[0].id;n.positionMm=config.axes[0].homeMm}
+    if(type==='CylinderExtend'||type==='CylinderRetract')n.device=config.cylinders[0].id;
+    if(type==='Delay')n.durationMs=200;
+    if(type==='Condition'){n.device='PartPresent';n.children=[newNode('Delay',config),newNode('Delay',config)];n.children[0].label='条件满足';n.children[1].label='条件不满足';}
+    if(type==='Parallel'){n.children=[newNode('Delay',config),newNode('Delay',config)];n.children[0].label='并行任务 A';n.children[1].label='并行任务 B';}
+    return n;
+  }
+  class WorkflowRevisions {
+    constructor(machine){
+      this.machine=machine;this.cfg=machine.cfg;this.versions=[];this.activeId=null;
+      try {
+        const saved=JSON.parse(localStorage.getItem(key)||'null');
+        if(saved&&Array.isArray(saved.versions)&&saved.versions.length&&saved.activeId&&saved.versions.some(v=>v.id===saved.activeId&&v.status==='Published')){
+          this.versions=saved.versions;this.activeId=saved.activeId;
+        }
+      }catch{}
+      if(!this.versions.length){
+        const initial=this.make(clone(machine.cfg.sequence),'system','Published',null,'初始固定流程');
+        this.versions=[initial];this.activeId=initial.id;
+      }
+      this.apply(this.active());
+    }
+    active(){return this.versions.find(v=>v.id===this.activeId)}
+    list(){return {active:clone(this.active()),versions:clone([...this.versions].reverse())}}
+    make(definition,author,status,sourceId,reason){
+      return {id:'flow-'+String(this.versions.length+1).padStart(4,'0'),status,author,createdAt:new Date().toISOString(),sourceId,reason,definition:clone(definition),hash:this.fingerprint(definition)};
+    }
+    fingerprint(obj){let n=2166136261;for(const c of JSON.stringify(obj)){n^=c.charCodeAt(0);n=Math.imul(n,16777619)}return(n>>>0).toString(16).padStart(8,'0')+'-demo'}
+    save(){try{localStorage.setItem(key,JSON.stringify({activeId:this.activeId,versions:this.versions}))}catch{}}
+    ensureIdle(){const m=this.machine.d;if(m.state!=='Idle'||m.busy||m.recoveryRequired)throw Error('运行中或恢复未完成，禁止流程发布/回滚')}
+    apply(v){
+      this.machine.cfg.sequence=clone(v.definition);this.machine.cfg.flowVersion=v.id;
+      this.machine.flow=new WorkflowEngine(this.machine,this.machine.cfg.sequence);
+      // app.js keeps the same STATION_CONFIG reference; update it in place.
+      if(global.STATION_CONFIG){global.STATION_CONFIG.sequence=clone(v.definition);global.STATION_CONFIG.flowVersion=v.id}
+    }
+    handle(path,body,user){
+      const rank={Operator:1,Engineer:2,Admin:3}[user?.role]||0;
+      const need=path==='/api/flows/draft'||path.endsWith('/validate')?2:3;
+      if(rank<need)throw Error('当前角色无权操作流程版本');
+      if(path==='/api/flows/draft'){
+        if(body.expectedActiveVersionId && body.expectedActiveVersionId!==this.activeId)throw Error('版本冲突：当前已发布流程发生变化，请刷新并合并改动');
+        const errors=validateFlow(body.definition,this.cfg);if(errors.length)throw Error('流程静态检查失败: '+errors[0]);
+        const v=this.make(body.definition,user.name,'Draft',this.activeId,'草稿已保存');this.versions.push(v);this.save();return clone(v);
+      }
+      if(path==='/api/flows/rollback'){
+        this.ensureIdle();const from=this.versions.find(v=>v.id===body.id&&['Published','Superseded'].includes(v.status));
+        if(!from)throw Error('只能回滚到已发布过的历史版本');
+        const errors=validateFlow(from.definition,this.cfg);if(errors.length)throw Error(errors.join('; '));
+        this.active().status='Superseded';const v=this.make(from.definition,user.name,'Published',from.id,'回滚发布');this.versions.push(v);this.activeId=v.id;this.apply(v);this.save();return clone(v);
+      }
+      const m=path.match(/^\/api\/flows\/([^/]+)\/(validate|publish)$/);if(!m)throw Error('未知流程版本操作');
+      const v=this.versions.find(x=>x.id===m[1]);if(!v)throw Error('流程版本不存在');
+      const errors=validateFlow(v.definition,this.cfg);if(errors.length)throw Error('验证失败: '+errors.join('；'));
+      if(m[2]==='validate'){
+        if(global.WorkflowQuality){const gate=global.WorkflowQuality.runSuite(v.definition,this.cfg);if(!gate.pass)throw Error('质量门禁未通过：'+(gate.errors[0]||gate.results.find(x=>!x.pass)?.name||gate.warnings[0]))}
+        if(v.status!=='Draft')throw Error('只有草稿才能验证');v.status='Validated';v.reason='静态验证通过';
+      }else{
+        this.ensureIdle();if(v.status!=='Validated')throw Error('只允许发布已验证版本');
+        if(v.sourceId!==this.activeId)throw Error('版本冲突：草稿基于过期版本，拒绝发布');
+        if(global.WorkflowQuality&&!global.WorkflowQuality.runSuite(v.definition,this.cfg).pass)throw Error('质量门禁未通过，禁止发布');
+        this.active().status='Superseded';v.status='Published';v.reason='管理员发布';this.activeId=v.id;this.apply(v);
+      }
+      this.save();return clone(v);
+    }
+  }
+  global.FlowStudioModel={clone,validateFlow,newNode,WorkflowRevisions};
+})(window);
+
+</script>
+<script>
+/* Browser-only governance for V0.4 offline demo. Not an authentication/security implementation. */
+class GovernanceMock {
+  constructor(machine) {
+    this.machine=machine;this.audit=[];this.versions=[];this.flows=new window.FlowStudioModel.WorkflowRevisions(machine);
+    const initial={name:'默认工艺',visionOffsetMm:0,extraDwellMs:0};
+    this.versions.push(this.createVersion(initial,'system','Published',null,'初始化基准版本'));
+    this.activeId=this.versions[0].id;
+  }
+  createVersion(values,author,status,sourceId,reason){
+    return {id:'v'+(this.versions.length+1).toString().padStart(3,'0'),sourceId,status,
+      createdAt:new Date().toISOString(),author,values:{...values},hash:this.hash(JSON.stringify(values)),reason};
+  }
+  hash(s){let n=2166136261;for(let i=0;i<s.length;i++){n^=s.charCodeAt(i);n=Math.imul(n,16777619)}return(n>>>0).toString(16).padStart(8,'0')}
+  login(username,password){
+    const roles={operator:'Operator',engineer:'Engineer',admin:'Admin'};
+    if(!Object.hasOwn(roles,username)||password!=='demo123')throw Error('演示账号或密码错误');
+    this.record({name:username,role:roles[username]},'/api/auth/login',200);
+    return {name:username,role:roles[username]};
+  }
+  rank(role){return ({Operator:1,Engineer:2,Admin:3})[role]||0}
+  required(path,body={}){
+    if(path==='/api/cycle/start'||path==='/api/cycle/stop'||path==='/api/auth/logout')return 1;
+    if(path==='/api/mode')return body.mode==='Manual'?2:1;
+    if(path==='/api/flow/debug')return 2;
+    if(path==='/api/flows/draft'||path.match(/^\/api\/flows\/[^/]+\/validate$/))return 2;
+    if(path.startsWith('/api/flows/'))return 3;
+    if(path.startsWith('/api/manual/')||path.startsWith('/api/sim/')||path.startsWith('/api/fault/')||path.startsWith('/api/recovery/'))return 2;
+    if(path==='/api/recipes/draft'||path.endsWith('/validate'))return 2;
+    if(path.endsWith('/publish')||path==='/api/recipes/rollback')return 3;
+    return 3;
+  }
+  record(user,path,status){
+    this.audit.unshift({id:Math.random().toString(36).slice(2,14),time:new Date().toISOString(),
+      actor:user?.name||'anonymous',role:user?.role||'None',method:'POST',path,status,
+      traceId:Math.random().toString(36).slice(2),outcome:status<400?'Accepted':'Rejected'});
+    this.audit=this.audit.slice(0,400);
+  }
+  checkPublish(){const s=this.machine.snapshot();if(s.state!=='Idle'||s.busy)throw Error('设备正在执行，禁止热切换配方');if(s.recoveryRequired)throw Error('恢复未完成，禁止发布配方')}
+  check(values){if(!values.name?.trim()||values.name.length>50||!Number.isFinite(values.visionOffsetMm)||Math.abs(values.visionOffsetMm)>10||!Number.isInteger(values.extraDwellMs)||values.extraDwellMs<0||values.extraDwellMs>1000)throw Error('配方校验失败：名称 1~50 字，视觉偏移 -10~10 mm，附加延时 0~1000 ms')}
+  active(){return this.versions.find(v=>v.id===this.activeId)}
+  list(){return {active:structuredClone(this.active()),versions:structuredClone([...this.versions].reverse())}}
+  auditPage(page=1,pageSize=40){return {total:this.audit.length,page,pageSize,items:structuredClone(this.audit.slice((page-1)*pageSize,page*pageSize))}}
+  checklist(){const s=this.machine.snapshot();return {required:s.recoveryRequired,alarm:s.activeAlarm,checks:[
+    {key:'idle',label:'执行服务空闲',ok:!s.busy&&s.state==='Idle'},
+    {key:'manual',label:'已切换手动模式',ok:s.mode==='Manual'},
+    {key:'input',label:'普通仿真工艺条件正常',ok:s.inputs.GuardClosed&&s.inputs.AirPressureOk},
+    ...Object.entries(s.axes).map(([id,a])=>({key:'axis-'+id,label:id+' 轴使能且回零位',ok:a.enabled&&a.homed&&Math.abs(a.positionMm-(this.machine.cfg.axes.find(x=>x.id===id).homeMm))<=0.01})),
+    ...Object.entries(s.cylinders).map(([id,c])=>({key:'cylinder-'+id,label:id+' 气缸已缩回',ok:c.position==='Retracted'}))]};
+  }
+  async post(path,body,user){
+    let status=200;
+    try {
+      if(!user){status=401;throw Error('请登录演示账号')}
+      if(this.rank(user.role)<this.required(path,body)){status=403;throw Error('当前角色无权执行此操作')}
+      if(path.startsWith('/api/flows/'))return {ok:true,data:this.flows.handle(path,body,user)};
+      if(path==='/api/recipes/draft'){
+        const version=this.createVersion({name:body.name,visionOffsetMm:body.visionOffsetMm,extraDwellMs:body.extraDwellMs},user.name,'Draft',this.activeId,'待验证');this.versions.push(version);return {ok:true,data:version};
+      }
+      if(path==='/api/recipes/rollback'){
+        this.checkPublish();const source=this.versions.find(v=>v.id===body.id);if(!source||!['Published','Superseded'].includes(source.status))throw Error('只能回滚到曾经发布过的版本');
+        this.active().status='Superseded';const version=this.createVersion(source.values,user.name,'Published',source.id,'回滚发布自 '+source.id);this.versions.push(version);this.activeId=version.id;return {ok:true,data:version};
+      }
+      const match=path.match(/^\/api\/recipes\/([^/]+)\/(validate|publish)$/);
+      if(match){
+        const version=this.versions.find(v=>v.id===match[1]);if(!version)throw Error('找不到配方版本');
+        if(match[2]==='validate'){
+          if(version.status!=='Draft')throw Error('仅草稿允许验证');this.check(version.values);version.status='Validated';version.reason='静态校验通过';return {ok:true,data:version};
+        }
+        this.checkPublish();if(version.status!=='Validated')throw Error('只允许发布已验证版本');this.check(version.values);
+        this.active().status='Superseded';version.status='Published';version.reason='经管理员发布';this.activeId=version.id;return {ok:true,data:version};
+      }
+      if(path==='/api/cycle/start'){this.machine.cycleRecipe=structuredClone(this.active().values);this.machine.cycleRecipeId=this.activeId;}
+      await this.machine.post(path,body);return {ok:true};
+    }catch(e){status=status===200?409:status;throw e}
+    finally{this.record(user,path,status)}
+  }
+}
+window.GovernanceMock=GovernanceMock;
+
+</script>
+<script>
+/* V0.7 browser-only workflow editing primitives. Nothing here executes machine commands.
+ * Undo history is bounded, local to the workspace, and reset when switching revisions. */
+(function(global){
+  const clone=x=>JSON.parse(JSON.stringify(x));
+  const fingerprint=x=>JSON.stringify(x);
+  class EditHistory {
+    constructor(initial, limit=80){this.limit=limit;this.reset(initial)}
+    reset(initial){this.baseline=clone(initial);this.present=clone(initial);this.past=[];this.future=[]}
+    transact(fn){
+      const next=clone(this.present);fn(next);
+      if(fingerprint(next)===fingerprint(this.present))return false;
+      this.past.push(clone(this.present));if(this.past.length>this.limit)this.past.shift();
+      this.present=next;this.future=[];return true;
+    }
+    undo(){if(!this.past.length)return false;this.future.push(clone(this.present));this.present=this.past.pop();return true}
+    redo(){if(!this.future.length)return false;this.past.push(clone(this.present));this.present=this.future.pop();return true}
+    get changed(){return fingerprint(this.present)!==fingerprint(this.baseline)}
+    get canUndo(){return this.past.length>0}
+    get canRedo(){return this.future.length>0}
+    snapshot(){return clone(this.present)}
+  }
+  function allIds(nodes){const ids=new Set();const walk=ns=>(ns||[]).forEach(n=>{ids.add(n.id);walk(n.children)});walk(nodes);return ids}
+  function cloneFresh(node,existing){
+    const used=new Set(existing),copy=clone(node);
+    function visit(n){
+      const base=(n.id||'node').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,38)||'node';
+      let i=1,id=base+'_copy';while(used.has(id)){id=base+'_copy'+(++i)}
+      n.id=id;used.add(id);(n.children||[]).forEach(visit);
+    }
+    visit(copy);return copy;
+  }
+  function flatten(nodes){const rows=new Map();function walk(list,parent){(list||[]).forEach((n,index)=>{rows.set(n.id,{node:n,parent,index});walk(n.children,n.id)})}walk(nodes,null);return rows}
+  function diffFlows(a,b){
+    const left=flatten(a),right=flatten(b),added=[],removed=[],changed=[],moved=[];
+    const label=n=>n.label||n.id;
+    for(const [id,v] of right){
+      const old=left.get(id);
+      if(!old){added.push({id,label:label(v.node)});continue}
+      const fields=new Set([...Object.keys(old.node),...Object.keys(v.node)].filter(k=>k!=='children'));
+      const updates=[...fields].filter(k=>fingerprint(old.node[k])!==fingerprint(v.node[k])).map(k=>({field:k,before:old.node[k],after:v.node[k]}));
+      if(updates.length)changed.push({id,label:label(v.node),fields:updates});
+      if(v.index!==old.index||v.parent!==old.parent)moved.push({id,label:label(v.node),from:(old.parent||'TOP')+':'+old.index,to:(v.parent||'TOP')+':'+v.index});
+    }
+    for(const [id,v] of left)if(!right.has(id))removed.push({id,label:label(v.node)});
+    return {added,removed,changed,moved,total:added.length+removed.length+changed.length+moved.length};
+  }
+  global.WorkflowEditTools={EditHistory,allIds,cloneFresh,diffFlows,clone};
+})(window);
+
+</script>
+<script>
+/* V0.7 read-only historical run replay. A replay never sends hardware or runtime commands.
+ * Data is sourced strictly from persisted cycle trace/steps and NEVER guessed from live state. */
+(function(global){
+  const clone=v=>JSON.parse(JSON.stringify(v));
+  function timeline(run){
+    if(!run)return [];
+    if(Array.isArray(run.trace)&&run.trace.length){
+      // Join persisted snapshots by immutable trace ordinal. Never synthesize past values.
+      const evidence = new Map((run.snapshots||[]).map(s=>[s.ordinal,s]));
+      return [...run.trace].map((t,i)=>({...t,recordIndex:i})).sort((a,b)=>(a.endedAt||'').localeCompare(b.endedAt||'')||a.recordIndex-b.recordIndex).map((t,i)=>({order:i,id:t.id,label:t.label||t.id,parentId:t.parentId||null,
+        kind:t.type||'Unknown',status:t.status||'Unknown',durationMs:Number(t.durationMs)||0,
+        resources:t.resources||[],attempt:t.attempt||0,error:t.error||null,endedAt:t.endedAt||null,
+        vars:t.variablesAfter?clone(t.variablesAfter):(evidence.has(t.recordIndex)?{
+          inputs:evidence.get(t.recordIndex).inputs,axes:evidence.get(t.recordIndex).axes,
+          cylinders:evidence.get(t.recordIndex).cylinders,vision:evidence.get(t.recordIndex).vision,
+          recipeId:evidence.get(t.recordIndex).recipeId,flowVersion:evidence.get(t.recordIndex).flowVersion
+        }:null),fromRecordedTrace:true}));
+    }
+    return (run.steps||[]).map((t,i)=>({order:i,id:String(t.index??i)+'-'+i,label:t.label||'步骤 '+i,parentId:null,
+      kind:t.type||'Unknown',status:t.outcome||'Unknown',durationMs:Number(t.durationMs)||0,
+      resources:[],attempt:0,error:t.error||null,endedAt:null,vars:null,fromRecordedTrace:false}));
+  }
+  class ReplayViewer{
+    constructor(opts){this.opts=opts;this.runId=null;this.index=0;this.playing=false;this.timer=null;this.speed=750}
+    stop(){this.playing=false;if(this.timer){clearInterval(this.timer);this.timer=null}}
+    choose(id){this.stop();this.runId=id;this.index=0;this.render()}
+    runs(){return this.opts.runs()||[]}
+    selected(){return this.runs().find(r=>r.id===this.runId)||null}
+    items(){return timeline(this.selected())}
+    step(delta){this.stop();const items=this.items();this.index=Math.max(0,Math.min(items.length-1,this.index+delta));this.render()}
+    seek(i){this.stop();const items=this.items();this.index=Math.max(0,Math.min(items.length-1,Number(i)||0));this.render()}
+    play(){const items=this.items();if(!items.length)return;
+      if(this.playing){this.stop();this.render();return}
+      if(this.index>=items.length-1)this.index=0;
+      this.playing=true;this.timer=setInterval(()=>{if(this.index>=this.items().length-1){this.stop()}else this.index++;this.render()},this.speed);this.render();
+    }
+    render(){
+      const $=id=>document.getElementById(id),escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const runs=this.runs();if(!runs.some(r=>r.id===this.runId)){this.stop();this.runId=runs[0]?.id||null;this.index=0}
+      const run=this.selected(),items=timeline(run);
+      const signature=[this.runId,this.index,this.playing,runs.length,runs[0]?.id||'',this.selected()?.snapshots?.length||0].join('|');
+      if(signature===this.lastSignature)return;
+      this.lastSignature=signature;
+      const runsScroll=$('replayRuns').scrollTop,timelineScroll=$('replayTimeline').scrollTop;
+      $('replayRuns').innerHTML=runs.map(r=>`<button data-replay-run="${escape(r.id)}" class="replay-run ${r.id===this.runId?'selected':''}"><b>${escape(r.id)}</b><span>${escape(r.outcome)} · ${escape(r.flowVersion||'无版本')}</span></button>`).join('')||'<div class="empty-state">没有已完成周期。先执行一次模拟单周期。</div>';
+      $('replayMeta').textContent=run?`结果 ${run.outcome} · 流程 ${run.flowVersion||'未知'} · 配方 ${run.recipeId||'未知'} · ${items.length} 条记录 · ${items.filter(x=>x.vars).length} 条变量证据`:'等待选择历史周期';
+      const idx=Math.min(this.index,Math.max(0,items.length-1));this.index=idx;
+      $('replayTimeline').innerHTML=items.map((x,i)=>`<button data-replay-index="${i}" class="replay-event ${i===idx?'selected':''}"><span class="replay-order">${String(i+1).padStart(2,'0')}</span><div><b>${escape(x.label)}</b><small>${escape(x.kind)} · ${escape(x.status)} · ${x.durationMs} ms</small></div></button>`).join('')||'<div class="empty-state">该周期没有可用步骤记录。</div>';
+      $('replayRuns').scrollTop=runsScroll;$('replayTimeline').scrollTop=timelineScroll;
+      const cur=items[idx];
+      $('replayStepLabel').textContent=cur?cur.label:'—';
+      $('replayStepStatus').textContent=cur?cur.status:'无记录';
+      $('replayIndex').textContent=items.length?`${idx+1} / ${items.length}`:'0 / 0';
+      $('replayRange').max=Math.max(items.length-1,0);$('replayRange').value=idx;$('replayRange').disabled=!items.length;
+      for(const [id,condition] of [['replayPrev',idx<=0],['replayNext',idx>=items.length-1],['replayPlay',!items.length]])$(id).disabled=condition;
+      $('replayPlay').textContent=this.playing?'Ⅱ 暂停回放':'▶ 自动回放';
+      if(!cur){$('replayWatch').innerHTML='<div class="empty-state">尚无历史变量快照</div>';return}
+      const data=cur.vars;
+      $('replayWatch').innerHTML=data?
+        `<div class="replay-watch-grid">${Object.entries(data).map(([k,v])=>`<div class="replay-watch-row"><b>${escape(k)}</b><code>${escape(typeof v==='object'?JSON.stringify(v):String(v))}</code></div>`).join('')}</div>`:
+        '<div class="empty-state">此周期未记录变量快照，仅显示已存的步骤信息；不会借用当前仿真状态填充。</div>';
+      $('replayError').textContent=cur.error?'异常：'+cur.error:cur.parentId?'分支节点 · '+cur.parentId:cur.fromRecordedTrace?'历史快照 · 只读回放':'仅有聚合步骤记录';
+    }
+  }
+  global.WorkflowReplay={timeline,ReplayViewer};
+})(window);
+
+</script>
+<script>
+/* V0.8 deterministic, side-effect-free workflow quality gate.
+ * Scenario execution is a model, NOT the control runtime: no API / device calls.
+ * All scenario inputs are typed and cannot write internal cylinder feedback. */
+(function (global) {
+  'use strict';
+  const copy = v => JSON.parse(JSON.stringify(v));
+  const schema = Object.freeze({
+    'recipe.visionOffsetMm': {type:'number',min:-10,max:10,unit:'mm'},
+    'recipe.extraDwellMs': {type:'integer',min:0,max:1000,unit:'ms'},
+    'vision.ok': {type:'boolean'},
+    'vision.targetXmm': {type:'number',min:0,max:200,unit:'mm'}
+  });
+  function validateValue(spec,value){
+    if(spec.type==='boolean') return typeof value==='boolean' ? null : '需要 Boolean';
+    if(typeof value!=='number'||!Number.isFinite(value))return '需要有限数值';
+    if(spec.type==='integer'&&!Number.isInteger(value))return '需要整数';
+    if(value<spec.min||value>spec.max)return `超出范围 ${spec.min} ～ ${spec.max}`;
+    return null;
+  }
+  function validateRecipe(values){
+    const errors=[];
+    for(const [field,spec] of Object.entries(schema)) if(field.startsWith('recipe.')){
+      const error=validateValue(spec,values?.[field.slice(7)]);
+      if(error) errors.push(`${field}: ${error}`);
+    }
+    return errors;
+  }
+  function inputsFor(cfg){return Object.fromEntries((cfg.signals||[]).filter(x=>x.direction==='DI').map(s=>[s.name,!!s.initial]));}
+  function scenarios(cfg){
+    const normal=inputsFor(cfg);
+    return [
+      {id:'normal',name:'正常路径',inputs:normal,visionOk:true,expected:'Completed'},
+      {id:'missing',name:'产品缺失',inputs:{...normal,PartPresent:false},visionOk:true,expected:'Rejected'},
+      {id:'air',name:'气压异常',inputs:{...normal,AirPressureOk:false},visionOk:true,expected:'Rejected'},
+      {id:'camera',name:'视觉 NG',inputs:normal,visionOk:false,expected:'Failed',onlyIfVision:true}
+    ];
+  }
+  function estimateFlow(flow,cfg){
+    const axes=new Map(cfg.axes.map(a=>[a.id,a]));
+    function duration(n){
+      if(n.type==='Delay')return n.durationMs||0;
+      if(n.type==='AxisMove'){const a=axes.get(n.device);return a?Math.ceil(Math.abs((n.useVisionX?80:n.positionMm)-a.homeMm)/a.speedMmPerSec*1000):0}
+      if(n.type==='Parallel')return Math.max(0,...(n.children||[]).map(duration));
+      if(n.type==='Condition')return Math.max(0,...(n.children||[]).map(duration));
+      return {VisionLocate:320,CylinderExtend:140,CylinderRetract:140,WaitInput:10}[n.type]||0;
+    }
+    return flow.reduce((v,n)=>v+duration(n),0);
+  }
+  function runScenario(nodes,cfg,scenario){
+    const steps=[], axes=Object.fromEntries(cfg.axes.map(x=>[x.id,x.homeMm]));
+    const cylinders=Object.fromEntries(cfg.cylinders.map(x=>[x.id,'Retracted']));
+    const inputs={...inputsFor(cfg),...scenario.inputs};
+    const target=Number.isFinite(scenario.visionTargetXmm)?scenario.visionTargetXmm:80;
+    let vision=null,reason=null;
+    const fail=(why,node)=>{reason=why;if(node)steps.push({id:node.id,label:node.label,outcome:'Failed',reason:why});throw Error(why)};
+    // Mirrors prerequisites of V0.7 StartSingleCycle: deliberately never mutates runtime.
+    if(!inputs.GuardClosed||!inputs.AirPressureOk||!inputs.PartPresent)
+      return {name:scenario.name,outcome:'Rejected',reason:'启动前置条件未满足',steps,axes,cylinders};
+    const interlocks=cfg.interlocks||[];
+    const execute=node=>{
+      if(node.type==='Condition'){
+        const branch=inputs[node.device]?0:1;
+        steps.push({id:node.id,label:node.label,outcome:'Branch '+(branch===0?'TRUE':'FALSE')});
+        return execute(node.children[branch]);
+      }
+      if(node.type==='Parallel'){
+        // Ignore wall-time scheduling: exact concurrency is not predictable from a dry-run.
+        // Resource collisions are checked as static warnings, not simulated as racing writes.
+        for(const child of node.children)execute(child);
+        steps.push({id:node.id,label:node.label,outcome:'Completed'});
+        return;
+      }
+      if(node.type==='WaitInput'&&!inputs[node.device])fail('输入条件不满足: '+node.device,node);
+      if(node.type==='VisionLocate'){
+        if(!scenario.visionOk)fail('视觉检测 NG',node);
+        vision={ok:true,targetXmm:target};
+      }
+      if(node.type==='AxisMove'){
+        for(const x of interlocks.filter(x=>x.action==='AxisMove'&&(x.device==='*'||x.device===node.device)))
+          if(inputs[x.signal]!==!!x.required)fail('动作互锁未满足: '+x.message,node);
+        if(node.useVisionX&&!vision)fail('视觉变量未赋值，禁止引用',node);
+        const axis=cfg.axes.find(x=>x.id===node.device);
+        const position=node.useVisionX?vision.targetXmm:node.positionMm;
+        if(!axis||!Number.isFinite(position)||position<axis.minMm||position>axis.maxMm)fail('轴目标不在类型/量程范围',node);
+        axes[node.device]=position;
+      }
+      if(node.type==='CylinderExtend'||node.type==='CylinderRetract'){
+        for(const x of interlocks.filter(x=>x.action===node.type&&(x.device==='*'||x.device===node.device)))
+          if(inputs[x.signal]!==!!x.required)fail('动作互锁未满足: '+x.message,node);
+        const cyl=cfg.cylinders.find(x=>x.id===node.device);if(!cyl)fail('气缸不存在',node);
+        const ext=node.type==='CylinderExtend';cylinders[node.device]=ext?'Extended':'Retracted';
+        inputs[cyl.extendedInput]=ext;inputs[cyl.retractedInput]=!ext;
+      }
+      steps.push({id:node.id,label:node.label,outcome:'Completed'});
+    };
+    try{for(const node of nodes)execute(node)}catch(e){return {name:scenario.name,outcome:'Failed',reason:reason||e.message,steps,axes,cylinders}}
+    return {name:scenario.name,outcome:'Completed',reason:'全部模型步骤完成',steps,axes,cylinders};
+  }
+  function staticWarnings(nodes,cfg){
+    const warnings=[];
+    const resource=n=>n.type==='AxisMove'?'axis:'+n.device:
+      /Cylinder/.test(n.type)?'cylinder:'+n.device:null;
+    let precedingVision=false;
+    for(const n of nodes){
+      if(n.type==='AxisMove'&&n.useVisionX&&!precedingVision)warnings.push(`${n.label} 在未经过必经视觉节点时引用了视觉目标`);
+      if(n.type==='VisionLocate')precedingVision=true;
+      if(n.type==='Parallel'){
+        const owners=new Set();for(const child of n.children||[]){const r=resource(child);
+          if(r&&owners.has(r))warnings.push(`${n.label} 的并行分支竞争相同资源 ${r}，运行时会串行化`);
+          if(r)owners.add(r);
+          if(child.type==='AxisMove'&&child.useVisionX&&!precedingVision)warnings.push(`${child.label} 使用未确认存在的视觉目标`);
+        }
+      }
+    }
+    return warnings;
+  }
+  function runSuite(nodes,cfg,custom=[]){
+    const errors=global.FlowStudioModel.validateFlow(nodes,cfg);
+    const cases=[...scenarios(cfg),...custom];
+    const results=cases.filter(s=>!s.onlyIfVision||nodes.some(n=>n.type==='VisionLocate')).map(s=>{
+      const actual=runScenario(nodes,cfg,s);
+      return {id:s.id,name:s.name,expected:s.expected,actual:actual.outcome,pass:actual.outcome===s.expected,reason:actual.reason,steps:actual.steps};
+    });
+    const warnings=staticWarnings(nodes,cfg);
+    const totalPass=errors.length===0&&results.every(x=>x.pass)&&warnings.filter(w=>w.includes('未经过必经')||w.includes('未确认存在')).length===0;
+    return {pass:totalPass,errors,warnings,results,estimatedMs:estimateFlow(nodes,cfg),testedAt:new Date().toISOString()};
+  }
+  function percentile(values,p){
+    if(!values.length)return null;
+    const a=[...values].sort((x,y)=>x-y),idx=(a.length-1)*p,lo=Math.floor(idx),hi=Math.ceil(idx);
+    return +(a[lo]+(a[hi]-a[lo])*(idx-lo)).toFixed(1);
+  }
+  function metrics(runs){
+    const all=runs||[],completed=all.filter(r=>r.outcome==='Completed');
+    const times=completed.map(r=>Number(r.durationMs)).filter(Number.isFinite);
+    const sums=new Map();
+    for(const r of all){
+      const traces=Array.isArray(r.trace)&&r.trace.length?r.trace.filter(x=>x.type!=='Parallel'&&x.type!=='Condition'):r.steps||[];
+      for(const t of traces){const ms=Number(t.durationMs)||0,key=t.label||t.id||'unnamed';
+        const item=sums.get(key)||{label:key,count:0,totalMs:0,maxMs:0};item.count++;item.totalMs+=ms;item.maxMs=Math.max(item.maxMs,ms);sums.set(key,item);
+      }
+    }
+    return {total:all.length,completed:completed.length,rate:all.length?+(100*completed.length/all.length).toFixed(1):null,p50:percentile(times,.5),p95:percentile(times,.95),
+      bottlenecks:[...sums.values()].sort((a,b)=>b.totalMs-a.totalMs).slice(0,6)};
+  }
+  global.WorkflowQuality={schema,validateValue,validateRecipe,scenarios,runScenario,runSuite,metrics,percentile};
+})(typeof window!=='undefined'?window:globalThis);
+
+</script>
+<script>
+/* V0.8 offline quality dashboard. No device commands; scenario engine runs in memory. */
+(function(global){
+  const h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  class QualityDashboard {
+    constructor({editor,config,runs,role,notify}){
+      this.editor=editor;this.config=config;this.runs=runs;this.role=role;this.notify=notify;
+      this.result=null;this.custom=[];this.version=null;
+      try{const saved=JSON.parse(localStorage.getItem('devicecontrol.v08.scenarios')||'[]');if(Array.isArray(saved))this.custom=saved.slice(0,30)}catch{}
+      const panel=document.getElementById('panel-quality');
+      panel.addEventListener('click',e=>{
+        const action=e.target.closest('[data-quality-action]')?.dataset.qualityAction;
+        if(action==='run'){if(this.role()<2)return this.notify('需要 Engineer 权限',true);this.run()}
+        else if(action==='add'){this.add()}
+        else if(action==='clear'){this.custom=[];this.save();this.render()}
+        else if(action==='export'){this.export()}
+        else if(action==='contract'){this.contract()}
+        const del=e.target.closest('[data-quality-delete]')?.dataset.qualityDelete;
+        if(del){this.custom=this.custom.filter(s=>s.id!==del);this.save();this.render()}
+      });
+    }
+    contract(){
+      const cfg=this.config(),base=JSON.parse(JSON.stringify(cfg.sequence));
+      const fixtures=[
+        {name:'默认流程',flow:base,expected:true},
+        {name:'视觉变量先于赋值',flow:(()=>{const a=JSON.parse(JSON.stringify(base));const at=a.findIndex(n=>n.type==='VisionLocate');a.push(...a.splice(at,1));return a})(),expected:false},
+        {name:'同资源并行争用（警告）',flow:(()=>{const a=JSON.parse(JSON.stringify(base));const p=a.find(n=>n.type==='Parallel');p.children[1].device=p.children[0].device;return a})(),expected:true},
+        {name:'等待不满足的输入',flow:(()=>{const a=JSON.parse(JSON.stringify(base));a[0].device='ClampExtended';return a})(),expected:false}
+      ];
+      const result=fixtures.map(f=>{const value=global.WorkflowQuality.runSuite(f.flow,cfg);return {name:f.name,expected:f.expected,actual:value.pass,pass:value.pass===f.expected}});
+      const passed=result.filter(x=>x.pass).length;
+      document.getElementById('qualityContractStatus').textContent=`浏览器模型契约检查：${passed} / ${result.length} 个符合预期；不等于 C# 端到端测试通过。`;
+      document.getElementById('qualityContractCases').innerHTML=result.map(x=>`<div><b>${h(x.pass?'✓':'!')} ${h(x.name)}</b><small>期望 ${x.expected?'通过':'阻止'} · 实际 ${x.actual?'通过':'阻止'}</small></div>`).join('');
+      this.notify(passed===result.length?'本地契约检查通过':'本地契约检查存在差异',passed!==result.length);
+    }
+    save(){try{localStorage.setItem('devicecontrol.v08.scenarios',JSON.stringify(this.custom))}catch{}}
+    selectedDefinition(){return this.editor.sequence.length?this.editor.sequence:this.config().sequence}
+    run(){
+      const flow=this.selectedDefinition(),cfg=this.config();
+      this.result=global.WorkflowQuality.runSuite(flow,cfg,this.custom);
+      this.version=this.editor.data?.active?.id||cfg.flowVersion;
+      this.render();this.notify(this.result.pass?'质量门禁通过：所有场景符合预期':'质量门禁未通过：请查看失败场景',!this.result.pass);
+    }
+    add(){
+      if(this.role()<2)return this.notify('需要 Engineer 权限',true);
+      const name=document.getElementById('qualityCaseName').value.trim();
+      const signal=document.getElementById('qualityCaseSignal').value;
+      const flag=document.getElementById('qualityCaseState').value==='true';
+      const expected=document.getElementById('qualityCaseExpected').value;
+      if(!name||name.length>45||this.custom.length>=30)return this.notify('名称需 1～45 字，最多 30 条',true);
+      const inputs=global.WorkflowQuality.scenarios(this.config())[0].inputs;
+      if(!(signal in inputs))return this.notify('只能配置已声明的布尔 DI',true);
+      this.custom.push({id:'case-'+Date.now().toString(36)+'-'+this.custom.length,name,inputs:{...inputs,[signal]:flag},visionOk:true,expected});
+      this.save();this.result=null;this.render();this.notify('已添加仿真场景');
+    }
+    export(){
+      if(!this.result)return this.notify('请先运行质量门禁',true);
+      const report={release:'V0.9',scope:'Browser dry-run, NOT hardware execution',workflowVersion:this.version,
+        generatedUtc:new Date().toISOString(),result:this.result,customScenarios:this.custom};
+      const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='workflow-quality-report.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }
+    render(){
+      const cfg=this.config(),inputs=cfg.signals.filter(x=>x.direction==='DI'&&x.injectable);
+      const sel=document.getElementById('qualityCaseSignal'),prev=sel.value;
+      sel.innerHTML=inputs.map(x=>`<option value="${h(x.name)}">${h(x.name)} · ${h(x.description)}</option>`).join('');
+      if(inputs.some(x=>x.name===prev))sel.value=prev;
+      document.querySelectorAll('[data-quality-action="run"],[data-quality-action="add"]').forEach(b=>b.disabled=this.role()<2);
+      const r=this.result,stats=global.WorkflowQuality.metrics(this.runs());
+      document.getElementById('qualityStatus').textContent=r?(r.pass?'门禁通过':'存在失败项'):'待执行';
+      document.getElementById('qualityStatus').className='pill '+(r?r.pass?'success':'alert':'neutral');
+      document.getElementById('qualityTotal').textContent=r?r.results.length+' 个':'—';
+      document.getElementById('qualityPassed').textContent=r?r.results.filter(x=>x.pass).length+' 个':'—';
+      document.getElementById('qualityEstimate').textContent=r?(r.estimatedMs/1000).toFixed(2)+' s':'—';
+      document.getElementById('qualityScenarios').innerHTML=r?r.results.map(x=>`<div class="quality-case ${x.pass?'pass':'fail'}"><span class="quality-check">${x.pass?'✓':'!'}</span><div><strong>${h(x.name)}</strong><small>预期 ${h(x.expected)} · 实际 ${h(x.actual)} · ${h(x.reason)}</small></div></div>`).join(''):
+        '<div class="empty-state">点击“运行质量门禁”执行内存中的确定性场景检查，不会操作仿真设备。</div>';
+      document.getElementById('qualityProblems').innerHTML=r?[
+        ...r.errors.map(e=>`<div class="quality-issue bad">错误 · ${h(e)}</div>`),
+        ...r.warnings.map(e=>`<div class="quality-issue">提示 · ${h(e)}</div>`)].join('')||'<div class="quality-issue good">✓ 未发现静态约束问题</div>':
+        '<div class="empty-state">等待执行</div>';
+      document.getElementById('qualityCustom').innerHTML=this.custom.map(x=>`<div class="quality-custom"><div><b>${h(x.name)}</b><small>${h(x.expected)} · ${h(Object.keys(x.inputs).find(k=>x.inputs[k]!==global.WorkflowQuality.scenarios(cfg)[0].inputs[k])||'默认')} </small></div><button class="btn btn-light" data-quality-delete="${h(x.id)}">删除</button></div>`).join('')||'<div class="empty-state">尚未添加自定义场景</div>';
+      document.getElementById('qualityP50').textContent=stats.p50===null?'—':(stats.p50/1000).toFixed(2)+' s';
+      document.getElementById('qualityP95').textContent=stats.p95===null?'—':(stats.p95/1000).toFixed(2)+' s';
+      document.getElementById('qualitySuccess').textContent=stats.rate===null?'—':stats.rate+'%';
+      document.getElementById('qualityCycleCount').textContent=stats.total+' 条运行记录';
+      const max=Math.max(...stats.bottlenecks.map(x=>x.totalMs),1);
+      document.getElementById('qualityBottlenecks').innerHTML=stats.bottlenecks.map(x=>`<div class="quality-bar-row"><div><strong>${h(x.label)}</strong><small>${x.count} 次 · 合计 ${x.totalMs} ms</small></div><div class="quality-track"><div style="width:${Math.round(100*x.totalMs/max)}%"></div></div></div>`).join('')||'<div class="empty-state">需要先运行一段模拟生产周期，才能根据实际历史记录生成统计。</div>';
+    }
+  }
+  global.WorkflowQualityUI={QualityDashboard};
+})(window);
+
+</script>
+<script>
+/* V0.6 controlled graph editor. Drawn connectors are directed by top-level order;
+ * branch children are restricted to a single level. Changes stay in a workspace
+ * until explicitly saved as a new immutable draft. */
+class FlowEditor {
+  constructor(opts){
+    this.opts=opts;this.data=null;this.sequence=[];this.selectedId=null;this.selectedVersion=null;
+    this.dragged=null;this.busy=false;this.changed=false;this.clipboard=null;this.history=new window.WorkflowEditTools.EditHistory([]);
+    this.$=id=>document.getElementById(id);
+    const panel=this.$('panel-workflow');
+    panel.addEventListener('click',e=>this.clicked(e));
+    panel.addEventListener('change',e=>this.changedInput(e));
+    panel.addEventListener('dragstart',e=>{const n=e.target.closest('[data-drag-id]');if(n&&this.canEdit()){this.dragged=n.dataset.dragId;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',this.dragged)}});
+    panel.addEventListener('dragover',e=>{if(e.target.closest('[data-drag-id]'))e.preventDefault()});
+    panel.addEventListener('drop',e=>{const dst=e.target.closest('[data-drag-id]');if(!dst||!this.dragged)return;e.preventDefault();this.reorder(this.dragged,dst.dataset.dragId);this.dragged=null});
+    document.addEventListener('keydown',e=>{
+      if(!this.$('panel-workflow').classList.contains('active')||!this.canEdit())return;
+      const tag=(e.target?.tagName||'').toLowerCase();
+      if(['input','textarea','select'].includes(tag)||e.target?.isContentEditable)return;
+      if((e.ctrlKey||e.metaKey)&&!e.altKey){
+        const key=e.key.toLowerCase();
+        if(key==='z'||key==='y'){e.preventDefault();this.navigateHistory(key==='y'||(key==='z'&&e.shiftKey)?'redo':'undo')}
+        else if(key==='c'){if(this.copySelected())e.preventDefault()}
+        else if(key==='v'){if(this.pasteSelected())e.preventDefault()}
+      }
+    });
+  }
+  clone(x){return window.FlowStudioModel.clone(x)}
+  esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+  canEdit(){return this.opts.role()>=2&&!this.busy}
+  getNode(id){for(const n of this.sequence){if(n.id===id)return n;for(const c of n.children||[])if(c.id===id)return c}return null}
+  resetWorkspace(seq){this.history.reset(seq);this.sequence=this.history.snapshot();this.changed=false;this.selectedId=null}
+  mutate(fn){if(!this.canEdit())return false;const success=this.history.transact(fn);if(success){this.sequence=this.history.snapshot();this.changed=this.history.changed;this.render()}return success}
+  navigateHistory(action){if(!this.canEdit())return;const changed=action==='undo'?this.history.undo():this.history.redo();if(changed){this.sequence=this.history.snapshot();this.changed=this.history.changed;if(!this.getNode(this.selectedId))this.selectedId=null;this.render()}}
+  copySelected(){const n=this.sequence.find(n=>n.id===this.selectedId);if(!n||!this.canEdit())return false;this.clipboard=this.clone(n);this.render();return true}
+  pasteSelected(){if(!this.clipboard||!this.canEdit())return false;
+    let id;const changed=this.mutate(seq=>{const node=window.WorkflowEditTools.cloneFresh(this.clipboard,window.WorkflowEditTools.allIds(seq));id=node.id;const i=seq.findIndex(x=>x.id===this.selectedId);seq.splice(i>=0?i+1:seq.length,0,node)});
+    if(changed){this.selectedId=id;this.render()}return changed;
+  }
+  async open(){try{this.data=await this.opts.read();if(!this.selectedVersion){this.resetWorkspace(this.data.active.definition);this.selectedVersion=this.data.active.id}this.render()}catch(e){this.opts.notice(e.message,true)}}
+  async reload(select=null){this.data=await this.opts.read();if(select){this.selectedVersion=select;this.resetWorkspace(this.data.versions.find(v=>v.id===select)?.definition||this.data.active.definition)}this.render()}
+  errors(){return window.FlowStudioModel.validateFlow(this.sequence,this.opts.cfg())}
+  reorder(a,b){if(a===b||!this.canEdit())return;this.mutate(seq=>{const ai=seq.findIndex(n=>n.id===a),bi=seq.findIndex(n=>n.id===b);if(ai<0||bi<0)return;const [item]=seq.splice(ai,1);seq.splice(bi,0,item)})}
+  branchMarkup(n){
+    const titles=n.type==='Condition'?['条件为 TRUE','条件为 FALSE']:['分支 A','分支 B','分支 C','分支 D'];
+    return `<div class="studio-branch-grid">${(n.children||[]).map((c,j)=>`<button class="studio-branch ${this.selectedId===c.id?'chosen':''}" data-editor-select="${this.esc(c.id)}"><span>${titles[j]}</span><strong>${this.esc(c.label)}</strong><small>${this.esc(c.type)} · ${this.esc(c.device||'')}</small></button>`).join('')}</div>`;
+  }
+  render(){
+    if(!this.data)return;const active=this.data.active,rev=this.data.versions.find(v=>v.id===this.selectedVersion)||active;
+    this.$('studioActiveVersion').textContent=active.id;
+    this.$('studioWorkspace').textContent=(this.changed?'● 未保存 · ':'')+'来源 '+rev.id+' · '+this.sequence.length+' 个顶层节点';
+    this.$('studioVersionList').innerHTML=this.data.versions.map(v=>`<button class="studio-version ${this.selectedVersion===v.id?'selected':''}" data-editor-version="${this.esc(v.id)}"><b>${this.esc(v.id)}</b><span class="pill">${this.esc(v.status)}</span><small>${this.esc(v.author)} · ${this.esc(v.reason)}</small></button>`).join('');
+    this.$('studioCanvas').innerHTML=this.sequence.map((n,i)=>`<div class="studio-node-wrap"><div class="studio-node ${this.selectedId===n.id?'chosen':''}" draggable="${this.canEdit()}" data-drag-id="${this.esc(n.id)}"><button data-editor-select="${this.esc(n.id)}" class="studio-node-body"><span class="studio-index">${String(i+1).padStart(2,'0')}</span><span class="studio-node-icon">${{Parallel:'⇉',Condition:'◇',AxisMove:'↔',VisionLocate:'◎',WaitInput:'◉',Delay:'◷',CylinderExtend:'⇥',CylinderRetract:'⇤'}[n.type]||'·'}</span><span><b>${this.esc(n.label)}</b><small>${this.esc(n.type)}${n.device?' · '+this.esc(n.device):''}</small></span></button><span class="studio-grip" title="拖动调整顺序">⠿</span></div>${n.children?.length?this.branchMarkup(n):''}</div>${i<this.sequence.length-1?'<div class="studio-link"><span>↓</span></div>':''}`).join('');
+    this.$('studioUndo').disabled=!this.canEdit()||!this.history.canUndo;
+    this.$('studioRedo').disabled=!this.canEdit()||!this.history.canRedo;
+    this.$('studioCopy').disabled=!this.canEdit()||!this.sequence.some(n=>n.id===this.selectedId);
+    this.$('studioPaste').disabled=!this.canEdit()||!this.clipboard;
+    this.$('studioDuplicate').disabled=!this.canEdit()||!this.sequence.some(n=>n.id===this.selectedId);
+    this.$('studioDiff').innerHTML=this.diffMarkup(active.definition,this.sequence);
+    const errs=this.errors();this.$('studioValidation').innerHTML=errs.length?`<b class="studio-invalid">静态检查 · ${errs.length} 项问题</b>${errs.slice(0,7).map(e=>`<small class="studio-error">• ${this.esc(e)}</small>`).join('')}`:'<b class="studio-valid">✓ 静态检查通过</b><small>拓扑、机构引用、参数范围、重试策略均符合受约束流程规则</small>';
+    const n=this.getNode(this.selectedId);
+    this.$('studioInspector').innerHTML=n?this.inspector(n):'<div class="empty-state">点击画布中的节点，在这里配置动作参数。</div>';
+    const admin=this.opts.role()>=3,eng=this.opts.role()>=2,id=rev.id,idle=this.opts.canPublish();
+    for(const b of this.$('panel-workflow').querySelectorAll('[data-editor-action]')){
+      const a=b.dataset.editorAction;
+      if(['undo','redo','copy','paste','duplicate'].includes(a))continue;
+      b.disabled=this.busy||(!eng)||((a==='publish'||a==='rollback')&&(!admin||!idle))||(a==='validate'&&rev.status!=='Draft')||(a==='publish'&&rev.status!=='Validated')||(a==='rollback'&&(!['Published','Superseded'].includes(rev.status)||rev.id===active.id))||(a==='save'&&(!this.changed&&rev.id!==active.id));
+    }
+    for(const b of this.$('panel-workflow').querySelectorAll('[data-editor-add],[data-editor-remove],[data-editor-input]'))b.disabled=this.busy||!eng;
+    this.$('studioStateNote').textContent=idle?'空闲，可申请发布或回滚':'执行中或恢复未完成，禁止发布和回滚';
+  }
+  diffMarkup(base,modified){
+    const delta=window.WorkflowEditTools.diffFlows(base,modified);
+    const items=[...delta.added.map(x=>['added','新增',x.label]),...delta.removed.map(x=>['removed','删除',x.label]),
+      ...delta.changed.map(x=>['modified','修改',x.label+' · '+x.fields.map(y=>y.field).join(' / ')]),
+      ...delta.moved.map(x=>['moved','移动',x.label+' · '+x.from+' → '+x.to])];
+    return `<div class="diff-summary">相对当前发布版 · 新增 ${delta.added.length} / 删除 ${delta.removed.length} / 属性变更 ${delta.changed.length} / 位置变化 ${delta.moved.length}</div>`+
+      (items.length?items.slice(0,35).map(([kind,name,desc])=>`<div class="diff-entry ${kind}"><span>${name}</span><small>${this.esc(desc)}</small></div>`).join(''):'<div class="studio-valid">✓ 与当前发布版本无差异</div>');
+  }
+  inspector(n){
+    const sel=(id,options,value)=>`<select class="select-field" data-editor-input="${id}">${options.map(x=>`<option value="${this.esc(x)}" ${x===value?'selected':''}>${this.esc(x)}</option>`).join('')}</select>`;
+    const fld=(name,key,val,type='text')=>`<label class="field-label">${name}<input class="login-input" data-editor-input="${key}" type="${type}" value="${this.esc(val)}"></label>`;
+    let html=`<div class="studio-inspector-title"><strong>${this.esc(n.id)}</strong><button class="btn btn-light" data-editor-remove="${this.esc(n.id)}">删除</button></div>${fld('节点名称','label',n.label)}<label class="field-label">节点类型${sel('type',['WaitInput','VisionLocate','AxisMove','CylinderExtend','CylinderRetract','Delay',...(this.sequence.some(x=>x.id===n.id)?['Parallel','Condition']:[])],n.type)}</label>`;
+    if(['AxisMove'].includes(n.type))html+=`<label class="field-label">运动轴${sel('device',this.opts.cfg().axes.map(x=>x.id),n.device)}</label>${fld('目标位置 (mm)','positionMm',n.positionMm||0,'number')}`;
+    if(['CylinderExtend','CylinderRetract'].includes(n.type))html+=`<label class="field-label">气缸${sel('device',this.opts.cfg().cylinders.map(x=>x.id),n.device)}</label>`;
+    if(['WaitInput','Condition'].includes(n.type))html+=`<label class="field-label">输入信号${sel('device',this.opts.cfg().signals.filter(x=>x.direction==='DI').map(x=>x.name),n.device)}</label>`;
+    if(n.type==='WaitInput')html+=fld('超时 (ms)','timeoutMs',n.timeoutMs||1500,'number');
+    if(n.type==='Delay')html+=fld('延时 (ms)','durationMs',n.durationMs||0,'number');
+    if(['WaitInput','VisionLocate','Delay'].includes(n.type))html+=`<label class="field-label">错误策略${sel('onError',['Abort','Retry','WaitForOperator'],n.onError||'Abort')}</label>`;
+    if(n.onError==='Retry'&&['WaitInput','VisionLocate','Delay'].includes(n.type))html+=fld('最多重试次数','maxRetries',n.maxRetries||1,'number');
+    if(!['Parallel','Condition'].includes(n.type)){
+      const keys=(n.sharedResources||[]).join(', ');
+      html+=fld('共享资源（逗号分隔）','sharedResources',keys);
+      html+=fld('共享资源等待超时 (ms)','resourceWaitTimeoutMs',n.resourceWaitTimeoutMs??2500,'number');
+      if(n.type==='VisionLocate')html+='<div class="control-hint">视觉定位节点始终自动申请 CELL-SHARED，兼容旧版流程。</div>';
+    }
+    if(n.type==='Parallel'&&n.children.length<4)html+=`<button class="btn btn-light" data-editor-add-child="${this.esc(n.id)}">+ 添加并行分支</button>`;
+    html+='<div class="control-hint">流程中的机构动作仍由仿真 Runtime 及其普通互锁执行。本界面不能绕过资源锁。</div>';
+    return html;
+  }
+  async clicked(e){
+    const el=e.target.closest('button');if(!el||el.disabled)return;
+    if(el.dataset.editorSelect){this.selectedId=el.dataset.editorSelect;this.render();return}
+    if(el.dataset.editorVersion){const v=this.data.versions.find(x=>x.id===el.dataset.editorVersion);if(!v)return;if(this.changed&&!confirm('切换版本将丢弃未保存的画布修改，继续？'))return;this.selectedVersion=v.id;this.resetWorkspace(v.definition);this.render();return}
+    if(el.dataset.editorAdd){this.mutate(seq=>seq.push(window.FlowStudioModel.newNode(el.dataset.editorAdd,this.opts.cfg())));return}
+    if(el.dataset.editorAddChild){this.mutate(seq=>{const p=seq.find(x=>x.id===el.dataset.editorAddChild);if(p&&p.type==='Parallel'&&p.children.length<4)p.children.push(window.FlowStudioModel.newNode('Delay',this.opts.cfg()))});return}
+    if(el.dataset.editorRemove){const id=el.dataset.editorRemove;this.mutate(seq=>{const i=seq.findIndex(x=>x.id===id);if(i>=0)seq.splice(i,1);else for(const n of seq)if(n.children)n.children=n.children.filter(x=>x.id!==id)});this.selectedId=null;this.render();return}
+    const a=el.dataset.editorAction;if(!a)return;
+    if(a==='undo'||a==='redo'){this.navigateHistory(a);return}
+    if(a==='copy'){this.copySelected();return}
+    if(a==='paste'){this.pasteSelected();return}
+    if(a==='duplicate'){if(this.copySelected())this.pasteSelected();return}
+
+    try{
+      this.busy=true;this.render();let result=null;
+      if(a==='save'){const errors=this.errors();if(errors.length)throw Error('保存前检查失败：'+errors[0]);result=await this.opts.send('/api/flows/draft',{definition:this.clone(this.sequence),expectedActiveVersionId:this.data.active.id});}
+      else if(a==='validate')result=await this.opts.send('/api/flows/'+encodeURIComponent(this.selectedVersion)+'/validate');
+      else if(a==='publish'){
+        if(!confirm('确认发布 '+this.selectedVersion+' 吗？将只影响之后启动的仿真周期。'))return;
+        result=await this.opts.send('/api/flows/'+encodeURIComponent(this.selectedVersion)+'/publish');
+      }else if(a==='rollback'){
+        if(!confirm('将创建一个新的发布版本，内容复制自 '+this.selectedVersion+'，确认？'))return;
+        result=await this.opts.send('/api/flows/rollback',{id:this.selectedVersion});
+      }else if(a==='reset') {this.resetWorkspace(this.data.active.definition);this.selectedVersion=this.data.active.id;this.opts.notice('已还原工作区');return}
+      const v=result?.data||result;
+      await this.reload(v?.id||this.selectedVersion);
+      await this.opts.refreshed();
+      this.opts.notice('操作成功：'+a);
+    }catch(err){this.opts.notice(err.message,true)}finally{this.busy=false;this.render()}
+  }
+  changedInput(e){
+    const el=e.target;if(!el.dataset.editorInput)return;
+    if(!this.canEdit())return;
+    if(!this.getNode(this.selectedId))return;
+    const field=el.dataset.editorInput;
+    this.mutate(seq=>{
+      let n=null;for(const top of seq){if(top.id===this.selectedId)n=top;for(const child of top.children||[])if(child.id===this.selectedId)n=child}
+      if(!n)return;
+      if(field==='type'){
+        const replacement=window.FlowStudioModel.newNode(el.value,this.opts.cfg(),n.id);replacement.label=n.label;
+        Object.keys(n).forEach(k=>delete n[k]);Object.assign(n,replacement);
+      }else if(field==='sharedResources')n.sharedResources=el.value.split(',').map(x=>x.trim().toUpperCase()).filter(Boolean);
+      else n[field]=['positionMm','durationMs','timeoutMs','maxRetries','resourceWaitTimeoutMs'].includes(field)?Number(el.value):el.value;
+      if(field==='onError'&&n.onError==='Retry')n.maxRetries=1;
+    });
+  }
+}
+window.FlowEditor=FlowEditor;
+
+</script>
+<script>
+/* V1.1 isolated A/B station control, same API semantics online/offline.
+ * Online failure locks this panel; there is no mid-session silent simulator fallback. */
+(function(global){
+  const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  class StationConsole {
+    constructor({root,backend,token,user,offline,coordinator,notify}){
+      this.root=root;this.backend=backend;this.token=token;this.user=user;this.offline=offline;this.coordinator=coordinator;this.notify=notify;
+      this.overviews=[];this.snaps={};this.owner=null;this.resources={leases:[],queue:[],events:[]};this.log=[];
+      this.locked=false;this.busy=false;this.polling=false;
+      this.panel=document.getElementById('panel-stations');
+      this.panel.addEventListener('click',e=>{const btn=e.target.closest('button[data-fleet-action]');if(btn&&!btn.disabled)
+        void this.action(btn.dataset.stationId,btn.dataset.fleetAction);
+      });
+      document.getElementById('fleetRefresh').addEventListener('click',()=>void this.refresh());
+      setInterval(()=>{if(this.panel.classList.contains('active')&&this.user()&&!this.busy)void this.refresh()},180);
+      this.render();
+    }
+    record(message,error=false){this.log.unshift({time:new Date().toLocaleTimeString(),message,error});this.log.length=Math.min(35,this.log.length);this.renderLog();this.notify(message,error)}
+    renderLog(){const dest=document.getElementById('fleetLog');dest.innerHTML=this.log.length?this.log.map(x=>`<div class="fleet-log-entry ${x.error?'error':''}">${safe(x.time)} · ${safe(x.message)}</div>`).join(''):'尚无操作记录'}
+    can(action,s){const role=({Operator:1,Engineer:2,Admin:3})[this.user()?.role]||0;
+      if(this.locked||this.busy||!role)return false;
+      const ready=s.state==='Idle'&&!s.busy;
+      if(action==='prepare')return role>=2&&ready&&s.mode==='Manual';
+      if(action==='auto')return role>=1&&ready&&s.mode==='Manual'&&!s.recoveryRequired;
+      if(action==='manual')return role>=2&&ready&&s.mode==='Auto';
+      if(action==='start')return role>=1&&ready&&s.mode==='Auto'&&!s.recoveryRequired;
+      if(action==='stop')return role>=1&&['Running','Stopping'].includes(s.state);
+      if(action==='reset')return role>=2&&s.state==='Fault'&&!s.busy;
+      if(action==='confirm')return role>=2&&ready&&s.mode==='Manual'&&s.recoveryRequired;
+      return false;
+    }
+    render(){
+      const rows=this.overviews||[];
+      document.getElementById('fleetCount').textContent=String(rows.length);
+      document.getElementById('fleetRunning').textContent=String(rows.filter(x=>x.busy).length);
+      document.getElementById('fleetFaults').textContent=String(rows.filter(x=>x.state==='Fault'||x.recoveryRequired).length);
+      document.getElementById('fleetOwner').textContent=this.owner?'工站 '+this.owner:'空闲';
+      const labels={prepare:'准备轴 / 回零',auto:'切换自动',manual:'切换手动',start:'运行周期',stop:'停止周期',reset:'报警复位',confirm:'确认恢复'};
+      const box=document.getElementById('fleetStations');
+      box.innerHTML=rows.length?rows.map(s=>{
+        const snap=this.snaps[s.id]||s;
+        const actionButtons=Object.entries(labels).map(([k,name])=>`<button class="btn ${k==='start'?'btn-primary':k==='stop'?'btn-danger':'btn-light'}" data-station-id="${safe(s.id)}" data-fleet-action="${k}" ${this.can(k,s)?'':'disabled'}>${safe(name)}</button>`).join('');
+        const flow=s.flowVersion||'—',recipe=s.recipeId||'—',last=(snap.cycleHistory||[])[0];
+        return `<article class="fleet-station ${s.state==='Fault'||s.recoveryRequired?'problem':s.busy?'running':''}" data-fleet-station="${safe(s.id)}">
+        <div class="fleet-station-head"><div><div class="eyebrow">STATION ${safe(s.id)} · SIMULATION</div><h2>工站 ${safe(s.id)}</h2><small>${safe(s.profileId)}</small></div>
+        <span class="pill ${s.state==='Fault'||s.recoveryRequired?'alert':s.busy?'neutral':''}">${safe(s.state==='Fault'?'故障':s.recoveryRequired?'待恢复':s.busy?'执行中':'待机')} · ${safe(s.mode)}</span></div>
+        <div class="fleet-station-metrics"><div><small>完成周期</small><b>${Number(s.cycles)||0}</b></div><div><small>状态</small><b>${safe(s.state)}</b></div><div><small>运行结果</small><b>${safe(last?.outcome||'—')}</b></div></div>
+        <div class="fleet-step"><span>当前步骤</span><b>${safe(snap.step||'等待操作')}</b></div>
+        <div class="fleet-buttons">${actionButtons}</div>
+        <div class="fleet-info"><span>流程 <code>${safe(flow)}</code></span><span>配方 <code>${safe(recipe)}</code></span><span class="${s.alarm?'alarm':''}">报警：${safe(s.alarm||'无')}</span></div></article>`;
+      }).join(''):'<div class="card">尚未取得工站状态。请登录或刷新。</div>';
+      const resources=this.resources||{leases:[],queue:[]};
+      document.getElementById('fleetQueueCount').textContent='等待 '+resources.queue.length;
+      const held=resources.leases.map(x=>`<div class="fleet-resource-line"><b>${safe(x.resource)}</b><span>工站 ${safe(x.stationId)} · ${safe(x.nodeId)}</span></div>`).join('');
+      const queue=resources.queue.map(x=>`<div class="fleet-resource-line"><b>#${Number(x.position)||'?' } · 工站 ${safe(x.stationId)}</b><span>${safe(x.nodeId)} · ${safe((x.resources||[]).join(', '))}</span></div>`).join('');
+      document.getElementById('fleetResourceRows').innerHTML=`<div class="fleet-resource-lane"><h3>已分配 LEASES · ${resources.leases.length}</h3>${held||'<div class="fleet-resource-empty">当前无占用，可并发运行非共享节点</div>'}</div><div class="fleet-resource-lane"><h3>FIFO 等待 QUEUE · ${resources.queue.length}</h3>${queue||'<div class="fleet-resource-empty">暂无排队请求</div>'}</div>`;
+      document.getElementById('fleetRefresh').disabled=this.busy||!this.user()||this.locked;
+    }
+    async request(path,body){
+      const response=await fetch(this.root+path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json','X-Sim-Token':this.token()},body:body===undefined?undefined:JSON.stringify(body)});
+      const value=await response.json();if(!response.ok)throw Error(value.error||'HTTP '+response.status);return value;
+    }
+    async refresh(){
+      if(!this.user()||this.polling||this.locked)return;
+      this.polling=true;
+      try{
+        if(this.backend()){
+          const [result,resources]=await Promise.all([this.request('/api/stations'),this.request('/api/stations/resources')]);
+          this.resources=resources;
+          const snaps=await Promise.all(result.stations.map(s=>this.request('/api/stations/'+encodeURIComponent(s.id)+'/snapshot')));
+          this.overviews=result.stations;this.owner=result.owner;
+          result.stations.forEach((s,i)=>{this.snaps[s.id]=snaps[i]});
+        }else{
+          this.snaps=Object.fromEntries(Object.entries(this.offline).map(([id,item])=>[id,item.machine.snapshot()]));
+          this.overviews=Object.entries(this.snaps).map(([id,s])=>({id,profileId:s.profileId,mode:s.mode,
+            state:s.state,cycles:s.cycles,busy:s.busy,recoveryRequired:s.recoveryRequired,alarm:s.alarm,
+            flowVersion:this.offline[id].machine.cfg.flowVersion||'offline-flow',recipeId:this.offline[id].governance.activeId}));
+          this.resources=this.coordinator.snapshot();
+          this.owner=this.resources.leases.find(x=>x.resource==='CELL-SHARED')?.stationId||null;
+        }
+        this.render();
+      }catch(e){
+        if(this.backend()) {this.locked=true;this.record('多工站服务连接丢失，禁止发起新操作：'+e.message,true)}
+        else this.record('离线读取失败：'+e.message,true);
+      }finally{this.polling=false}
+    }
+    async post(id,path,body={}){
+      if(this.backend())return this.request('/api/stations/'+id+path,body);
+      return this.offline[id].governance.post(path,body,this.user());
+    }
+    async action(id,action){
+      if(!this.user()||this.locked||this.busy)return;
+      const current=this.overviews.find(s=>s.id===id);
+      if(!current||!this.can(action,current))return;
+      this.busy=true;this.render();
+      try{
+        if(action==='prepare'){
+          // Explicit normal manual actions; this is NOT an interlock bypass.
+          const cfg=this.backend()?await this.request('/api/stations/'+id+'/config'):this.offline[id].machine.cfg;
+          for(const a of cfg.axes){await this.post(id,`/api/manual/axes/${encodeURIComponent(a.id)}/enable`,{enabled:true});await this.post(id,`/api/manual/axes/${encodeURIComponent(a.id)}/home`)}
+        }else if(action==='auto'||action==='manual')await this.post(id,'/api/mode',{mode:action==='auto'?'Auto':'Manual'});
+        else if(action==='start'){
+          // V1.2 allows concurrent cycles; only shared workflow nodes queue.
+          await this.post(id,'/api/cycle/start');
+        }else if(action==='stop')await this.post(id,'/api/cycle/stop');
+        else if(action==='reset')await this.post(id,'/api/fault/reset');
+        else if(action==='confirm')await this.post(id,'/api/recovery/confirm');
+        this.record('工站 '+id+'：'+({prepare:'轴已完成准备',auto:'切换自动',manual:'切换手动',start:'已提交启动请求',stop:'已提交软件停止',reset:'报警复位',confirm:'恢复确认'}[action]||action));
+      }catch(e){this.record('工站 '+id+' 操作失败：'+e.message,true)}
+      finally{this.busy=false;await this.refresh();this.render()}
+    }
+  }
+  global.StationConsole=StationConsole;
+})(window);
+
+</script>
+<script>
+(() => {
+  const root='http://127.0.0.1:5088';
+  const mock=new MockRuntime();
+  const governance=new GovernanceMock(mock);
+  let cfg=window.STATION_CONFIG, snapshot=mock.snapshot(),flow=mock.flow.snapshot();
+  let usingBackend=false, disconnected=false, currentTab='dashboard', inFlight=0, backendProbe=null;
+  let editor=null,replay=null,quality=null,stationConsole=null;
+  let selectedAxis='X',selectedCylinder='Clamp',toastTimer=null,polling=false;
+  let historyFilter='All',selectedCycleId=null;
+  let user=null,token=null,governanceData=null,auditData=null,recoveryData=null,selectedRecipeId=null,auditPage=1;
+  const $=id=>document.getElementById(id);
+  const h=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const names={PartPresent:'产品到位',GuardClosed:'防护门状态（普通 DI）',AirPressureOk:'气压正常',ClampExtended:'夹紧伸出到位',ClampRetracted:'夹紧缩回到位',StopperExtended:'阻挡伸出到位',StopperRetracted:'阻挡缩回到位',ClampExtend:'夹紧伸出阀',ClampRetract:'夹紧缩回阀',StopperExtend:'阻挡伸出阀',StopperRetract:'阻挡缩回阀',XStuck:'X 轴卡滞',YStuck:'Y 轴卡滞',ClampStuck:'夹紧气缸卡滞',StopperStuck:'阻挡气缸卡滞'};
+  const stateText={Idle:'待机',Running:'运行中',Stopping:'停止中',Fault:'故障',Manual:'手动',Auto:'自动',Retracted:'缩回到位',Extended:'伸出到位',Unknown:'位置未知'};
+  const titles={stations:'多工站调度',dashboard:'生产总览',manual:'手动调试',io:'IO 监控',config:'机构与互锁',sequence:'流程调试',analytics:'运行分析',events:'报警与日志',recovery:'故障恢复向导',governance:'配方版本与审计',workflow:'流程设计器',replay:'历史回放',quality:'流程质量门禁'};
+  const txt=(id,val)=>{const e=$(id);if(e)e.textContent=val};
+  const status=(id,ok)=>{const e=$(id);if(e){e.classList.toggle('ok',!!ok);e.classList.toggle('error',!ok)}};
+  function toast(message,error=false){const n=$('toast');n.textContent=message;n.className='toast'+(error?' error':'');clearTimeout(toastTimer);toastTimer=setTimeout(()=>n.classList.add('hidden'),4200)}
+  function activate(tab){if(!titles[tab])return;if(tab!=='replay')replay?.stop();currentTab=tab;txt('pageTitle',titles[tab]);document.querySelectorAll('[data-tab]').forEach(e=>e.classList.toggle('active',e.dataset.tab===tab));document.querySelectorAll('.panel').forEach(e=>e.classList.toggle('active',e.id==='panel-'+tab));render();if(tab==='governance'||tab==='recovery')loadGovernance();if(tab==='workflow')editor.open();if(tab==='replay')replay.render();if(tab==='quality')quality?.render();if(tab==='stations')void stationConsole?.refresh()}
+  async function detectBackend(){
+    if(location.protocol==='file:'){render();return}
+    try{
+      const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),650);
+      const res=await fetch(root+'/api/health',{signal:controller.signal});clearTimeout(timeout);
+      if(!res.ok)throw Error('服务不可用');
+      const health=await res.json();if(health.mode!=='Simulation')throw Error('本界面仅可连接仿真服务');
+      usingBackend=true;
+      // Do not auto-authorize or silently reuse a previous session. Explicit login is required.
+      if(user){const r=await fetch(root+'/api/config',{headers:{'X-Sim-Token':token}});if(!r.ok)throw Error('无法读取站点配置');cfg=await r.json();populateSelectors();await refresh();}
+    }catch(e){if(usingBackend){disconnected=true;toast('后端连接异常，控制已锁定：'+e.message,true)}else toast('未检测到 C# 本地仿真服务，已启用浏览器离线演示')}
+    render();
+  }
+  async function request(path,body={}){
+    if(disconnected)throw Error('本地服务断开，控制已锁定；请检查服务并重新加载页面');
+    if(!user)throw Error('请先登录');
+    if(!usingBackend)return governance.post(path,body,user);
+    const resp=await fetch(root+path,{method:'POST',headers:{'Content-Type':'application/json','X-Sim-Token':token},body:JSON.stringify(body)});
+    let value;try{value=await resp.json()}catch{throw Error('后端未返回有效 JSON')}
+    if(!resp.ok)throw Error(value.error||'请求失败 '+resp.status);return value;
+  }
+  async function refresh(){
+    if(polling||disconnected||!user)return;
+    polling=true;
+    try{
+      if(usingBackend){
+        const heads={'X-Sim-Token':token};
+        const [res,fres]=await Promise.all([fetch(root+'/api/snapshot',{headers:heads}),fetch(root+'/api/flow',{headers:heads})]);
+        if(!res.ok||!fres.ok)throw Error('HTTP '+(res.ok?fres.status:res.status));
+        snapshot=await res.json();flow=await fres.json();
+      }else {snapshot=mock.snapshot();flow=mock.flow.snapshot()}
+    }catch(e){disconnected=true;toast('本地仿真 API 已断开，所有控制已锁定，不会自动切换到浏览器模拟器',true)}
+    finally{polling=false;render()}
+  }
+  async function act(path,body={}){
+    inFlight++;render();
+    try{await request(path,body);await refresh();if(currentTab==='governance'||currentTab==='recovery')await loadGovernance();toast('指令已执行（仿真）')}
+    catch(e){toast(e.message||'命令失败',true);await refresh()}
+    finally{inFlight--;render()}
+  }
+  function populateSelectors(){
+    $('axisSelect').innerHTML=cfg.axes.map(a=>`<option value="${h(a.id)}">${h(a.label)}（${h(a.id)}）</option>`).join('');
+    $('cylinderSelect').innerHTML=cfg.cylinders.map(c=>`<option value="${h(c.id)}">${h(c.label)}（${h(c.id)}）</option>`).join('');
+    if(!cfg.axes.some(a=>a.id===selectedAxis))selectedAxis=cfg.axes[0].id;
+    if(!cfg.cylinders.some(c=>c.id===selectedCylinder))selectedCylinder=cfg.cylinders[0].id;
+    $('axisSelect').value=selectedAxis;$('cylinderSelect').value=selectedCylinder;
+  }
+  const rank=()=>({Operator:1,Engineer:2,Admin:3})[user?.role]||0;
+  async function login(username,password){
+    // Do not race a local API health probe and accidentally create an offline
+    // session that cannot authorize the actual backend.
+    if(backendProbe)await backendProbe;
+    if(disconnected)throw Error('服务断开，请刷新页面后重试');
+    if(usingBackend){
+      const res=await fetch(root+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+      const value=await res.json();if(!res.ok)throw Error(value.error||'登录失败');token=value.token;user=value.user;
+      const cfgRes=await fetch(root+'/api/config',{headers:{'X-Sim-Token':token}});
+      if(!cfgRes.ok)throw Error('登录后读取配置失败');cfg=await cfgRes.json();
+    }else user=governance.login(username,password);
+    $('loginOverlay').classList.add('hidden');populateSelectors();void stationConsole?.refresh();await refresh();await loadGovernance();render();
+  }
+  async function logout(){
+    if(usingBackend&&token){try{await fetch(root+'/api/auth/logout',{method:'POST',headers:{'X-Sim-Token':token}})}catch{}}
+    user=null;token=null;governanceData=null;auditData=null;recoveryData=null;
+    $('loginOverlay').classList.remove('hidden');stationConsole?.render();render();
+  }
+  async function securedGet(path){
+    if(!user)return null;
+    if(!usingBackend){
+      if(path==='/api/recipes')return governance.list();
+      if(path==='/api/flows')return governance.flows.list();
+      if(path.startsWith('/api/audit'))return governance.auditPage(auditPage,40);
+      if(path==='/api/recovery/checklist')return governance.checklist();
+    }
+    const res=await fetch(root+path,{headers:{'X-Sim-Token':token}});
+    if(!res.ok){const v=await res.json().catch(()=>({}));throw Error(v.error||'API '+res.status)}return res.json();
+  }
+  async function loadGovernance(){
+    if(!user)return;
+    try{
+      if(currentTab==='governance'){
+        governanceData=await securedGet('/api/recipes');
+        auditData=rank()>=2?await securedGet('/api/audit?page='+auditPage+'&pageSize=40'):null;
+      }
+      if(currentTab==='recovery')recoveryData=await securedGet('/api/recovery/checklist');
+      render();
+    }catch(e){toast('治理数据加载失败：'+e.message,true)}
+  }
+  function renderRecovery(d){
+    const data=usingBackend?recoveryData:governance.checklist();if(!data)return;
+    const checks=data.checks;const all=checks.every(x=>x.ok);
+    txt('recoveryStatus',d.recoveryRequired?all?'条件已满足':'需要处理':'无需恢复');
+    $('recoveryStatus').className='pill'+(d.recoveryRequired&&!all?' alert':'');
+    txt('guideAlarm',d.activeAlarm?d.activeAlarm.code+' · '+d.activeAlarm.message:d.recoveryRequired?'流程停止或故障已复位，仍需完成机构确认':'当前无活动故障');
+    $('recoveryChecklist').innerHTML=checks.map(x=>`<div class="check-row ${x.ok?'pass':'fail'}"><span class="check-icon">${x.ok?'✓':'✕'}</span>${h(x.label)}<span style="margin-left:auto;font-size:10px">${x.ok?'通过':'未满足'}</span></div>`).join('');
+    txt('recoveryAdvice',!d.recoveryRequired?'当前无需故障恢复。':d.state==='Fault'?'先排除仿真故障并在设备总览复位报警。':all?'条件齐全，工程师可点击确认恢复。':'请逐项完成未满足的恢复条件。');
+  }
+  function formatRecipe(v){return `<div class="keyvalue"><span>名称</span><b>${h(v.name)}</b></div><div class="keyvalue"><span>视觉 X 偏移</span><b>${Number(v.visionOffsetMm).toFixed(2)} mm</b></div><div class="keyvalue"><span>额外延时</span><b>${v.extraDwellMs} ms</b></div>`}
+  function renderGovernance(d){
+    if(!governanceData)return;
+    const a=governanceData.active,versions=governanceData.versions;
+    if(!selectedRecipeId||!versions.some(v=>v.id===selectedRecipeId))selectedRecipeId=a.id;
+    txt('activeRecipeTag',a.id);$('activeRecipeInfo').innerHTML=formatRecipe(a.values)+`<small>创建者 ${h(a.author)} · Hash ${h(a.hash)}</small>`;
+    $('recipeVersions').innerHTML=versions.map(v=>`<button class="recipe-item ${v.id===selectedRecipeId?'selected':''}" data-recipe-id="${h(v.id)}"><strong>${h(v.id)} · ${h(v.values.name)}</strong><span class="pill">${h({Draft:'草稿',Validated:'已验证',Published:'已发布',Superseded:'历史版本'}[v.status]||v.status)}</span><small>${h(v.author)} · ${h(new Date(v.createdAt).toLocaleString('zh-CN'))}</small><small>${h(v.reason)}</small></button>`).join('');
+    const sel=versions.find(v=>v.id===selectedRecipeId)||a;
+    const fields=[['名称',a.values.name,sel.values.name],['视觉偏移(mm)',a.values.visionOffsetMm,sel.values.visionOffsetMm],['延时(ms)',a.values.extraDwellMs,sel.values.extraDwellMs]];
+    $('recipeDiff').innerHTML=fields.map(([n,oldV,newV])=>`<div class="keyvalue"><span>${h(n)}</span><b>${h(String(oldV))} → <span style="color:${oldV===newV?'#778ea9':'#3367d8'}">${h(String(newV))}</span></b></div>`).join('');
+    document.querySelectorAll('[data-governance]').forEach(b=>{
+      let allowed=rank()>=2;
+      if(b.dataset.governance==='publish'||b.dataset.governance==='rollback')allowed=rank()>=3&&!d.busy&&!d.recoveryRequired&&d.state==='Idle';
+      if(b.dataset.governance==='validate')allowed=allowed&&sel.status==='Draft';
+      if(b.dataset.governance==='publish')allowed=allowed&&sel.status==='Validated';
+      if(b.dataset.governance==='rollback')allowed=allowed&&['Published','Superseded'].includes(sel.status)&&sel.id!==a.id;
+      if(b.dataset.governance==='audit-next')allowed=rank()>=2&&auditPage*40<(auditData?.total||0);
+      if(b.dataset.governance==='audit-prev')allowed=rank()>=2&&auditPage>1;
+      b.disabled=!allowed||inFlight>0;
+    });
+    const rows=auditData?.items||[];
+    $('auditRows').innerHTML=rows.length?rows.map(x=>`<tr><td>${h(new Date(x.time).toLocaleString('zh-CN'))}</td><td><b>${h(x.actor)}</b><br>${h(x.role)}</td><td>${h(x.method)} ${h(x.path)}</td><td class="${x.status>=400?'denied':''}">${x.status} · ${h(x.outcome)}</td><td><code>${h(x.traceId)}</code></td></tr>`).join(''):'<tr><td colspan="5">该角色没有审计查看权限，或尚无记录。</td></tr>';
+    txt('auditMeta',auditData?'共 '+auditData.total+' 条 · 第 '+auditPage+' 页':'审计记录需要工程师权限');
+  }
+  function exportAudit(){
+    if(rank()<2||!auditData)throw Error('无审计导出权限');
+    const rows=[['时间','操作人','角色','方法','路径','结果','TraceId'],...auditData.items.map(x=>[x.time,x.actor,x.role,x.method,x.path,x.status,x.traceId])];
+    const csv='\ufeff'+rows.map(x=>x.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n');
+    const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+    const a=document.createElement('a');a.href=url;a.download='device-control-audit-page-'+auditPage+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
+  function render(){
+    const d=snapshot;if(!d)return;
+    txt('userLabel',user?user.name+' · '+user.role:'未登录');$('logoutButton').disabled=!user;
+    txt('connectionLabel',disconnected?'已断开 · 锁定':usingBackend?'C# 本地模拟后端':'浏览器模拟驱动');
+    txt('sourceMode',disconnected?'连接丢失':usingBackend?'本地 API · Simulation':'离线 Simulation');
+    txt('clock',new Date().toLocaleTimeString('zh-CN',{hour12:false}));
+    txt('stateValue',stateText[d.state]||d.state);
+    $('stateDot').className='state-dot '+(disconnected||d.state==='Fault'?'error':d.state==='Running'||d.state==='Stopping'?'running':'ok');
+    txt('stateSubtitle',disconnected?'控制锁定':d.recoveryRequired?'需要恢复确认':'普通互锁有效');
+    txt('modeValue',stateText[d.mode]||d.mode);txt('cyclesValue',String(d.cycles));
+    const x=d.axes.X||Object.values(d.axes)[0],clamp=d.cylinders.Clamp||Object.values(d.cylinders)[0];
+    txt('axisValue',x.positionMm.toFixed(3));txt('axisSub',x.homed?'X 轴已回零':'X 轴未回零');
+    txt('stepValue',d.step);txt('flowStatus',stateText[d.state]||d.state);
+    txt('recoveryTag',d.recoveryRequired?'需要恢复确认':d.state==='Fault'?'报警':'状态正常');
+    $('recoveryTag').className='pill'+(d.recoveryRequired||d.state==='Fault'?' alert':'');
+    const xCfg=cfg.axes.find(a=>a.id==='X')||cfg.axes[0];
+    $('axisCarriage').style.left=Math.min(100,Math.max(0,(x.positionMm-xCfg.minMm)/(xCfg.maxMm-xCfg.minMm)*100))+'%';
+    $('piston').classList.toggle('extended',clamp.position==='Extended');
+    $('productSymbol').classList.toggle('absent',!d.inputs.PartPresent);
+    status('guardLed',d.inputs.GuardClosed);status('airLed',d.inputs.AirPressureOk);status('partLed',d.inputs.PartPresent);
+    txt('visionValue',d.vision?'视觉：'+(d.vision.ok?'OK · X='+d.vision.targetXmm.toFixed(3)+' mm':'NG'):'视觉：尚未触发');
+    $('stepProgress').style.width=(d.stepIndex>=cfg.sequence.length?100:d.stepIndex<0?0:Math.round((d.stepIndex+1)/cfg.sequence.length*100))+'%';
+    txt('actionHint',disconnected?'连接已断开，重新启动服务后刷新页面':d.alarm?'故障：'+d.alarm:d.recoveryRequired?'需要手动恢复所有轴与气缸后才能切换自动':d.mode==='Manual'?'先使能并回零 X/Y，再切换自动模式':'自动模式可以启动一个单周期');
+    $('modeManual').classList.toggle('selected',d.mode==='Manual');$('modeAuto').classList.toggle('selected',d.mode==='Auto');
+    renderManual(d);
+    const manual=d.mode==='Manual'&&d.state==='Idle'&&!d.busy&&d.inputs.GuardClosed&&d.inputs.AirPressureOk;
+    document.querySelectorAll('[data-action]').forEach(b=>{
+      const a=b.dataset.action;let ok=true;
+      if(['servo-on','servo-off','axis-home','axis-move','cylinder-extend','cylinder-retract','vision-trigger'].includes(a))ok=manual;
+      if(a==='cycle-start')ok=d.mode==='Auto'&&d.state==='Idle'&&!d.busy&&!d.recoveryRequired;
+      if(a==='cycle-stop')ok=d.state==='Running'||d.state==='Stopping';
+      if(a==='fault-reset')ok=d.state==='Fault'&&!d.busy;
+      if(a==='recovery-confirm')ok=d.mode==='Manual'&&d.state==='Idle'&&!d.busy&&d.recoveryRequired;
+      if(['servo-on','servo-off','axis-home','axis-move','cylinder-extend','cylinder-retract','vision-trigger','fault-reset','recovery-confirm'].includes(a))ok=ok&&rank()>=2;
+      b.disabled=!ok||!user||inFlight>0||disconnected;
+    });
+    document.querySelectorAll('[data-mode]').forEach(b=>b.disabled=!user||rank()<(b.dataset.mode==='Manual'?2:1)||d.state!=='Idle'||d.busy||inFlight>0||disconnected);
+    if(currentTab==='io')renderIO(d);
+    if(currentTab==='config')renderConfig(d);
+    if(currentTab==='sequence')renderSteps(d);
+    if(currentTab==='replay')replay?.render();
+    if(currentTab==='events')renderEvents(d);
+    if(currentTab==='analytics')renderAnalytics(d);
+    if(currentTab==='recovery')renderRecovery(d);
+    if(currentTab==='governance')renderGovernance(d);
+  }
+  function renderManual(d){
+    const a=d.axes[selectedAxis]||Object.values(d.axes)[0];const ac=cfg.axes.find(x=>x.id===selectedAxis)||cfg.axes[0];
+    const c=d.cylinders[selectedCylinder]||Object.values(d.cylinders)[0];
+    txt('axisReadout',a.positionMm.toFixed(3));txt('homedReadout',a.homed?'已回零':'未回零');
+    txt('axisLimits',ac.minMm+'–'+ac.maxMm+' mm / '+ac.speedMmPerSec+' mm/s');
+    txt('axisBadge',a.enabled?'已使能':'未使能');txt('cylinderBadge',stateText[c.position]||c.position);
+    txt('cylinderReadout',stateText[c.position]||c.position);txt('extendReadout',c.extendedSensor?'ON':'OFF');txt('retractReadout',c.retractedSensor?'ON':'OFF');
+    txt('mechanismHint',selectedCylinder==='Clamp'?'Clamp 伸出需先使 Stopper 伸出。轴运动前必须缩回两只气缸。':'Stopper 可独立伸出；伸出期间 X/Y 轴均禁止移动。');
+    $('mechanismOverview').innerHTML=[...cfg.axes.map(x=>{const s=d.axes[x.id];return `<div class="mini-item"><b>${h(x.label)}</b><small>Axis ${h(x.id)} / ${s.homed?'已回零':'未回零'}</small><strong>${s.positionMm.toFixed(3)} mm</strong></div>`}),...cfg.cylinders.map(x=>{const s=d.cylinders[x.id];return `<div class="mini-item"><b>${h(x.label)}</b><small>Cylinder ${h(x.id)}</small><strong>${h(stateText[s.position]||s.position)}</strong></div>`})].join('');
+  }
+  function signalRow(s,value){
+    const writable=s.injectable&&s.direction==='DI';
+    return `<div class="signal-row"><span class="signal-index">${h(s.channel)}</span><div class="signal-text"><b>${h(s.description||names[s.name]||s.name)}</b><small>${h(s.name)}</small></div><div class="signal-control"><span class="signal-indicator"><span class="led ${value?'on':''}"></span>${value?'ON':'OFF'}</span>${writable?`<button class="switch ${value?'on':''}" data-signal-name="${h(s.name)}" data-signal-kind="input" data-next="${!value}" aria-label="切换${h(s.name)}"></button>`:''}</div></div>`;
+  }
+  function renderIO(d){
+    $('inputRows').innerHTML=cfg.signals.filter(s=>s.direction==='DI').map(s=>signalRow(s,d.inputs[s.name])).join('');
+    $('outputRows').innerHTML=cfg.signals.filter(s=>s.direction==='DO').map(s=>signalRow(s,d.outputs[s.name])).join('');
+    $('faultRows').innerHTML=Object.entries(d.faultInjection).map(([n,v],i)=>`<div class="signal-row"><span class="signal-index">F${i+1}</span><div class="signal-text"><b>${h(names[n]||n)}</b><small>${h(n)}</small></div><div class="signal-control"><span class="signal-indicator"><span class="led ${v?'on':''}"></span>${v?'ON':'OFF'}</span><button class="switch ${v?'on':''}" data-signal-name="${h(n)}" data-signal-kind="fault" data-next="${!v}" aria-label="模拟${h(n)}"></button></div></div>`).join('');
+    document.querySelectorAll('[data-signal-kind]').forEach(x=>x.disabled=!user||rank()<2||disconnected||inFlight>0);
+  }
+  function renderConfig(d){
+    txt('profileDescription',cfg.profileId+' · '+cfg.driver+' · '+cfg.axes.length+' 轴 / '+cfg.cylinders.length+' 气缸');
+    $('configMechanisms').innerHTML=[...cfg.axes.map(a=>`<div class="mini-item"><b>${h(a.label)}</b><small>轴 ID ${h(a.id)} · 范围 ${a.minMm}–${a.maxMm} mm</small><strong>${a.speedMmPerSec} mm/s</strong></div>`),...cfg.cylinders.map(c=>`<div class="mini-item"><b>${h(c.label)}</b><small>${h(c.extendOutput)} / ${h(c.retractOutput)}</small><strong>${c.timeoutMs} ms</strong></div>`)].join('');
+    $('mappingRows').innerHTML=cfg.signals.map(s=>`<div class="mapping-row"><span class="map-chip">${h(s.channel)}</span><div><b>${h(s.name)}</b><small>${h(s.description)}</small></div><span class="map-chip">${h(s.direction)}</span></div>`).join('');
+    $('interlockRows').innerHTML=d.interlocks.map(x=>`<div class="interlock-card"><b>${h(x.message)}</b><small>动作: ${h(x.action)} · ${h(x.device)} / DI ${h(x.signal)} = ${x.required?'ON':'OFF'}</small><small class="${x.satisfied?'pass':'block'}">${x.satisfied?'● 已满足':'● 不满足'} · 实际 ${x.actual?'ON':'OFF'}</small></div>`).join('');
+  }
+  function renderSteps(d){
+    const f=flow||{version:cfg.flowVersion,status:'Idle',breakpoints:[],active:[],traces:[],resources:{},waiting:null};
+    const active=new Set((f.active||[]).map(v=>typeof v==='string'?v:v.id));
+    const traces=f.traces||[];
+    const last=id=>[...traces].reverse().find(t=>t.id===id);
+    txt('sequenceStatus',stateText[d.state]||d.state);
+    txt('flowVersion',f.version||cfg.flowVersion||'unversioned');
+    txt('flowDebugStatus',f.status==='Paused'?'已暂停':f.status==='Running'?'执行中':'待机');
+    $('flowDebugStatus').className='pill'+(f.status==='Paused'?' alert':'');
+    txt('flowDetail',`${cfg.sequence.length} 个顶层步骤 · ${cfg.sequence.filter(n=>n.type==='Parallel').length} 个并行组 · ${traces.length} 条执行轨迹`);
+    $('sequenceSteps').innerHTML=cfg.sequence.map((node,i)=>{
+      const lastRoot=last(node.id),on=(f.breakpoints||[]).includes(i),isActive=active.has(node.id),isPaused=f.status==='Paused'&&f.waiting?.index===i;
+      const cl=isActive?'active':isPaused?'paused':lastRoot?.status==='Failed'?'failed':lastRoot?.status==='Completed'?'finished':'';
+      const label=isActive?'● 执行中':isPaused?'● 断点暂停':lastRoot?.status==='Completed'?'✓ 已完成':lastRoot?.status==='Failed'?'✕ 失败':'待执行';
+      const children=node.children?.length?`<div class="flow-children">${node.children.map(n=>{const t=last(n.id);return `<div class="flow-child"><b>${active.has(n.id)?'◉':'↳'}</b><div style="flex:1"><strong>${h(n.label)}</strong><small>${h(n.id)} · ${h(n.type)}</small></div><span class="flow-status-text">${active.has(n.id)?'运行中':t?.status==='Completed'?'完成 · '+t.durationMs+' ms':t?.status==='Failed'?'失败':'待执行'}</span></div>`}).join('')}</div>`:'';
+      return `<div class="flow-node ${cl}"><div class="flow-node-main"><button class="break-dot ${on?'on':''}" data-debug="breakpoint" data-index="${i}" data-enabled="${!on}" title="${on?'移除':'设置'}断点" ${rank()<2?'disabled':''}>●</button><span class="flow-index">${String(i+1).padStart(2,'0')}</span><div class="flow-title"><strong>${h(node.label)}</strong><small>${h(node.id)} · ${h(node.type)} ${node.onError&&node.onError!=='Abort'?'· '+h(node.onError):''}</small></div><span class="flow-status-text">${label}</span></div>${children}</div>`;
+    }).join('');
+    const varRows=[['流程状态',f.status],['设备模式',d.mode],['顶层步骤',d.stepIndex>=0?String(d.stepIndex+1):'—'],['视觉坐标',d.vision?.ok?d.vision.targetXmm.toFixed(3)+' mm':'—'],['暂停/错误原因',f.waiting?.message||'—']];
+    $('flowVariables').innerHTML=varRows.map(([k,v])=>`<div class="flow-var"><span>${h(k)}</span><b>${h(v)}</b></div>`).join('');
+    const resources=Object.entries(f.resources||{});
+    $('flowResources').innerHTML=resources.length?resources.map(([k,v])=>`<span class="resource-chip">🔒 ${h(k)} : ${h(v)}</span>`).join(''):'<small class="subtle">资源空闲，无机构锁占用</small>';
+    $('flowTraces').innerHTML=traces.length?[...traces].reverse().slice(0,35).map(t=>`<div class="trace-row"><div class="trace-top"><b>${h(t.label)}</b><span class="trace-${h((t.status||'').toLowerCase())}">${h(t.status)}</span></div><small>${h(t.parentId?'↳ '+t.parentId+' · ':'')}${h(t.id)} · 第 ${t.attempt||0} 次尝试 · ${t.durationMs} ms</small>${t.error?`<div class="trace-failed">${h(t.error)}</div>`:''}</div>`).join(''):'<p class="empty-state">暂无执行轨迹。启动自动单周期后实时显示。</p>';
+    document.querySelectorAll('[data-debug]').forEach(b=>{
+      const cmd=b.dataset.debug;
+      const paused=f.status==='Paused',running=f.status==='Running',wait=f.waiting?.kind;
+      b.disabled=!user||rank()<2||disconnected||inFlight>0||(cmd==='breakpoint'?false:cmd==='pause'?!running:cmd==='resume'||cmd==='step'?!paused||wait!=='breakpoint':cmd==='retry'||cmd==='abort'?!paused||wait!=='error':true);
+    });
+  }
+  function renderEvents(d){
+    txt('alarmStatus',d.alarm?'有活动报警':'无活动报警');$('alarmStatus').className='pill'+(d.alarm?' alert':'');
+    txt('alarmDetails',d.alarm||'当前没有活动报警');$('alarmDetails').className=d.alarm?'alarm-active':'alarm-empty';
+    const a=d.activeAlarm,box=$('alarmDiagnosis');box.classList.toggle('hidden',!a);
+    if(a)box.innerHTML=`<b>${h(a.code)}</b><span>步骤：${h(a.source)} · ${h(new Date(a.raisedAt).toLocaleString('zh-CN'))}</span><p>${h(a.suggestion)}</p>`;
+    $('eventsRows').innerHTML=d.events.map(ev=>`<div class="event-row"><time>${h(ev.time)}</time><span class="loglevel ${h(ev.level)}">${h(ev.level)}</span><span>${h(ev.message)}</span></div>`).join('');
+  }
+  function renderAnalytics(d){
+    const all=d.cycleHistory||[];
+    const complete=all.filter(c=>c.outcome==='Completed'),failed=all.filter(c=>c.outcome!=='Completed');
+    txt('histTotal',all.length);txt('histSuccess',all.length?(complete.length/all.length*100).toFixed(1)+'%':'—');
+    txt('histMean',complete.length?(complete.reduce((n,c)=>n+c.durationMs,0)/complete.length/1000).toFixed(2):'—');
+    txt('histFailures',failed.length);
+    const shown=all.filter(c=>historyFilter==='All'||c.outcome===historyFilter);
+    if(!shown.some(c=>c.id===selectedCycleId))selectedCycleId=shown[0]?.id||null;
+    $('historyRows').innerHTML=shown.length?shown.map(c=>`<button class="history-row ${selectedCycleId===c.id?'selected':''}" data-cycle-id="${h(c.id)}"><span><b>${h(c.id)}</b><small>${h(new Date(c.startedAt).toLocaleString('zh-CN'))}</small></span><span class="outcome ${h(c.outcome)}">${h({Completed:'成功',Failed:'失败',Stopped:'已停止'}[c.outcome]||c.outcome)}</span><strong>${(c.durationMs/1000).toFixed(2)} s</strong></button>`).join(''):'<p class="empty-state">暂无符合条件的周期记录。可以在生产总览运行一次仿真流程。</p>';
+    const selected=shown.find(c=>c.id===selectedCycleId);
+    txt('selectedRunLabel',selected?'周期 '+selected.id+' · '+(selected.durationMs/1000).toFixed(2)+' 秒 · 配方 '+(selected.recipeId||'未记录')+' · 流程 '+(selected.flowVersion||'旧版本'):'暂无记录');
+    txt('selectedRunStatus',selected?{Completed:'成功',Failed:'失败',Stopped:'已停止'}[selected.outcome]: '—');
+    const steps=selected?.steps||[];const peak=Math.max(1,...steps.map(x=>x.durationMs));
+    $('stepTimingRows').innerHTML=steps.length?steps.map((st,i)=>`<div class="timing-row"><div class="timing-top"><b>${String(st.index+1).padStart(2,'0')} ${h(st.label)}</b><span class="outcome ${h(st.outcome)}">${h({Completed:'完成',Failed:'失败',Canceled:'取消'}[st.outcome]||st.outcome)}</span><b>${st.durationMs} ms</b></div><div class="timing-rail"><div style="width:${(st.durationMs/peak*100).toFixed(1)}%"></div></div>${st.error?`<small class="error-line">${h(st.error)}</small>`:''}</div>`).join(''):'<p class="empty-state">没有步骤记录。</p>';
+  }
+  function exportHistory(){
+    const rows=[['周期编号','开始时间','结束时间','执行结果','耗时毫秒','步骤数','配方版本','流程版本','原因'],...(snapshot.cycleHistory||[]).map(c=>[c.id,c.startedAt,c.endedAt,c.outcome,c.durationMs,c.steps.length,c.recipeId||'',c.flowVersion||'',c.reason||''])];
+    const csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\r\n');
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='device-control-cycle-history.csv';a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);toast('已导出当前历史记录 CSV');
+  }
+  document.addEventListener('click',async e=>{
+    const b=e.target.closest('button');if(!b||b.disabled)return;
+    if(b.dataset.tab){activate(b.dataset.tab);return}
+    if(b.dataset.debug){const body={command:b.dataset.debug};if(b.dataset.debug==='breakpoint'){body.index=Number(b.dataset.index);body.enabled=b.dataset.enabled==='true'}await act('/api/flow/debug',body);return}
+    if(b.dataset.replayRun){replay.choose(b.dataset.replayRun);return}
+    if(b.dataset.replayIndex){replay.seek(Number(b.dataset.replayIndex));return}
+    if(b.dataset.replayAction){const a=b.dataset.replayAction;if(a==='prev')replay.step(-1);else if(a==='next')replay.step(1);else replay.play();return}
+    if(b.dataset.cycleId){selectedCycleId=b.dataset.cycleId;render();return}
+    if(b.dataset.recipeId){selectedRecipeId=b.dataset.recipeId;render();return}
+    if(b.dataset.governance){
+      const action=b.dataset.governance;
+      if(action==='audit-refresh'){await loadGovernance();return}
+      if(action==='audit-prev'||action==='audit-next'){auditPage+=action==='audit-prev'?-1:1;await loadGovernance();return}
+      if(action==='audit-export'){try{exportAudit();toast('本页审计记录已导出')}catch(e){toast(e.message,true)}return}
+      const id=selectedRecipeId;
+      if(action==='draft'){
+        const body={name:$('recipeName').value.trim(),visionOffsetMm:Number($('recipeOffset').value),extraDwellMs:Number($('recipeDwell').value)};
+        if(!body.name||!Number.isFinite(body.visionOffsetMm)||!Number.isInteger(body.extraDwellMs)){toast('请输入合法的草稿参数',true);return}
+        await act('/api/recipes/draft',body);if(governanceData?.versions?.[0])selectedRecipeId=governanceData.versions[0].id;
+      }
+      if(action==='validate')await act('/api/recipes/'+encodeURIComponent(id)+'/validate');
+      if(action==='publish')await act('/api/recipes/'+encodeURIComponent(id)+'/publish');
+      if(action==='rollback'){
+        if(!window.confirm('确定回滚到 '+id+' 吗？系统会创建新的已发布版本。'))return;
+        await act('/api/recipes/rollback',{id});
+      }
+      await loadGovernance();return;
+    }
+    if(b.dataset.action==='export-history'){exportHistory();return}
+    if(b.id==='helpToggle'){$('help').classList.toggle('hidden');return}
+    if(b.dataset.mode){await act('/api/mode',{mode:b.dataset.mode});return}
+    if(b.dataset.signalKind){await act('/api/sim/'+(b.dataset.signalKind==='fault'?'fault':'input'),{name:b.dataset.signalName,value:b.dataset.next==='true'});return}
+    const a=b.dataset.action;if(!a)return;
+    const axis='/api/manual/axes/'+encodeURIComponent(selectedAxis),cy='/api/manual/cylinders/'+encodeURIComponent(selectedCylinder);
+    const routes={'servo-on':[axis+'/enable',{enabled:true}],'servo-off':[axis+'/enable',{enabled:false}],
+      'axis-home':[axis+'/home'],'axis-move':[axis+'/move',{positionMm:Number($('moveTarget').value)}],
+      'cylinder-extend':[cy+'/extend'],'cylinder-retract':[cy+'/retract'],'vision-trigger':['/api/manual/vision/trigger'],
+      'cycle-start':['/api/cycle/start'],'cycle-stop':['/api/cycle/stop'],
+      'fault-reset':['/api/fault/reset'],'recovery-confirm':['/api/recovery/confirm']};
+    if(a==='axis-move'&&($('moveTarget').value.trim()===''||!Number.isFinite(Number($('moveTarget').value)))){toast('请输入合法数值',true);return}
+    if(routes[a])await act(...routes[a]);
+  });
+  $('loginForm').addEventListener('submit',async e=>{
+    e.preventDefault();$('loginError').textContent='';
+    try{await login($('loginUser').value,$('loginPassword').value)}catch(err){$('loginError').textContent=err.message}
+  });
+  $('logoutButton').addEventListener('click',logout);
+  $('axisSelect').addEventListener('change',e=>{selectedAxis=e.target.value;const a=cfg.axes.find(x=>x.id===selectedAxis);$('moveTarget').value=String(a.homeMm);render()});
+  $('historyFilter').addEventListener('change',e=>{historyFilter=e.target.value;selectedCycleId=null;render()});
+  $('cylinderSelect').addEventListener('change',e=>{selectedCylinder=e.target.value;render()});
+  replay=new window.WorkflowReplay.ReplayViewer({runs:()=>snapshot?.cycleHistory||[]});
+  $('replayRange').addEventListener('input',e=>replay.seek(Number(e.target.value)));
+  editor=new FlowEditor({
+    role:rank,
+    cfg:()=>cfg,
+    canPublish:()=>snapshot?.state==='Idle'&&!snapshot?.busy&&!snapshot?.recoveryRequired,
+    notice:toast,
+    read:()=>securedGet('/api/flows'),
+    send:async(path,body)=>request(path,body),
+    refreshed:async()=>{
+      if(usingBackend){const res=await fetch(root+'/api/config',{headers:{'X-Sim-Token':token}});if(!res.ok)throw Error('更新站点配置失败');cfg=await res.json()}
+      else cfg=window.STATION_CONFIG;
+      await refresh();
+    }
+  });
+  quality=new window.WorkflowQualityUI.QualityDashboard({editor,config:()=>cfg,runs:()=>snapshot?.cycleHistory||[],role:rank,notify:toast});
+  const cfgB=JSON.parse(JSON.stringify(window.STATION_CONFIG));cfgB.profileId='DEMO-STATION-B';
+  const mockB=new MockRuntime(cfgB), governanceB=new GovernanceMock(mockB);
+  const coordinator=new window.SharedResourceCoordinator();
+  mock.stationId='A';mockB.stationId='B';mock.sharedCoordinator=coordinator;mockB.sharedCoordinator=coordinator;
+  stationConsole=new window.StationConsole({root,backend:()=>usingBackend,token:()=>token,user:()=>user,
+    offline:{A:{machine:mock,governance},B:{machine:mockB,governance:governanceB}},coordinator,notify:toast});
+  populateSelectors();render();setInterval(refresh,300);backendProbe=detectBackend();
+})();
+
+</script>
+</body>
+</html>
