@@ -3,11 +3,12 @@ The SQLite engine is tested; this does not compile or test Microsoft.Data.Sqlite
 """
 from pathlib import Path
 import re,sqlite3,tempfile
+import contextlib
 root=Path(__file__).resolve().parents[1]
-v2=(root/'tests/fixtures/schema_v2.sql').read_text()
-v3=(root/'tests/fixtures/schema_v3.sql').read_text()
+v2=(root/'tests/fixtures/schema_v2.sql').read_text(encoding='utf-8')
+v3=(root/'tests/fixtures/schema_v3.sql').read_text(encoding='utf-8')
 with tempfile.TemporaryDirectory() as folder:
- with sqlite3.connect(Path(folder)/'test.db') as db:
+ with contextlib.closing(sqlite3.connect(Path(folder)/'test.db')) as db:
   db.execute('PRAGMA foreign_keys=ON')
   db.executescript(v2)
   db.execute('INSERT INTO workflow_revisions VALUES (?,?,?,?,?,?,?,?)',('flow-base','Published',None,'system','2026-01-01','old-sha','[]','legacy'))

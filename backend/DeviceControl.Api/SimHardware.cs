@@ -241,6 +241,10 @@ public sealed class SimCamera : ICamera
     {
         _monitor.Check("VisionLocate", "Camera");
         await Task.Delay(320, ct);
+        // F05: re-validate ordinary interlocks AFTER the acquisition delay. A guard or
+        // air-pressure change during acquisition must not yield a successful result.
+        ct.ThrowIfCancellationRequested();
+        _monitor.Check("VisionLocate", "Camera");
         if (!_io.ReadInput("PartPresent")) return new(false, 0, 0, "未检测到产品");
         return new(true, 80.0, 0.987, "模拟视觉定位 OK");
     }

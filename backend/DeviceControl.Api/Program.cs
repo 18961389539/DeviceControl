@@ -23,6 +23,7 @@ builder.Services.AddSingleton<AuditTrail>();
 builder.Services.AddSingleton<RecipeStore>();
 builder.Services.AddSingleton<DeviceRuntime>();
 builder.Services.AddSingleton<SharedResourceCoordinator>();
+builder.Services.AddSingleton<RunEligibilityRegistry>();
 builder.Services.AddSingleton<MultiStationRegistry>();
 builder.Services.AddSingleton<StationTemplateCatalog>();
 builder.Services.AddSingleton<StationUpgradeManager>();
@@ -48,17 +49,32 @@ app.Use(async (ctx, next) =>
     {
         ctx.Response.StatusCode = denied;
         await ctx.Response.WriteAsJsonAsync(new { ok = false, error = denied == 401 ? "请登录仿真账号" : "当前角色无权执行此操作" });
+        if (ctx.Request.Method != "GET")
+            audit.Record(user?.Name ?? "anonymous", user?.Role ?? "None", ctx.Request.Method, path,
+                ctx.Response.StatusCode, ctx.TraceIdentifier);
     }
     else
     {
         ctx.Items["SimUser"] = user;
-        await next();
+        try { await next(); }
+        finally
+        {
+            // F10: an unhandled exception must not skip the audit row.
+            if (ctx.Request.Method != "GET")
+                audit.Record(user?.Name ?? "anonymous", user?.Role ?? "None", ctx.Request.Method, path,
+                    ctx.Response.StatusCode, ctx.TraceIdentifier);
+        }
     }
-    if (ctx.Request.Method != "GET")
-        audit.Record(user?.Name ?? "anonymous", user?.Role ?? "None", ctx.Request.Method, path,
-            ctx.Response.StatusCode, ctx.TraceIdentifier);
 });
-app.MapGet("/api/health", () => Results.Ok(new { ok = true, mode = "Simulation", safetyRated = false, version = "2.0-rc" }));
+app.MapGet("/api/health", (SqliteStore store, MultiStationRegistry fleet) =>
+{
+    // F10: health must prove the store answers, not return a constant.
+    string? storeError = null;
+    try { using var c = store.OpenProbe(); } catch (Exception ex) { storeError = ex.Message; }
+    return Results.Ok(new { ok = storeError == null, mode = "Simulation", safetyRated = false, version = "2.0-rc",
+        store = storeError == null ? "reachable" : "unreachable", storeError,
+        stations = fleet.StationIds.Count });
+});
 app.MapPost("/api/auth/login", (DemoSessions sessions, LoginRequest request, HttpContext ctx, AuditTrail audit) =>
 {
     try
@@ -182,8 +198,8 @@ app.MapPost("/api/stations/{id}/cycle/stop", (MultiStationRegistry fleet, string
     InStation(fleet, id, s => Execute(() => fleet.Stop(s.Id))));
 app.MapPost("/api/stations/{id}/fault/reset", (MultiStationRegistry fleet, string id) =>
     InStation(fleet, id, s => Execute(s.Machine.ResetFault)));
-app.MapPost("/api/stations/{id}/recovery/confirm", (MultiStationRegistry fleet, string id) =>
-    InStation(fleet, id, s => Execute(s.Machine.ConfirmRecovery)));
+app.MapPost("/api/stations/{id}/recovery/confirm", (MultiStationRegistry fleet, string id, HttpContext ctx) =>
+    InStation(fleet, id, s => Execute(() => s.Machine.ConfirmRecovery(((SimUser)ctx.Items["SimUser"]!).Name))));
 app.MapPost("/api/stations/{id}/sim/input", (MultiStationRegistry fleet, string id, ToggleRequest r) =>
     InStation(fleet, id, s => Execute(() => s.Machine.SetInput(r.Name, r.Value))));
 app.MapPost("/api/stations/{id}/sim/fault", (MultiStationRegistry fleet, string id, ToggleRequest r) =>
@@ -238,7 +254,7 @@ app.MapGet("/api/audit", (AuditTrail trail, int? page, int? pageSize) => Results
 app.MapGet("/api/recipes", (RecipeStore recipes) => Results.Ok(new { active = recipes.Active, versions = recipes.List() }));
 app.MapPost("/api/recipes/draft", (RecipeStore recipes, RecipeDraftRequest request, HttpContext ctx) =>
     ExecuteValue(() => recipes.Draft(new RecipeValues(request.Name, request.VisionOffsetMm, request.ExtraDwellMs),
-        ((SimUser)ctx.Items["SimUser"]!).Name)));
+        ((SimUser)ctx.Items["SimUser"]!).Name, request.ExpectedActiveVersionId)));
 app.MapPost("/api/recipes/{id}/validate", (RecipeStore recipes, string id) => ExecuteValue(() => recipes.Validate(id)));
 app.MapPost("/api/recipes/{id}/publish", (RecipeStore recipes, DeviceRuntime machine, string id) =>
     ExecuteValue(() => recipes.Publish(id, machine)));
@@ -259,11 +275,34 @@ app.MapPost("/api/manual/vision/trigger", (DeviceRuntime machine) => ExecuteAsyn
 app.MapPost("/api/cycle/start", (MultiStationRegistry fleet) => Execute(() => fleet.Start("A")));
 app.MapPost("/api/cycle/stop", (MultiStationRegistry fleet) => Execute(() => fleet.Stop("A")));
 app.MapPost("/api/fault/reset", (DeviceRuntime machine) => Execute(machine.ResetFault));
-app.MapPost("/api/recovery/confirm", (DeviceRuntime machine) => Execute(machine.ConfirmRecovery));
+app.MapPost("/api/recovery/confirm", (DeviceRuntime machine, HttpContext ctx) =>
+    Execute(() => machine.ConfirmRecovery(((SimUser)ctx.Items["SimUser"]!).Name)));
 // Eager initialization ensures interrupted-cycle recovery happens before health is served.
-_ = app.Services.GetRequiredService<MultiStationRegistry>();
-_ = app.Services.GetRequiredService<StationUpgradeManager>();
-_ = app.Services.GetRequiredService<FleetRolloutManager>();
+var fleet = app.Services.GetRequiredService<MultiStationRegistry>();
+var upgrades = app.Services.GetRequiredService<StationUpgradeManager>();
+var rollouts = app.Services.GetRequiredService<FleetRolloutManager>();
+// F04: register the unified run-eligibility check for every station (existing and future).
+var eligibility = app.Services.GetRequiredService<RunEligibilityRegistry>();
+foreach (var id in fleet.StationIds) eligibility.Register(id, () => upgrades.UnresolvedReason(id));
+fleet.OnStationAdded = id => eligibility.Register(id, () => upgrades.UnresolvedReason(id));
+// F13: read-only diagnostics for stations that failed closed at startup.
+app.MapGet("/api/diagnostics/stations", (HttpContext ctx) =>
+{
+    var user = ctx.Items["SimUser"] as SimUser;
+    if (user == null || Permissions.Rank(user.Role) < 2)
+        return Results.Json(new { ok = false, error = "需要工程师或管理员角色" }, statusCode: 403);
+    return Results.Ok(new
+    {
+        ok = true,
+        failedStations = fleet.FailedStations,
+        deploymentStartupIssues = upgrades.StartupIssues,
+        eventWriteFailures = fleet.StationIds.ToDictionary(id => id, id =>
+        {
+            try { return fleet.Get(id).Journal.EventWriteFailures; }
+            catch { return -1; }
+        })
+    });
+});
 app.Run();
 static IResult ExecuteValue<T>(Func<T> action)
 {

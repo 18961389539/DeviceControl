@@ -1,0 +1,18 @@
+DeviceControl V2.0 software quality gate
+Profile: offline; browser: True; .NET SDK found: True
+Passed: 11, failed: 0, blocked: 0
+RELEASE APPROVED: NO
+
+PASS             python:test_recovery_v19_static.py
+PASS             python:test_recovery_v18_static.py
+PASS             python:test_rollout_files_v16.py
+PASS             python:test_rollout_v17_static.py
+PASS             python:test_station_files_v12.py
+PASS             python:test_template_files_v14.py
+PASS             python:test_upgrade_files_v15.py
+PASS             browser:test_browser_v19.py
+PASS             browser:test_browser_v18.py
+PASS             browser:test_browser_v17.py
+PASS             browser:test_browser_v16.py
+
+This is a software-only simulation. Not hardware / industrial safety qualification.

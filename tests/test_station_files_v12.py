@@ -1,13 +1,13 @@
 """V1.2 C# source seam checks; NOT a substitute for .NET compiler/runtime tests."""
 from pathlib import Path
 p=Path(__file__).resolve().parents[1]/'backend'/'DeviceControl.Api'
-reg=(p/'MultiStationRegistry.cs').read_text()
-api=(p/'Program.cs').read_text()
-paths=(p/'StationStoragePaths.cs').read_text()
-perm=(p/'Governance.cs').read_text()
-engine=(p/'FlowEngine.cs').read_text()
-coordinator=(p/'SharedResourceCoordinator.cs').read_text()
-config=(p/'StationConfig.cs').read_text()
+reg=(p/'MultiStationRegistry.cs').read_text(encoding='utf-8')
+api=(p/'Program.cs').read_text(encoding='utf-8')
+paths=(p/'StationStoragePaths.cs').read_text(encoding='utf-8')
+perm=(p/'Governance.cs').read_text(encoding='utf-8')
+engine=(p/'FlowEngine.cs').read_text(encoding='utf-8')
+coordinator=(p/'SharedResourceCoordinator.cs').read_text(encoding='utf-8')
+config=(p/'StationConfig.cs').read_text(encoding='utf-8')
 assert 'BuildStation("B", bCfg)' in reg
 assert 'new SqliteStore(_environment, id)' in reg
 assert 'new RunJournal(_environment, db, id)' in reg

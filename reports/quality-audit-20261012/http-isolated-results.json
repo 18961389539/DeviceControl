@@ -1,0 +1,52 @@
+[
+  {
+    "test": "test_api_v09.py",
+    "status": "FAIL",
+    "seconds": 1.11
+  },
+  {
+    "test": "test_api_v10.py",
+    "status": "FAIL",
+    "seconds": 7.3
+  },
+  {
+    "test": "test_api_v12.py",
+    "status": "FAIL",
+    "seconds": 7.09
+  },
+  {
+    "test": "test_api_v13.py",
+    "status": "PASS",
+    "seconds": 1.44
+  },
+  {
+    "test": "test_api_v14.py",
+    "status": "PASS",
+    "seconds": 2.14
+  },
+  {
+    "test": "test_api_v15.py",
+    "status": "FAIL",
+    "seconds": 2.09
+  },
+  {
+    "test": "test_api_v16.py",
+    "status": "PASS",
+    "seconds": 2.58
+  },
+  {
+    "test": "test_api_v17.py",
+    "status": "PASS",
+    "seconds": 2.66
+  },
+  {
+    "test": "test_api_v18.py",
+    "status": "PASS",
+    "seconds": 2.55
+  },
+  {
+    "test": "test_api_v19.py",
+    "status": "PASS",
+    "seconds": 1.22
+  }
+]

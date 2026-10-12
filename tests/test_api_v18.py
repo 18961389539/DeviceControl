@@ -58,18 +58,18 @@ with tempfile.TemporaryDirectory(prefix='dc-v18-') as tmp:
   assert request('/api/rollouts/'+roll_id+'/recovery-report',token=operator)[0]==403
  finally:stop(service)
  # Simulate an interrupted write, not a second HTTP action. Test has no live service now.
- journal=root/'data/rollouts'/(roll_id+'.json');row=json.loads(journal.read_text())
+ journal=root/'data/rollouts'/(roll_id+'.json');row=json.loads(journal.read_text(encoding='utf-8'))
  row['Status']='Deploying';row['Steps'][0]['Status']='Applying'
  journal.write_text(json.dumps(row))
- depfile=root/'data/deployments'/(deployment_id+'.json');dep=json.loads(depfile.read_text())
+ depfile=root/'data/deployments'/(deployment_id+'.json');dep=json.loads(depfile.read_text(encoding='utf-8'))
  dep['Status']='InProgress';depfile.write_text(json.dumps(dep))
  service=boot()
  try:
   engineer=login('engineer');admin=login('admin')
   code,roll=request('/api/rollouts/'+roll_id,token=engineer)
   assert code==200 and roll['data']['status']=='Interrupted',(code,roll)
-  assert json.loads(journal.read_text())['Status']=='Interrupted','restart marker not persisted'
-  assert json.loads(depfile.read_text())['Status']=='Interrupted','deployment marker not persisted'
+  assert json.loads(journal.read_text(encoding='utf-8'))['Status']=='Interrupted','restart marker not persisted'
+  assert json.loads(depfile.read_text(encoding='utf-8'))['Status']=='Interrupted','deployment marker not persisted'
   code,rep=request('/api/rollouts/'+roll_id+'/recovery-report',token=engineer)
   assert code==200 and rep['data']['readOnly'] and rep['data']['requiresManualReview'],(code,rep)
   assert request('/api/rollouts/'+roll_id+'/advance',{},admin)[0]==409

@@ -18,7 +18,7 @@ public sealed class StationTemplateCatalog
 {
     private readonly object _gate = new();
     private readonly string _file;
-    private readonly List<StationTemplateRevision> _versions;
+    private List<StationTemplateRevision> _versions;
     private static readonly JsonSerializerOptions Json = new() { PropertyNameCaseInsensitive = true, WriteIndented = true };
     public StationTemplateCatalog(IHostEnvironment env)
     {
@@ -74,12 +74,14 @@ public sealed class StationTemplateCatalog
             throw new InvalidOperationException("模板流程未通过质量门禁：" +
                 (report.Errors.FirstOrDefault() ?? report.Results.FirstOrDefault(r => !r.Pass)?.Name ?? "未知原因"));
     }
-    private void Persist()
+    // F02: persist the candidate list first; swap memory only after the file commit
+    // succeeds so a failed write can never leave a phantom in-memory revision.
+    private void Persist(List<StationTemplateRevision> rows)
     {
         var tmp = _file + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
-            File.WriteAllText(tmp, JsonSerializer.Serialize(_versions, Json));
+            File.WriteAllText(tmp, JsonSerializer.Serialize(rows, Json));
             File.Move(tmp, _file, true);
         }
         finally { if (File.Exists(tmp)) File.Delete(tmp); }
@@ -98,7 +100,13 @@ public sealed class StationTemplateCatalog
         var revision = new StationTemplateRevision("tmpl-" + Guid.NewGuid().ToString("N")[..12],
             name.Trim(), "Draft", source.Id, author, DateTimeOffset.UtcNow.ToString("O"),
             Hash(config, recipe), config, recipe);
-        lock (_gate) { _versions.Add(revision); Persist(); return Clone(revision); }
+        lock (_gate)
+        {
+            var candidate = new List<StationTemplateRevision>(_versions) { revision };
+            Persist(candidate);
+            _versions = candidate;
+            return Clone(revision);
+        }
     }
     public StationTemplateRevision Validate(string id)
     {
@@ -109,7 +117,11 @@ public sealed class StationTemplateCatalog
             ValidateSnapshot(r);
             AssertFlowQuality(r);
             var next = r with { Status = "Validated" };
-            _versions[_versions.IndexOf(r)] = next; Persist(); return Clone(next);
+            var candidate = new List<StationTemplateRevision>(_versions);
+            candidate[candidate.IndexOf(r)] = next;
+            Persist(candidate);
+            _versions = candidate;
+            return Clone(next);
         }
     }
     public StationTemplateRevision Publish(string id)
@@ -121,7 +133,11 @@ public sealed class StationTemplateCatalog
             ValidateSnapshot(r);
             AssertFlowQuality(r);
             var next = r with { Status = "Published" };
-            _versions[_versions.IndexOf(r)] = next; Persist(); return Clone(next);
+            var candidate = new List<StationTemplateRevision>(_versions);
+            candidate[candidate.IndexOf(r)] = next;
+            Persist(candidate);
+            _versions = candidate;
+            return Clone(next);
         }
     }
     public object Diff(string id, StationContext station)

@@ -3,6 +3,7 @@ Requires an installed .NET 10 SDK, local loopback, no hardware. CI MUST require 
 """
 import json,os,shutil,socket,subprocess,tempfile,time,urllib.request,urllib.error,sys
 from pathlib import Path
+import contextlib
 ROOT=Path(__file__).resolve().parents[1]
 if not shutil.which('dotnet'):
  print('SKIP UNVERIFIED: no .NET SDK; V1.0 API tests did NOT run')
@@ -81,10 +82,12 @@ with tempfile.TemporaryDirectory(prefix='devicecontrol-v10-') as folder:
   s,runs=req('/api/runs',token=tok)
   interrupted=[r for r in runs if r['outcome']=='Interrupted']
   assert len(interrupted)==1,runs
+  # Contract: an Interrupted run has no node trace; its snapshots are UNAVAILABLE (null),
+  # never an empty array that would imply "captured nothing". Missing stays missing.
   assert interrupted[0]['trace'] is None and interrupted[0]['snapshots'] is None
   assert req('/api/cycle/start','POST',{},tok)[0]!=200
   import sqlite3
-  with sqlite3.connect(root/'data/devicecontrol.db') as db:
+  with contextlib.closing(sqlite3.connect(root/'data/devicecontrol.db')) as db:
    assert db.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
    assert db.execute('SELECT count(*) FROM run_inflight').fetchone()[0]==0
    assert db.execute('SELECT count(*) FROM run_variable_snapshots WHERE run_id=?',(run_id,)).fetchone()[0]==len(saved)

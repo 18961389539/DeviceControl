@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -30,6 +31,12 @@ public sealed class StationUpgradeManager
     private readonly StationTemplateCatalog _catalog;
     private readonly string _folder;
     private readonly Dictionary<string, StationUpgradePlan> _plans = new(StringComparer.Ordinal);
+    private readonly List<string> _startupIssues = new();
+    // F04: lock-free unresolved-deployment snapshot. DeviceRuntime consults this on
+    // cycle start / Auto / configuration change; taking _gate there would invert the
+    // lock order against Apply (which holds _gate across the machine lock).
+    private readonly ConcurrentDictionary<string, string?> _unresolved = new(StringComparer.OrdinalIgnoreCase);
+    private string? _activeApplyId;
     private readonly JsonSerializerOptions _json = new() { WriteIndented = true, PropertyNameCaseInsensitive = true };
     public StationUpgradeManager(IHostEnvironment environment, MultiStationRegistry fleet, StationTemplateCatalog catalog)
     {
@@ -38,17 +45,57 @@ public sealed class StationUpgradeManager
         Directory.CreateDirectory(_folder);
         MarkInterruptedAtStartup();
     }
+    public IReadOnlyList<string> StartupIssues { get { lock (_gate) return _startupIssues.ToArray(); } }
     // Replay ONLY the durable intent status. Never retry, infer success, or roll back on boot.
     // An incomplete journal entry is an explicit manual recovery condition.
     private void MarkInterruptedAtStartup()
     {
         foreach (var path in Directory.GetFiles(_folder, "dep-*.json"))
         {
-            var row = ReadRecord(Path.GetFileNameWithoutExtension(path));
-            if (row.Status == "InProgress")
-                Persist(row with { Status = "Interrupted", Error =
-                    "服务重启发现部署意图未完结；禁止自动重试，核对备份与现行版本" });
+            var id = Path.GetFileNameWithoutExtension(path);
+            try
+            {
+                var row = ReadRecord(id);
+                if (row.Status == "InProgress")
+                    Persist(row with { Status = "Interrupted", Error =
+                        "服务重启发现部署意图未完结；禁止自动重试，核对备份与现行版本" });
+            }
+            catch (Exception ex)
+            {
+                // F13: an unreadable deployment record must never be silently ignored.
+                // It fails closed (see UnresolvedReason) and is surfaced for diagnosis.
+                lock (_gate) _startupIssues.Add(id + ": " + ex.Message);
+            }
         }
+        RefreshUnresolved();
+    }
+    /// <summary>F04: station-scoped unresolved-deployment reason, or null. An unreadable
+    /// record fails closed for every station (key "") because its owner is unknown.</summary>
+    public string? UnresolvedReason(string stationId)
+    {
+        if (_unresolved.TryGetValue("", out var global)) return global;
+        return _unresolved.TryGetValue(stationId, out var reason) ? reason : null;
+    }
+    private void RefreshUnresolved()
+    {
+        var found = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        foreach (var path in Directory.GetFiles(_folder, "dep-*.json"))
+        {
+            var id = Path.GetFileNameWithoutExtension(path);
+            try
+            {
+                var row = ReadRecord(id);
+                if (row.Id == _activeApplyId) continue; // the apply in progress owns its own record
+                if (row.Status is "InProgress" or "Interrupted" or "ManualRecoveryRequired")
+                {
+                    var key = string.IsNullOrWhiteSpace(row.StationId) ? "" : row.StationId;
+                    found[key] = $"存在未解决的部署 {row.Id}（{row.Status}），必须先人工检查并回滚";
+                }
+            }
+            catch { found[""] = $"部署记录 {id} 损坏且无法读取，已阻止所有工站运行；请人工核对后修复或归档该记录"; }
+        }
+        _unresolved.Clear();
+        foreach (var kv in found) _unresolved[kv.Key] = kv.Value;
     }
     public BackupIntegrity InspectBackup(string deploymentId)
     {
@@ -60,7 +107,8 @@ public sealed class StationUpgradeManager
                     "没有完整的备份文件和哈希记录；不得将其视为可恢复备份");
             // Reject a forged station identifier in the persisted journal before
             // deriving a filesystem path; canonical IDs cannot contain dot segments.
-            if (!System.Text.RegularExpressions.Regex.IsMatch(record.StationId ?? "", @"\A[A-Z][A-Z0-9_-]{0,15}\z"))
+            if (string.IsNullOrEmpty(record.StationId) ||
+                !System.Text.RegularExpressions.Regex.IsMatch(record.StationId, @"\A[A-Z][A-Z0-9_-]{0,15}\z"))
                 return new BackupIntegrity(record.Id, "InvalidPath", null, "部署日志工站编号非法");
             // A journal must reference THIS deployment's backup only. Prefix checks alone
             // allowed a forged journal to borrow a different station's valid backup.
@@ -149,6 +197,11 @@ public sealed class StationUpgradeManager
     {
         lock (_gate)
         {
+            // F12: drop expired plans instead of letting the dictionary grow forever.
+            var purgeBefore = DateTimeOffset.UtcNow;
+            foreach (var stale in _plans.Where(kv => purgeBefore > DateTimeOffset.Parse(kv.Value.ExpiresAt))
+                                       .Select(kv => kv.Key).ToList())
+                _plans.Remove(stale);
             var station = _fleet.Get(stationId);
             var template = _catalog.Get(templateId);
             var blockers = Blockers(template, station).ToList();
@@ -188,19 +241,23 @@ public sealed class StationUpgradeManager
                 var record = new StationDeploymentRecord("dep-" + Token(), station.Id, template.Id, plan.Id,
                     actor, DateTimeOffset.UtcNow.ToString("O"), null, "InProgress", null,
                     beforeFlow, beforeRecipe, null, null);
-                Persist(record); // durable recovery evidence BEFORE either write
+                // F04: this deployment owns its own InProgress record while applying;
+                // the eligibility snapshot must not block the apply itself.
+                _activeApplyId = record.Id;
                 try
                 {
+                    Persist(record); // durable recovery evidence BEFORE either write
+                    RefreshUnresolved();
                     // V1.5 online SQLite backup; never copy a live WAL file with File.Copy.
                     var backupDir = Path.Combine(_folder, "backups", station.Id);
                     var backup = Path.Combine(backupDir, record.Id + ".db");
                     var digest = station.Store.CreateVerifiedBackup(backup);
                     record = record with { BackupFile = Path.GetRelativePath(_folder, backup), BackupSha256 = digest };
-                    Persist(record);
+                    Persist(record); RefreshUnresolved();
                     var flowDraft = station.Flows.Draft(Clone(template.Config.Sequence), actor, beforeFlow.Id);
                     station.Flows.Validate(flowDraft.Id);
                     var activeFlow = station.Machine.PublishFlow(flowDraft.Id);
-                    record = record with { AfterFlowId = activeFlow.Id }; Persist(record);
+                    record = record with { AfterFlowId = activeFlow.Id }; Persist(record); RefreshUnresolved();
                     var recipeDraft = station.Recipes.Draft(Clone(template.Recipe), actor);
                     station.Recipes.Validate(recipeDraft.Id);
                     var activeRecipe = station.Recipes.Publish(recipeDraft.Id, station.Machine);
@@ -227,6 +284,7 @@ public sealed class StationUpgradeManager
                     // Surface failure to caller, preserve recovery evidence in durable journal.
                     throw new InvalidOperationException("部署失败 (" + record.Id + ")：" + record.Error, ex);
                 }
+                finally { _activeApplyId = null; RefreshUnresolved(); }
             });
         }
     }
@@ -252,13 +310,13 @@ public sealed class StationUpgradeManager
                         station.Machine.RollbackFlow(record.BeforeFlow.Id, actor);
                     record = record with { Status = "RolledBack", Error = null,
                         FinishedAt = DateTimeOffset.UtcNow.ToString("O") };
-                    Persist(record); return record;
+                    Persist(record); RefreshUnresolved(); return record;
                 }
                 catch (Exception ex)
                 {
                     record = record with { Status = "ManualRecoveryRequired", Error = ex.Message,
                         FinishedAt = DateTimeOffset.UtcNow.ToString("O") };
-                    Persist(record); throw;
+                    Persist(record); RefreshUnresolved(); throw;
                 }
             });
         }

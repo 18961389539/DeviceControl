@@ -1,10 +1,10 @@
 """Static structural checks only. Not a replacement for dotnet build/HTTP tests."""
 from pathlib import Path
 r=Path(__file__).resolve().parents[1]
-api=(r/'backend/DeviceControl.Api/Program.cs').read_text()
-reg=(r/'backend/DeviceControl.Api/MultiStationRegistry.cs').read_text()
-cat=(r/'backend/DeviceControl.Api/StationTemplateCatalog.cs').read_text()
-perm=(r/'backend/DeviceControl.Api/Governance.cs').read_text()
+api=(r/'backend/DeviceControl.Api/Program.cs').read_text(encoding='utf-8')
+reg=(r/'backend/DeviceControl.Api/MultiStationRegistry.cs').read_text(encoding='utf-8')
+cat=(r/'backend/DeviceControl.Api/StationTemplateCatalog.cs').read_text(encoding='utf-8')
+perm=(r/'backend/DeviceControl.Api/Governance.cs').read_text(encoding='utf-8')
 assert all(f'"/api/templates{path}"' in api for path in ('','/capture','/{id}/validate','/{id}/publish','/{id}/diff/{stationId}','/{id}/deploy'))
 assert 'AssertFlowQuality(r)' in cat and 'WorkflowQualityGate.Evaluate' in cat
 assert 'Status != "Published"' in cat

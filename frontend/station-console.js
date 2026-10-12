@@ -57,7 +57,17 @@
       document.getElementById('fleetRefresh').disabled=this.busy||!this.user()||this.locked;
     }
     async request(path,body){
-      const response=await fetch(this.root+path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json','X-Sim-Token':this.token()},body:body===undefined?undefined:JSON.stringify(body)});
+      // F09: application-level timeout; a half-open connection must not freeze polling.
+      const write=body!==undefined;
+      const controller=new AbortController();
+      const timer=setTimeout(()=>controller.abort(),write?15000:8000);
+      let response;
+      try{
+        response=await fetch(this.root+path,{method:write?'POST':'GET',headers:{'Content-Type':'application/json','X-Sim-Token':this.token()},body:write?JSON.stringify(body):undefined,signal:controller.signal});
+      }catch(e){
+        if(e&&e.name==='AbortError')throw Error(write?'写操作超时：结果未知，不会自动重发':'数据获取超时，界面可能非最新');
+        throw e;
+      }finally{clearTimeout(timer)}
       const value=await response.json();if(!response.ok)throw Error(value.error||'HTTP '+response.status);return value;
     }
     async refresh(){

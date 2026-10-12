@@ -38,23 +38,35 @@ public sealed class DeviceRuntime : ISequenceRuntime
     private string? _alarm;
     private int _cycles, _stepIndex = -1;
     private bool _busy, _recoveryRequired;
+    private readonly RunEligibilityRegistry? _eligibility;
     private VisionResult? _vision;
     private CancellationTokenSource? _cycleCts;
 
     public DeviceRuntime(StationConfig config, SimIoController io, IMotionController motion,
-        ICylinderRegistry cylinders, ICamera camera, OrdinaryInterlockMonitor interlocks, RunJournal journal, RecipeStore recipes, FlowRevisions flows)
+        ICylinderRegistry cylinders, ICamera camera, OrdinaryInterlockMonitor interlocks, RunJournal journal,
+        RecipeStore recipes, FlowRevisions flows, RunEligibilityRegistry? eligibility = null)
     {
         _flowRevisions=flows;
+        _eligibility=eligibility;
         var current=flows.Active;
         config.Sequence=current.Definition;config.FlowVersion=current.Id;
         _flow = new FlowEngine(config);
         _config = config; _io = io; _motion = motion; _cylinders = cylinders;
         _camera = camera; _interlocks = interlocks; _journal = journal; _recipes = recipes;
+        // F01: durable recovery gate survives restarts; never silently dropped.
+        var persisted = journal.RecoveryState;
         if (journal.RecoveredInterruptions > 0)
         {
-            _recoveryRequired = true;
+            EnterRecoveryRequired($"上次软件退出时有 {journal.RecoveredInterruptions} 个未完成周期；已标记 Interrupted",
+                null, "StartupInterruptedCycles");
             _step = "检测到进程中断的未完成仿真周期，必须人工恢复";
             Log("Warning", $"上次软件退出时有 {journal.RecoveredInterruptions} 个未完成周期；已标记 Interrupted");
+        }
+        else if (persisted is { Required: true })
+        {
+            _recoveryRequired = true;
+            _step = "存在未确认的恢复要求（" + persisted.Reason + "），必须人工恢复";
+            Log("Warning", "加载未确认的恢复要求：" + persisted.Reason);
         }
         Log("Info", "加载站点 " + config.ProfileId + "，模式 Simulation（无真实板卡）");
     }
@@ -88,6 +100,12 @@ public sealed class DeviceRuntime : ISequenceRuntime
         {
             RequireIdle();
             if (mode == "Auto" && _recoveryRequired) throw new InvalidOperationException("需要先完成故障恢复确认");
+            if (mode == "Auto")
+            {
+                // F04: an unresolved deployment (or broken eligibility check) blocks Auto.
+                var blocked = _eligibility?.BlockingReason(_stationId);
+                if (blocked != null) throw new InvalidOperationException(blocked);
+            }
             _mode = mode; _step = "等待操作"; _stepIndex = -1;
             Log("Info", "模式切换: " + mode);
         }
@@ -162,7 +180,8 @@ public sealed class DeviceRuntime : ISequenceRuntime
         {
             lock (_sync)
             {
-                _state = "Fault"; _alarm = e.Message; _activeAlarm = FaultCatalog.From(e, description); _recoveryRequired = true;
+                _state = "Fault"; _alarm = e.Message; _activeAlarm = FaultCatalog.From(e, description);
+                EnterRecoveryRequired("手动动作失败：" + e.Message, null, actionType);
                 InvalidateAllAxes();
                 Log("Error", description + " 失败: " + e.Message);
             }
@@ -182,6 +201,9 @@ public sealed class DeviceRuntime : ISequenceRuntime
             RequireIdle();
             if (_mode != "Auto") throw new InvalidOperationException("请先切换自动模式");
             if (_recoveryRequired) throw new InvalidOperationException("请先确认故障恢复");
+            // F04: unified run-eligibility gate (unresolved deployments etc.).
+            var blocked = _eligibility?.BlockingReason(_stationId);
+            if (blocked != null) throw new InvalidOperationException(blocked);
             _interlocks.Check("CycleStart", "Station");
             if (!_io.ReadInput("PartPresent")) throw new InvalidOperationException("未检测到产品");
             foreach (var a in _config.Axes)
@@ -200,7 +222,8 @@ public sealed class DeviceRuntime : ISequenceRuntime
             // An unexpected process exit will be recovered as Interrupted, never Completed.
             try { _journal.BeginCycle(new CycleStartRecord(_cycleId, _cycleStarted.ToString("O"),
                 _cycleRecipe?.Id, _cycleFlowVersion)); }
-            catch { _state = "Idle"; _busy = false; _recoveryRequired = true; throw; }
+            catch { _state = "Idle"; _busy = false;
+                EnterRecoveryRequired("周期启动标记持久化失败", _cycleId, "BeginCycle"); throw; }
             _cycleCts = new CancellationTokenSource();
             token = _cycleCts.Token;
             Log("Info", "启动单周期");
@@ -245,7 +268,8 @@ public sealed class DeviceRuntime : ISequenceRuntime
         {
             lock (_sync)
             {
-                _state = "Idle"; _recoveryRequired = true;
+                _state = "Idle";
+                EnterRecoveryRequired("软件停止完成，需人工恢复", _cycleId, "Stop");
                 InvalidateAllAxes(); _step = "软件停止完成，需人工恢复";
                 Log("Warning", "流程取消；回零有效性已清除");
             }
@@ -254,7 +278,8 @@ public sealed class DeviceRuntime : ISequenceRuntime
         {
             lock (_sync)
             {
-                _state = "Fault"; _alarm = e.Message; _activeAlarm = FaultCatalog.From(e, _step); _recoveryRequired = true;
+                _state = "Fault"; _alarm = e.Message; _activeAlarm = FaultCatalog.From(e, _step);
+                EnterRecoveryRequired("自动流程中断：" + e.Message, _cycleId, "Cycle");
                 InvalidateAllAxes(); _step = "故障待处理";
                 Log("Error", "自动流程中断: " + e.Message);
             }
@@ -274,7 +299,8 @@ public sealed class DeviceRuntime : ISequenceRuntime
                 }
                 catch (Exception journalError)
                 {
-                    _state = "Fault"; _recoveryRequired = true;
+                    _state = "Fault";
+                    EnterRecoveryRequired("周期数据持久化失败：" + journalError.Message, _cycleId, "Journal");
                     _alarm = "周期数据持久化失败：" + journalError.Message;
                     _activeAlarm = FaultCatalog.From(journalError,"SQLite Journal");
                     Log("Error",_alarm);
@@ -343,6 +369,9 @@ public sealed class DeviceRuntime : ISequenceRuntime
         {
             RequireIdle();
             if (_recoveryRequired) throw new InvalidOperationException("恢复未完成，禁止发布配方");
+            // F04: an interrupted deployment must also block ordinary version changes.
+            var blocked = _eligibility?.BlockingReason(_stationId);
+            if (blocked != null) throw new InvalidOperationException(blocked);
             return action();
         }
     }
@@ -363,7 +392,11 @@ public sealed class DeviceRuntime : ISequenceRuntime
             }
             foreach (var c in _config.Cylinders)
                 checks.Add(new { key = "cylinder-" + c.Id, label = c.Id + " 气缸已缩回", ok = _cylinders.GetCylinder(c.Id).Status.Position == "Retracted" });
-            return new { required = _recoveryRequired, alarm = _activeAlarm, checks };
+            var eligibilityBlock = _eligibility?.BlockingReason(_stationId);
+            return new { required = _recoveryRequired, alarm = _activeAlarm, checks,
+                eligibilityBlock,
+                persistedRecovery = _journal.RecoveryState is { Required: true } s
+                    ? new { s.Reason, s.RunId, s.Action, s.RaisedUtc, s.AcknowledgedBy, s.AcknowledgedUtc } : null };
         }
     }
     public void ResetFault()
@@ -377,7 +410,7 @@ public sealed class DeviceRuntime : ISequenceRuntime
             Log("Warning", "报警已复位，仍需机构回零与确认");
         }
     }
-    public void ConfirmRecovery()
+    public void ConfirmRecovery(string actor)
     {
         lock (_sync)
         {
@@ -393,9 +426,28 @@ public sealed class DeviceRuntime : ISequenceRuntime
             foreach (var c in _config.Cylinders)
                 if (_cylinders.GetCylinder(c.Id).Status.Position != "Retracted")
                     throw new InvalidOperationException(c.Id + " 尚未缩回到位");
+            // F04/F01: an unresolved deployment must be cleared by a human before
+            // recovery confirmation can re-open the station.
+            var blocked = _eligibility?.BlockingReason(_stationId);
+            if (blocked != null) throw new InvalidOperationException(blocked);
             _recoveryRequired = false; _step = "恢复条件已确认";
-            Log("Info", "仿真恢复确认完成");
+            // F01: the durable gate is only cleared here, with an audited actor.
+            try { _journal.ClearRecoveryRequired(actor); }
+            catch (Exception ex)
+            {
+                EnterRecoveryRequired("恢复确认持久化失败：" + ex.Message, null, "ConfirmRecovery");
+                throw new InvalidOperationException("恢复确认未能持久化，门禁保持有效", ex);
+            }
+            Log("Info", "仿真恢复确认完成（" + actor + "）");
         }
+    }
+    /// <summary>F01: raise the recovery requirement in memory AND in SQLite so a
+    /// restart cannot silently drop it.</summary>
+    private void EnterRecoveryRequired(string reason, string? runId, string? action)
+    {
+        _recoveryRequired = true;
+        try { _journal.RaiseRecoveryRequired(reason, runId, action); }
+        catch (Exception ex) { Log("Error", "恢复要求持久化失败：" + ex.Message); }
     }
     private void InvalidateAllAxes()
     { foreach (var a in _config.Axes) _motion.GetAxis(a.Id).InvalidateHome(); }
@@ -407,6 +459,9 @@ public sealed class DeviceRuntime : ISequenceRuntime
         {
             _events.Add(new(DateTimeOffset.Now.ToString("HH:mm:ss.fff"), level, message));
             if (_events.Count > 160) _events.RemoveRange(0, _events.Count - 160);
+            // F10: mirror run events to a durable per-station log. Never throws
+            // into the runtime path; failures are counted for diagnostics.
+            try { _journal.AppendEvent(level, message); } catch { /* diagnostics only */ }
         }
     }
 }

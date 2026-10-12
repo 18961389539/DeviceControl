@@ -4,6 +4,7 @@
 Does not modify the source or configure recurring backup policy.
 """
 import argparse
+import contextlib
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote
@@ -33,18 +34,26 @@ def backup_database(source,target):
     if dst.exists():raise FileExistsError('Backup already exists: '+str(dst))
     partial=dst.with_name(dst.name+'.partial')
     if partial.exists():raise FileExistsError('Partial backup already exists: '+str(partial))
+    # F06: `with sqlite3.connect(...)` only manages the TRANSACTION; the connection
+    # stays open and os.replace/unlink hit WinError 32 on Windows. closing() releases
+    # the file handle before the rename.
+    uri='file:'+quote(src.as_posix(),safe='/')+'?mode=ro'
     try:
-        uri='file:'+quote(src.as_posix(),safe='/')+'?mode=ro'
-        with sqlite3.connect(uri,uri=True,timeout=10) as src_db:
+        with contextlib.closing(sqlite3.connect(uri,uri=True,timeout=10)) as src_db:
             inspect(src_db)
-            with sqlite3.connect(partial,timeout=10) as dst_db:
+            with contextlib.closing(sqlite3.connect(partial,timeout=10)) as dst_db:
                 src_db.backup(dst_db,pages=100,sleep=.03)
                 dst_db.commit()
                 # Source may change during online backup; verify the resulting snapshot itself.
                 summary=inspect(dst_db)
         os.replace(partial,dst)
-    finally:
-        if partial.exists():partial.unlink()
+    except Exception:
+        # Never let cleanup mask the original backup failure; report residue explicitly.
+        try:
+            if partial.exists():partial.unlink()
+        except OSError as cleanup_error:
+            print('Warning: could not remove partial backup '+str(partial)+': '+str(cleanup_error),file=sys.stderr)
+        raise
     return summary
 
 def main():

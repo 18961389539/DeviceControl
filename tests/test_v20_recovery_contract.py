@@ -1,10 +1,10 @@
 """V2.0 source-only contract: not a substitute for a C# compiler or HTTP service."""
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
-upgrade=(root/'backend/DeviceControl.Api/StationUpgradeManager.cs').read_text()
-sandbox=(root/'backend/DeviceControl.Api/RecoverySandboxInspector.cs').read_text()
-program=(root/'backend/DeviceControl.Api/Program.cs').read_text()
-gate=(root/'tools/release_gate_v20.py').read_text()
+upgrade=(root/'backend/DeviceControl.Api/StationUpgradeManager.cs').read_text(encoding='utf-8')
+sandbox=(root/'backend/DeviceControl.Api/RecoverySandboxInspector.cs').read_text(encoding='utf-8')
+program=(root/'backend/DeviceControl.Api/Program.cs').read_text(encoding='utf-8')
+gate=(root/'tools/release_gate_v20.py').read_text(encoding='utf-8')
 assert 'version = "2.0-rc"' in program
 assert 'string.Equals(Path.GetFullPath(Path.Combine(root, relative)), expected, StringComparison.Ordinal)' in upgrade
 assert 'Path.IsPathFullyQualified(relative)' in upgrade

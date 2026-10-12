@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="light">
-  <title>Device Control V1.8 · 设备控制实验台</title>
+  <title>DeviceControl V2.0 RC · 多工站软件仿真</title>
   <style>
 :root{--ink:#16243b;--muted:#7b8b9f;--accent:#3264e5;--accent-dark:#204bb7;--border:#e6ebf1;--bg:#f4f6fa;--green:#139a65;--red:#d34c58;--amber:#b47a26;--sidebar:#142035}*{box-sizing:border-box}body{margin:0;font:14px/1.55 Inter,'Segoe UI','Microsoft YaHei',Arial,sans-serif;color:var(--ink);background:var(--bg)}button,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.48;cursor:not-allowed}.app-shell{display:flex;min-height:100vh}.sidebar{width:244px;background:var(--sidebar);color:#c1cbdc;flex-shrink:0;display:flex;flex-direction:column;padding:26px 14px 18px}.brand{padding:4px 12px 34px;display:flex;align-items:center;gap:11px;color:white}.brand b{display:block;font-weight:730;font-size:15px;line-height:1.15}.brand small{display:block;color:#8393aa;font-size:9px;letter-spacing:1.45px;margin-top:7px}.brand-mark{width:39px;height:39px;background:#386aee;border-radius:12px;color:white;display:grid;place-items:center;font-size:25px;font-weight:750}.section-label{font-size:10px;letter-spacing:2px;color:#7b8ba4;padding:0 15px 12px}.navigation{display:grid;gap:5px}.nav-item{border:0;background:none;color:#a4b2ca;display:flex;align-items:center;text-align:left;gap:13px;border-radius:9px;padding:12px 15px;font-size:13px}.nav-item:hover{background:#263650;color:white}.nav-item.active{background:#294369;color:white;font-weight:650}.nav-icon{font-size:20px;width:20px;text-align:center;line-height:1}.sidebar-bottom{margin-top:auto;padding:16px 13px 0;border-top:1px solid #304158;font-size:11px;color:#cbd5e5;display:grid;grid-template-columns:9px 1fr;gap:6px;align-items:center}.connection-dot{width:8px;height:8px;background:#36cb91;border-radius:50%}.sidebar-bottom small{grid-column:1/3;color:#7387a4;font-size:10px;margin-top:6px}.main{min-width:0;display:flex;flex:1;flex-direction:column}.topbar{height:96px;background:white;border-bottom:1px solid var(--border);padding:22px 36px;display:flex;justify-content:space-between;align-items:center}.topbar h1{font-size:23px;font-weight:740;line-height:1.2;margin:4px 0 0}.eyebrow{letter-spacing:1.5px;text-transform:uppercase;font-size:10px;font-weight:600;color:#90a1b4}.topright{display:flex;align-items:center;gap:20px}.mode-chip{background:#edf2ff;color:var(--accent-dark);padding:7px 12px;border-radius:6px;font-weight:650;font-size:11px}.clock{color:var(--muted);font-variant-numeric:tabular-nums;font-weight:550}.content{padding:25px 36px;max-width:1560px;width:100%;margin:0 auto;flex:1}.notice{padding:11px 16px;background:#edf2fd;border:1px solid #dce7fc;border-radius:9px;display:flex;align-items:center;gap:10px;color:#50729e;font-size:12px;margin-bottom:22px}.notice-icon{background:#6794df;color:white;border-radius:50%;width:16px;height:16px;display:grid;place-items:center;font-size:11px;font-weight:bold;flex-shrink:0}.text-button{margin-left:auto;border:0;background:transparent;color:#3364a7;text-decoration:underline}.help-panel{padding:13px 17px;background:white;border-radius:8px;border:1px solid var(--border);color:#567;margin:-12px 0 19px}.hidden{display:none!important}.panel{display:none}.panel.active{display:block}.four-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.stat-card,.card{background:white;border:1px solid var(--border);border-radius:12px;box-shadow:0 2px 10px #21344805}.stat-card{padding:20px 22px}.stat-label{font-size:12px;color:var(--muted)}.stat-value{margin:8px 0 3px;font-size:28px;font-weight:750;letter-spacing:-.7px;line-height:1.25;display:flex;align-items:center;gap:9px;font-variant-numeric:tabular-nums}.stat-card small{color:#91a0af;font-size:11px}.state-dot,.tiny-indicator{display:inline-block;border-radius:50%;width:10px;height:10px;background:#a6b3c5;flex-shrink:0}.state-dot.ok,.tiny-indicator.ok{background:#13a76b;box-shadow:0 0 0 4px #e3f7ed}.state-dot.running{background:#3568ed;box-shadow:0 0 0 4px #e8eeff}.state-dot.error,.tiny-indicator.error{background:#e15862;box-shadow:0 0 0 4px #fbe9eb}.unit{font-size:13px;color:var(--muted);align-self:end;padding-bottom:6px}.dashboard-grid{display:grid;grid-template-columns:minmax(315px,.92fr) minmax(400px,1.25fr);gap:18px;margin-top:18px}.card{padding:23px}.card-head{display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:21px}.card-head h2,.section-intro h2{font-size:15px;margin:0 0 4px;font-weight:750}.card-head p,.section-intro p{margin:0;color:var(--muted);font-size:12px}.pill{padding:5px 9px;background:#e8f6ef;color:#179562;border-radius:20px;font-size:11px;white-space:nowrap;font-weight:650}.pill.neutral{background:#f2f4f7;color:#65778e}.pill.alert{background:#fff0f0;color:#d84855}.mode-toggle{background:#f2f5fa;border-radius:9px;padding:5px;display:flex;margin:18px 0 20px}.mode-toggle button{border:0;background:none;flex:1;padding:11px 12px;color:#7b8ba1;border-radius:7px;font-weight:650}.mode-toggle button.selected{background:white;box-shadow:0 1px 6px #09244414;color:#305fd4}.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:11px}.btn{border:1px solid transparent;border-radius:8px;padding:11px 14px;font-size:12px;font-weight:700;transition:background .15s}.btn:hover:not(:disabled){filter:brightness(.97)}.btn-primary{background:#3264e5;color:white}.btn-danger{background:#fff0f1;border-color:#ffe0e3;color:#ca4c56}.btn-light{background:#f6f8fb;border-color:#e7ebf1;color:#465c77}.control-hint{background:#f8fafd;color:#8191a7;padding:12px;border-radius:7px;font-size:11px;margin-top:14px}.machine-diagram{background:linear-gradient(180deg,#f8faff,#f3f7fc);border:1px dashed #d7e0ed;border-radius:10px;min-height:190px;padding:14px 25px 12px;position:relative;overflow:hidden}.camera-sim{display:flex;align-items:center;flex-direction:column;font-size:9px;letter-spacing:1px;color:#92a2b7;gap:2px}.camera-shape{display:grid;place-items:center;width:44px;height:29px;background:#304d79;color:white;border-radius:6px 6px 10px 10px;font-size:24px;box-shadow:0 4px 13px #18263c28}.axis-track{margin:22px 24px 8px;height:6px;background:#c9d5e9;border-radius:4px;position:relative}.axis-track:before{content:'';position:absolute;height:15px;left:0;right:0;top:-4px;border-left:3px solid #879eba;border-right:3px solid #879eba}.axis-origin,.axis-end{position:absolute;top:14px;font-size:9px;color:#90a3b9}.axis-end{right:0}.axis-carriage{position:absolute;top:-7px;width:28px;height:20px;background:#386ae6;border:3px solid white;border-radius:5px;box-shadow:0 3px 9px #234c9a4a;transform:translateX(-50%);transition:left .15s linear;z-index:2}.carriage-label{font-size:9px;color:#4271d2;position:absolute;top:-18px;left:6px;font-weight:700}.machine-bottom{display:flex;justify-content:space-between;align-items:center;padding:25px 48px 0}.cylinder-sim{display:grid;gap:7px;justify-items:center;color:#90a1b6;font-size:9px}.cylinder-body{height:18px;width:76px;background:#a8b9d1;border:3px solid #819ab6;border-radius:4px;position:relative}.cylinder-rod{position:absolute;width:39px;height:6px;background:#7793bf;left:66px;top:3px;transition:width .3s}.cylinder-rod.extended{width:60px}.product-symbol{display:grid;place-items:center;border:2px solid #9fbee6;background:#e5effc;width:54px;height:40px;border-radius:7px;color:#4d7ec3;font-size:24px;position:relative}.product-symbol small{font-size:9px;position:absolute;bottom:-19px;color:#91a2b6}.product-symbol.absent{opacity:.15}.device-health{display:flex;gap:19px;padding-top:18px;font-size:11px;color:#657890;flex-wrap:wrap}.device-health>div{display:flex;align-items:center;gap:9px}.tiny-indicator{width:7px;height:7px}.progress-card{margin-top:18px}.progress-card .card-head{margin-bottom:10px}.current-step{display:flex;align-items:center;gap:12px;font-size:15px;margin:14px 0}.step-icon{display:grid;place-items:center;background:#eef3ff;color:#3f6de2;border-radius:9px;width:35px;height:35px;font-size:22px}.progress-rail{height:7px;background:#edf1f7;border-radius:12px;overflow:hidden}.progress-rail div{height:100%;background:#4272e9;width:0%;transition:width .2s}.step-foot{display:flex;justify-content:space-between;margin-top:13px;font-size:11px;color:#8a9aae}.section-intro{margin-bottom:22px}.section-intro h2{font-size:20px}.section-intro p{font-size:13px}.two-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.readout{background:#f6f8fc;border-radius:9px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;margin:15px 0}.readout span{color:#75869c;font-size:12px}.readout strong{font-size:25px;color:#233a5a}.readout strong small{font-size:12px;color:#9baabe}.keyvalue{padding:10px 0;display:flex;justify-content:space-between;color:#7e8fa3;font-size:12px;border-bottom:1px solid #eef1f5}.keyvalue b{color:#365072;font-weight:650}.btn-row{display:flex;gap:9px;margin-top:19px;flex-wrap:wrap}.btn-row button{flex:1}.field-label{font-size:12px;color:#74859c;display:block;margin:21px 0 9px}.input-row{display:flex;gap:9px}.input-row input{width:100%;min-width:0;border:1px solid #dbe3ee;border-radius:8px;padding:11px 12px;outline:none}.input-row input:focus{border-color:#6589ed}.full{width:100%}.divider{border-top:1px solid #eef1f5;margin:22px 0}.signal-list{display:grid;gap:3px}.signal-row{display:grid;grid-template-columns:25px 1fr auto;align-items:center;gap:11px;border-bottom:1px solid #f0f2f6;padding:13px 0}.signal-index{font-size:10px;color:#9caabe}.signal-text b{display:block;font-size:12px}.signal-text small{display:block;font-size:10px;color:#8fa0b5;margin-top:2px}.signal-control{display:flex;gap:13px;align-items:center}.signal-indicator{display:flex;align-items:center;gap:7px;font-size:11px;color:#8698ae;font-weight:700}.led{width:9px;height:9px;border-radius:50%;background:#d6dce7}.led.on{background:#27b584;box-shadow:0 0 0 3px #e7f8ef}.switch{width:34px;height:19px;background:#ccd7e4;border:0;border-radius:11px;position:relative;transition:background .2s}.switch:before{content:'';position:absolute;width:13px;height:13px;border-radius:50%;background:white;top:3px;left:3px;transition:left .2s}.switch.on{background:#4273e9}.switch.on:before{left:18px}.sequence-list{display:grid;gap:0}.sequence-row{display:flex;gap:15px;align-items:center;padding:14px 7px;border-bottom:1px solid #edf1f5;color:#8c9aab}.sequence-number{display:grid;place-items:center;width:30px;height:30px;border:1px solid #dbe2ec;border-radius:50%;font-size:11px;flex-shrink:0}.sequence-row.current{color:#2c5ed7;background:#f5f8ff;font-weight:700}.sequence-row.current .sequence-number{background:#3e70eb;color:white;border-color:#3e70eb}.sequence-label{flex:1}.sequence-row small{font-size:11px}.event-list{max-height:500px;overflow:auto}.event-row{display:grid;grid-template-columns:94px 70px 1fr;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid #edf1f5;font-size:12px}.event-row time{color:#93a2b6;font-variant-numeric:tabular-nums}.loglevel{font-size:10px;font-weight:750;color:#4b709c}.loglevel.Error{color:#dc4a55}.loglevel.Warning{color:#ae7a25}.alarm-empty{padding:16px;background:#f6f8fb;color:#8191a3;border-radius:8px}.alarm-active{padding:16px;background:#fff2f1;color:#bd4552;border-radius:8px}.footer{display:flex;justify-content:space-between;padding:16px 36px;border-top:1px solid var(--border);font-size:11px;color:#9aa9b8}.toast{position:fixed;bottom:22px;right:22px;padding:13px 18px;max-width:380px;border-radius:9px;background:#233950;color:white;box-shadow:0 6px 25px #17274130;z-index:20}.toast.error{background:#b83a46}@media(max-width:1100px){.sidebar{width:210px}.topbar{padding:22px}.content{padding:20px}.four-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-grid{grid-template-columns:1fr}.machine-diagram{min-height:190px}}@media(max-width:700px){.app-shell{display:block}.sidebar{width:100%;padding:12px}.brand{padding:4px 5px 12px}.section-label,.sidebar-bottom{display:none}.navigation{display:flex;overflow:auto;gap:2px}.nav-item{white-space:nowrap;padding:9px 10px;font-size:11px}.nav-icon{display:none}.topbar{height:85px;padding:13px}.topbar h1{font-size:21px}.topright{gap:7px}.clock{display:none}.content{padding:14px}.four-grid{gap:9px}.stat-card{padding:15px}.stat-value{font-size:22px}.two-grid{grid-template-columns:1fr}.card{padding:17px}.footer{padding:13px}.notice{font-size:11px}.machine-bottom{padding-left:10px;padding-right:10px}}
 
@@ -220,7 +220,7 @@
       <div class="topright"><label for="workspaceStation" class="workspace-chooser">工站 <select id="workspaceStation" class="select-field" aria-label="选择当前工作区"><option value="A">工站 A</option><option value="B">工站 B</option></select></label><span id="workspaceTag" class="mode-chip">工作区 A</span><span class="mode-chip" id="sourceMode">初始化中</span><span class="mode-chip" id="userLabel">未登录</span><button id="logoutButton" class="btn btn-light" style="padding:8px 11px" disabled>退出</button><span class="clock" id="clock">--:--:--</span></div>
     </header>
     <div class="content">
-      <div class="notice"><span class="notice-icon">i</span><span>V1.8：重启中断留痕、备份哈希核验与只读恢复演练；所有部署仍由管理员显式触发。仅仿真。</span><button id="helpToggle" class="text-button">说明</button></div>
+      <div class="notice"><span class="notice-icon">i</span><span>V2.0 RC：新增严格发布验收门禁和备份来源保护。离线仿真不代表 .NET/HTTP 验收通过。</span><button id="helpToggle" class="text-button">说明</button></div>
       <div id="help" class="help-panel hidden">离线打开时使用浏览器内置仿真。启动 .NET 后端并由 5173 静态服务访问前端时，连接本地 API 仿真。控制动作都由软件普通互锁约束，但这不能替代机械安全系统。后端连接丢失时会锁定控制，禁止无提示自动切换到另一台模拟设备。</div>
       <div id="toast" role="status" class="toast hidden"></div>
       <div id="loginOverlay" class="login-overlay">
@@ -311,7 +311,7 @@
           <div id="rolloutRecovery" class="rollout-steps" aria-live="polite"><div class="control-hint">选择批次查询只读恢复报告，或运行不影响任何工站的故障演练。</div></div>
           <div class="control-hint">红色异常只提供诊断，不会自动恢复。服务重启会将未完成部署标为 Interrupted 并持久化，需人工处理。</div>
           <div class="divider"></div>
-          <div class="card-head"><div><h2>⑨ 隔离备份检查 · V1.9</h2><p>在临时副本上验证 SHA-256、SQLite 完整性与部署前版本；只输出检查结果，永不回写生产数据。</p></div><span class="pill neutral">诊断专用</span></div>
+          <div class="card-head"><div><h2>⑨ 隔离备份检查 · V2.0 RC</h2><p>在临时副本上验证 SHA-256、SQLite 完整性与部署前版本；只输出检查结果，永不回写生产数据。</p></div><span class="pill neutral">诊断专用</span></div>
           <div class="btn-row"><button class="btn btn-light" id="sandboxInspectBtn">检查「已有工站升级」中选定的部署</button></div>
           <div id="sandboxReport" class="rollout-steps" aria-live="polite"><div class="control-hint">请先在上方「⑤ 已有工站升级」选择部署历史，然后点击检查。离线 HTML 不包含实际 SQLite 备份，不能代替真实数据库验收。</div></div>
           <div class="control-hint">沙箱检查通过也不代表允许自动恢复；必须人工审查版本、日志及工站状态。当前没有自动恢复接口。</div>
@@ -1528,6 +1528,9 @@ class FlowEditor {
     this.opts=opts;this.data=null;this.sequence=[];this.selectedId=null;this.selectedVersion=null;
     this.dragged=null;this.busy=false;this.changed=false;this.clipboard=null;this.history=new window.WorkflowEditTools.EditHistory([]);
     this.stationId='A';this.stationCache={};this.readEpoch=0;
+    // F14: warn before a refresh/close silently discards unsaved canvas changes.
+    window.addEventListener('beforeunload',e=>{
+      if(this.changed){e.preventDefault();e.returnValue='存在未保存的流程修改'}});
     this.$=id=>document.getElementById(id);
     const panel=this.$('panel-workflow');
     panel.addEventListener('click',e=>this.clicked(e));
@@ -1669,7 +1672,10 @@ class FlowEditor {
       }else if(a==='rollback'){
         if(!confirm('将创建一个新的发布版本，内容复制自 '+this.selectedVersion+'，确认？'))return;
         result=await this.opts.send('/api/flows/rollback',{id:this.selectedVersion});
-      }else if(a==='reset') {this.resetWorkspace(this.data.active.definition);this.selectedVersion=this.data.active.id;this.opts.notice('已还原工作区');return}
+      }else if(a==='reset') {
+        // F14: never discard unsaved canvas changes without an explicit confirm.
+        if(this.changed&&!confirm('重置将丢弃未保存的画布修改，继续？'))return;
+        this.resetWorkspace(this.data.active.definition);this.selectedVersion=this.data.active.id;this.opts.notice('已还原工作区');return}
       const v=result?.data||result;
       await this.reload(v?.id||this.selectedVersion);
       await this.opts.refreshed();
@@ -1756,7 +1762,17 @@ window.FlowEditor=FlowEditor;
       document.getElementById('fleetRefresh').disabled=this.busy||!this.user()||this.locked;
     }
     async request(path,body){
-      const response=await fetch(this.root+path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json','X-Sim-Token':this.token()},body:body===undefined?undefined:JSON.stringify(body)});
+      // F09: application-level timeout; a half-open connection must not freeze polling.
+      const write=body!==undefined;
+      const controller=new AbortController();
+      const timer=setTimeout(()=>controller.abort(),write?15000:8000);
+      let response;
+      try{
+        response=await fetch(this.root+path,{method:write?'POST':'GET',headers:{'Content-Type':'application/json','X-Sim-Token':this.token()},body:write?JSON.stringify(body):undefined,signal:controller.signal});
+      }catch(e){
+        if(e&&e.name==='AbortError')throw Error(write?'写操作超时：结果未知，不会自动重发':'数据获取超时，界面可能非最新');
+        throw e;
+      }finally{clearTimeout(timer)}
       const value=await response.json();if(!response.ok)throw Error(value.error||'HTTP '+response.status);return value;
     }
     async refresh(){
@@ -2409,6 +2425,26 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
 <script>
 (() => {
   const root='http://127.0.0.1:5088';
+  // F09: unified fetch with application-level timeouts. Reads mark staleness instead of
+  // silently keeping old state; writes report "result unknown" and are never auto-resent.
+  const READ_TIMEOUT_MS=8000,WRITE_TIMEOUT_MS=15000;
+  let dataStale=false;
+  async function apiFetch(path,opts={}){
+    const write=(opts.method||'GET')!=='GET';
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),write?WRITE_TIMEOUT_MS:READ_TIMEOUT_MS);
+    try{
+      const res=await fetch(root+path,{...opts,signal:controller.signal});
+      if(!write)dataStale=false;
+      return res;
+    }catch(e){
+      if(e&&e.name==='AbortError'){
+        if(write)throw Error('写操作超时：结果未知。请核对运行记录与审计，设备动作不会自动重发');
+        dataStale=true;throw Error('数据获取超时，界面显示的可能不是最新状态');
+      }
+      throw e;
+    }finally{clearTimeout(timer)}
+  }
   const machineA=new MockRuntime(window.STATION_CONFIG);
   const machineB=new MockRuntime(window.STATION_CONFIG_B);
   machineA.stationId='A';machineB.stationId='B';
@@ -2444,7 +2480,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
     try{
       const target=window.StationWorkspace.ensureStation(id);
       let targetConfig=offline[target]?.machine.cfg || window.STATION_CONFIG;
-      if(usingBackend){const res=await fetch(root+apiPath('/api/config',target),{headers:{'X-Sim-Token':token}});
+      if(usingBackend){const res=await apiFetch(apiPath('/api/config',target),{headers:{'X-Sim-Token':token}});
         if(!res.ok)throw Error('读取工站 '+target+' 配置失败');targetConfig=await res.json();}
       // Avoid changing context until the target has passed validation and can be loaded.
       if(!offline[target]){const shadow=new MockRuntime(targetConfig);shadow.stationId=target;shadow.sharedCoordinator=coordinator;offline[target]={machine:shadow,governance:new GovernanceMock(shadow)}}
@@ -2471,7 +2507,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
   }
   async function registerRemoteStations(){
     if(!usingBackend||!user)return;
-    const r=await fetch(root+'/api/stations',{headers:{'X-Sim-Token':token}});
+    const r=await apiFetch('/api/stations',{headers:{'X-Sim-Token':token}});
     if(!r.ok)throw Error('读取工站注册表失败');
     const items=(await r.json()).stations||[];
     items.forEach(s=>window.StationWorkspace.register(s.id));
@@ -2492,7 +2528,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
       const health=await res.json();if(health.mode!=='Simulation')throw Error('本界面仅可连接仿真服务');
       usingBackend=true;
       // Do not auto-authorize or silently reuse a previous session. Explicit login is required.
-      if(user){const r=await fetch(root+apiPath('/api/config'),{headers:{'X-Sim-Token':token}});if(!r.ok)throw Error('无法读取站点配置');cfg=await r.json();populateSelectors();await refresh();}
+      if(user){const r=await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}});if(!r.ok)throw Error('无法读取站点配置');cfg=await r.json();populateSelectors();await refresh();}
     }catch(e){if(usingBackend){disconnected=true;toast('后端连接异常，控制已锁定：'+e.message,true)}else toast('未检测到 C# 本地仿真服务，已启用浏览器离线演示')}
     render();
   }
@@ -2502,7 +2538,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
     if(!user)throw Error('请先登录');
     const target=workspace.id;
     if(!usingBackend)return offline[target].governance.post(path,body,user);
-    const resp=await fetch(root+apiPath(path,target),{method:'POST',headers:{'Content-Type':'application/json','X-Sim-Token':token},body:JSON.stringify(body)});
+    const resp=await apiFetch(apiPath(path,target),{method:'POST',headers:{'Content-Type':'application/json','X-Sim-Token':token},body:JSON.stringify(body)});
     let value;try{value=await resp.json()}catch{throw Error('后端未返回有效 JSON')}
     if(!resp.ok)throw Error(value.error||'请求失败 '+resp.status);return value;
   }
@@ -2512,7 +2548,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
     try{
       if(usingBackend){
         const heads={'X-Sim-Token':token};
-        const [res,fres]=await Promise.all([fetch(root+apiPath('/api/snapshot',context.station),{headers:heads}),fetch(root+apiPath('/api/flow',context.station),{headers:heads})]);
+        const [res,fres]=await Promise.all([apiFetch(apiPath('/api/snapshot',context.station),{headers:heads}),apiFetch(apiPath('/api/flow',context.station),{headers:heads})]);
         if(!res.ok||!fres.ok)throw Error('HTTP '+(res.ok?fres.status:res.status));
         const [nextSnapshot,nextFlow]=await Promise.all([res.json(),fres.json()]);
         if(workspace.isCurrent(context)){snapshot=nextSnapshot;flow=nextFlow}
@@ -2541,15 +2577,15 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
     if(backendProbe)await backendProbe;
     if(disconnected)throw Error('服务断开，请刷新页面后重试');
     if(usingBackend){
-      const res=await fetch(root+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+      const res=await apiFetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
       const value=await res.json();if(!res.ok)throw Error(value.error||'登录失败');token=value.token;user=value.user;
-      const cfgRes=await fetch(root+apiPath('/api/config'),{headers:{'X-Sim-Token':token}});
+      const cfgRes=await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}});
       if(!cfgRes.ok)throw Error('登录后读取配置失败');cfg=await cfgRes.json();
     }else user=governance.login(username,password);
     $('loginOverlay').classList.add('hidden');await registerRemoteStations();populateSelectors();void stationConsole?.refresh();await refresh();await loadGovernance();render();
   }
   async function logout(){
-    if(usingBackend&&token){try{await fetch(root+'/api/auth/logout',{method:'POST',headers:{'X-Sim-Token':token}})}catch{}}
+    if(usingBackend&&token){try{await apiFetch('/api/auth/logout',{method:'POST',headers:{'X-Sim-Token':token}})}catch{}}
     user=null;token=null;governanceData=null;auditData=null;recoveryData=null;
     $('loginOverlay').classList.remove('hidden');stationConsole?.render();render();
   }
@@ -2564,7 +2600,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
       if(path.startsWith('/api/audit'))return gov.auditPage(auditPage,40);
       if(path==='/api/recovery/checklist')return gov.checklist();
     }
-    const res=await fetch(root+apiPath(path,target),{headers:{'X-Sim-Token':token}});
+    const res=await apiFetch(apiPath(path,target),{headers:{'X-Sim-Token':token}});
     if(!res.ok){const v=await res.json().catch(()=>({}));throw Error(v.error||'API '+res.status)}return res.json();
   }
   async function loadGovernance(){
@@ -2627,7 +2663,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
     txt('workspaceTag','工作区 '+workspace.id);txt('workspaceBreadcrumb','STATION '+workspace.id);
     txt('userLabel',user?user.name+' · '+user.role:'未登录');$('logoutButton').disabled=!user;
     txt('connectionLabel',disconnected?'已断开 · 锁定':usingBackend?'C# 本地模拟后端':'浏览器模拟驱动');
-    txt('sourceMode',disconnected?'连接丢失':usingBackend?'本地 API · Simulation':'离线 Simulation');
+    txt('sourceMode',disconnected?'连接丢失':dataStale?'数据可能过期':usingBackend?'本地 API · Simulation':'离线 Simulation');
     txt('clock',new Date().toLocaleTimeString('zh-CN',{hour12:false}));
     txt('stateValue',stateText[d.state]||d.state);
     $('stateDot').className='state-dot '+(disconnected||d.state==='Fault'?'error':d.state==='Running'||d.state==='Stopping'?'running':'ok');
@@ -2814,7 +2850,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
     read:()=>securedGet('/api/flows'),
     send:async(path,body)=>request(path,body),
     refreshed:async()=>{
-      if(usingBackend){const res=await fetch(root+apiPath('/api/config'),{headers:{'X-Sim-Token':token}});if(!res.ok)throw Error('更新站点配置失败');cfg=await res.json()}
+      if(usingBackend){const res=await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}});if(!res.ok)throw Error('更新站点配置失败');cfg=await res.json()}
       else cfg=offline[workspace.id].machine.cfg;
       await refresh();
     }
@@ -2830,7 +2866,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
   upgradeStudio=new window.StationUpgradeStudio({root,backend:()=>usingBackend,token:()=>token,user:()=>user,
     offline,templates:()=>templateStudio.templates,notify:toast,onChanged:async id=>{
       if(id===workspace.id){
-        if(usingBackend){const r=await fetch(root+apiPath('/api/config'),{headers:{'X-Sim-Token':token}});if(r.ok)cfg=await r.json();}
+        if(usingBackend){const r=await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}});if(r.ok)cfg=await r.json();}
         await refresh();if(currentTab==='workflow')await editor.open();
       }
       await stationConsole.refresh();

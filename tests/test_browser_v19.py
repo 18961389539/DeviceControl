@@ -10,7 +10,7 @@ async def run():
   b=await pw.chromium.launch(**kw)
   p=await b.new_page(viewport={'width':1440,'height':980});errors=[]
   p.on('pageerror',lambda e:errors.append(str(e)))
-  await p.set_content((ROOT/'tests'/'fixtures'/'DeviceControl_V1.9_Preview.html').read_text(),wait_until='load')
+  await p.set_content((ROOT/'tests'/'fixtures'/'DeviceControl_V1.9_Preview.html').read_text(encoding='utf-8'),wait_until='load')
   await p.locator('#loginUser').select_option('admin')
   await p.locator('#loginForm button').click()
   await p.locator('#loginOverlay').wait_for(state='hidden')

@@ -3,13 +3,14 @@ C# SQL text tested in Python SQLite; not a compiled .NET persistence integration
 """
 from pathlib import Path
 import re,sqlite3,tempfile
+import contextlib
 old=(Path(__file__).parent/'fixtures/schema_v1.sql').read_text(encoding='utf8')
 new=(Path(__file__).parent/'fixtures/schema_v2.sql').read_text(encoding='utf8')
 pattern=r'cmd\.CommandText\s*=\s*"""\s*(CREATE TABLE IF NOT EXISTS schema_version.*?INSERT OR IGNORE INTO schema_version.*?;)\s*"""'
 v1=old
 v2=new
 with tempfile.TemporaryDirectory() as folder:
-  with sqlite3.connect(Path(folder)/'upgrade.db') as db:
+  with contextlib.closing(sqlite3.connect(Path(folder)/'upgrade.db')) as db:
     db.execute('PRAGMA foreign_keys=ON')
     db.executescript(v1)
     db.execute("INSERT INTO workflow_revisions VALUES (?,?,?,?,?,?,?,?)",('r-v1','Published',None,'system','2026-01-01','hash','[]','old'))

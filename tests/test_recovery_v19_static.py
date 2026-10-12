@@ -1,8 +1,8 @@
 from pathlib import Path
 r=Path(__file__).resolve().parents[1]
-api=(r/'backend/DeviceControl.Api/Program.cs').read_text()
-source=(r/'backend/DeviceControl.Api/RecoverySandboxInspector.cs').read_text()
-roles=(r/'backend/DeviceControl.Api/Governance.cs').read_text()
+api=(r/'backend/DeviceControl.Api/Program.cs').read_text(encoding='utf-8')
+source=(r/'backend/DeviceControl.Api/RecoverySandboxInspector.cs').read_text(encoding='utf-8')
+roles=(r/'backend/DeviceControl.Api/Governance.cs').read_text(encoding='utf-8')
 assert '/api/upgrades/{id}/sandbox' in api
 assert 'builder.Services.AddSingleton<RecoverySandboxInspector>();' in api
 assert 'path.StartsWith("/api/upgrades/", StringComparison.OrdinalIgnoreCase)' in roles

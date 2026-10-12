@@ -7,15 +7,22 @@ public sealed class RunJournal
 {
     private readonly object _sync = new();
     private readonly string _path;
+    private readonly string _eventsPath;
     private readonly SqliteStore _db;
     private readonly List<CycleRecord> _cycles = new();
+    private int _eventWriteFailures;
     public int RecoveredInterruptions { get; }
+    // F01: durable recovery gate, loaded once at construction and mutated only
+    // through Raise/Clear below. A restart must never silently drop the requirement.
+    public RecoveryStateRecord? RecoveryState { get; private set; }
     public RunJournal(IHostEnvironment environment,SqliteStore db, string? scope = null)
     {
         var dir = StationStoragePaths.Folder(environment, scope);
         _path = Path.Combine(dir, "cycles.jsonl");
+        _eventsPath = Path.Combine(dir, "run-events.jsonl");
         _db=db;
         RecoveredInterruptions = _db.RecoverInterruptedCycles();
+        RecoveryState = _db.LoadRecoveryState();
         if (File.Exists(_path)) foreach (var line in File.ReadLines(_path))
         {
             try
@@ -25,7 +32,8 @@ public sealed class RunJournal
             }
             catch (JsonException) { /* tolerate a truncated final record */ }
         }
-        _cycles.AddRange(_db.Cycles().AsEnumerable().Reverse());
+        // F12: recent-cycle metadata only; node snapshots hydrate on demand.
+        _cycles.AddRange(_db.Cycles(limit:100, withSnapshots:false).AsEnumerable().Reverse());
         if (_cycles.Count > 100) _cycles.RemoveRange(0, _cycles.Count - 100);
     }
     public IReadOnlyList<CycleRecord> Recent()
@@ -42,7 +50,47 @@ public sealed class RunJournal
             if (_cycles.Count > 100) _cycles.RemoveRange(0, _cycles.Count - 100);
         }
     }
+    public void RaiseRecoveryRequired(string reason, string? runId, string? action)
+    {
+        _db.RaiseRecoveryState(reason, runId, action);
+        lock (_sync) RecoveryState = _db.LoadRecoveryState();
+    }
+    public void ClearRecoveryRequired(string actor)
+    {
+        _db.ClearRecoveryState(actor);
+        lock (_sync) RecoveryState = _db.LoadRecoveryState();
+    }
+    /// <summary>F10: append-only run event log. Never throws into the runtime path;
+    /// failures are counted and surfaced through the diagnostics endpoint.</summary>
+    public void AppendEvent(string level, string message, string? runId = null)
+    {
+        var line = JsonSerializer.Serialize(new RunEventEntry(DateTimeOffset.UtcNow.ToString("O"), level, message, runId));
+        lock (_sync)
+        {
+            try
+            {
+                File.AppendAllText(_eventsPath, line + "\n");
+                var info = new FileInfo(_eventsPath);
+                if (info.Length > 8 * 1024 * 1024) TrimEventLog();
+            }
+            catch (IOException) { _eventWriteFailures++; }
+        }
+    }
+    public int EventWriteFailures { get { lock (_sync) return _eventWriteFailures; } }
+    private void TrimEventLog()
+    {
+        // Keep the most recent ~1MB; retention is a local diagnostic aid, not an audit ledger.
+        var bytes = File.ReadAllBytes(_eventsPath);
+        if (bytes.Length <= 1024 * 1024) return;
+        var start = bytes.Length - 1024 * 1024;
+        while (start < bytes.Length && bytes[start] != (byte)'\n') start++;
+        File.WriteAllBytes(_eventsPath, bytes[(start + 1)..]);
+    }
 }
+
+public sealed record RecoveryStateRecord(bool Required, string Reason, string? RunId, string? Action,
+    string? RaisedUtc, string? AcknowledgedBy, string? AcknowledgedUtc);
+public sealed record RunEventEntry(string TimeUtc, string Level, string Message, string? RunId);
 
 public record StepRecord(int Index, string Label, string Type, string Device,
     string Outcome, long DurationMs, string? Error);

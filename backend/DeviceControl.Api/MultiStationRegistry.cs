@@ -42,17 +42,21 @@ public sealed class MultiStationRegistry
 {
     private readonly object _gate = new();
     private readonly Dictionary<string, StationContext> _stations;
+    private readonly Dictionary<string, string> _failedStations = new(StringComparer.OrdinalIgnoreCase);
     private readonly SharedResourceCoordinator _coordinator;
     private readonly IHostEnvironment _environment;
     private readonly string _managedFolder;
+    private readonly RunEligibilityRegistry _eligibility;
     private const int MaxStations = 12;
 
     public MultiStationRegistry(IHostEnvironment environment, StationConfig cfg,
         DeviceRuntime runtime, SqliteStore store, RunJournal journal,
-        FlowRevisions flows, RecipeStore recipes, SharedResourceCoordinator coordinator)
+        FlowRevisions flows, RecipeStore recipes, SharedResourceCoordinator coordinator,
+        RunEligibilityRegistry eligibility)
     {
         _environment = environment;
         _coordinator = coordinator;
+        _eligibility = eligibility;
         runtime.AttachSharedResources(coordinator, "A");
         _stations = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -70,9 +74,21 @@ public sealed class MultiStationRegistry
             var id = CanonicalStationId(Path.GetFileNameWithoutExtension(path));
             if (_stations.ContainsKey(id) || _stations.Count >= MaxStations)
                 throw new InvalidOperationException("持久化工站目录包含重复 ID 或超过容量");
-            _stations.Add(id, BuildStation(id, StationConfig.Load(path)));
+            // F13: one corrupt managed-station file fails that station closed and is
+            // recorded for diagnosis; it must not take the whole service down.
+            try { _stations.Add(id, BuildStation(id, StationConfig.Load(path))); }
+            catch (Exception ex) { _failedStations[id] = ex.Message; }
         }
     }
+    /// <summary>F13: stations that failed to load, with the reason. They stay out of
+    /// the fleet (fail closed) and are visible through the diagnostics endpoint.</summary>
+    public IReadOnlyDictionary<string, string> FailedStations
+    { get { lock (_gate) return new Dictionary<string, string>(_failedStations); } }
+    public IReadOnlyList<string> StationIds
+    { get { lock (_gate) return _stations.Keys.OrderBy(x => x, StringComparer.Ordinal).ToArray(); } }
+    /// <summary>F04: invoked for every newly created station so the caller can register
+    /// its run-eligibility check (the upgrade manager does not exist yet at construction).</summary>
+    public Action<string>? OnStationAdded { get; set; }
 
     public static string CanonicalStationId(string id)
     {
@@ -93,7 +109,7 @@ public sealed class MultiStationRegistry
         var flows = new FlowRevisions(db, cfg);
         var journal = new RunJournal(_environment, db, id);
         var machine = new DeviceRuntime(cfg, io, motion, cylinders,
-            camera, interlocks, journal, recipes, flows);
+            camera, interlocks, journal, recipes, flows, _eligibility);
         machine.AttachSharedResources(_coordinator, id);
         return new StationContext(id, cfg, machine, db, journal, flows, recipes);
     }
@@ -133,6 +149,7 @@ public sealed class MultiStationRegistry
                 station.Recipes.Validate(draft.Id);
                 station.Recipes.Publish(draft.Id, station.Machine);
                 _stations.Add(id, station);
+                OnStationAdded?.Invoke(id);
                 return station;
             }
             catch

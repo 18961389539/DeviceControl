@@ -10,7 +10,7 @@ async def run():
   browser=await pw.chromium.launch(**opts)
   page=await browser.new_page(viewport={'width':1550,'height':920});errors=[]
   page.on('pageerror',lambda e:errors.append(str(e)))
-  await page.set_content((ROOT/'tests'/'fixtures'/'DeviceControl_V1.6_Preview.html').read_text(),wait_until='load')
+  await page.set_content((ROOT/'tests'/'fixtures'/'DeviceControl_V1.6_Preview.html').read_text(encoding='utf-8'),wait_until='load')
   await page.locator('#loginForm button').click();await page.locator('#loginOverlay').wait_for(state='hidden')
   await page.locator('[data-tab=templates]').click()
   assert await page.locator('[data-rollout=create]').is_disabled() # Engineer cannot create

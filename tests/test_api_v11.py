@@ -3,6 +3,7 @@ Requires .NET 10; execution is a mandatory CI gate, not an offline assertion.
 """
 import json,os,shutil,socket,subprocess,tempfile,time,urllib.request,urllib.error,sys,sqlite3
 from pathlib import Path
+import contextlib
 ROOT=Path(__file__).resolve().parents[1]
 if not shutil.which('dotnet'):
  print('UNVERIFIED V1.1 C# API: .NET SDK is not installed')
@@ -94,7 +95,7 @@ with tempfile.TemporaryDirectory(prefix='devicecontrol-v11-') as directory:
   assert any(x['values']['name']=='B-only' for x in recipes_b['versions'])
   for path in (root/'data/devicecontrol.db',root/'data/stations/B/devicecontrol.db'):
    assert path.exists(),path
-   with sqlite3.connect(path) as db:
+   with contextlib.closing(sqlite3.connect(path)) as db:
     assert db.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
   print('PASS V1.1 C# HTTP: legacy gate, scoped RBAC, state/recipe/history/storage isolation, A vs B recovery')
  finally:

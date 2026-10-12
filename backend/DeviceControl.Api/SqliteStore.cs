@@ -78,6 +78,15 @@ public sealed class SqliteStore
               http_status INTEGER NOT NULL, trace_id TEXT NOT NULL, payload_json TEXT NOT NULL
             );
             CREATE INDEX IF NOT EXISTS idx_audit_time ON audit_events(time_utc DESC);
+            -- F01: durable per-station recovery gate. A restart must not clear an
+            -- unacknowledged recovery requirement; only an explicit confirm clears it.
+            CREATE TABLE IF NOT EXISTS recovery_state(
+              singleton INTEGER PRIMARY KEY CHECK(singleton=1),
+              required INTEGER NOT NULL CHECK(required IN (0,1)),
+              reason TEXT NOT NULL DEFAULT '',
+              run_id TEXT, action TEXT,
+              raised_utc TEXT, acknowledged_by TEXT, acknowledged_utc TEXT
+            );
             CREATE TABLE IF NOT EXISTS recipe_revisions(
               id TEXT PRIMARY KEY, state TEXT NOT NULL, payload_json TEXT NOT NULL
             );
@@ -96,6 +105,16 @@ public sealed class SqliteStore
         using var cmd = c.CreateCommand();
         cmd.CommandText = "PRAGMA busy_timeout=5000; PRAGMA foreign_keys=ON;";
         cmd.ExecuteNonQuery();
+        return c;
+    }
+    /// <summary>F10: cheap liveness probe for /api/health; proves the store answers.</summary>
+    public SqliteConnection OpenProbe()
+    {
+        var c = new SqliteConnection(_connectionString);
+        c.Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM sqlite_master";
+        cmd.ExecuteScalar();
         return c;
     }
     /// <summary>Consistent SQLite online backup (including committed WAL pages).
@@ -249,9 +268,13 @@ public sealed class SqliteStore
             var raw=q.ExecuteScalar() as string;
             if(raw is null)return null;
             var row=JsonSerializer.Deserialize<CycleRecord>(raw);
-            return row is null?null:row with { Snapshots=Snapshots(id) };
+            // Contract: an Interrupted run carries NO node trace, so its variable
+            // snapshots are unavailable (null), never an empty "captured nothing" array.
+            return row is null?null:row with { Snapshots=HydrateSnapshots(row) };
         }
     }
+    private IReadOnlyList<NodeVariableSnapshot>? HydrateSnapshots(CycleRecord row)
+        => row.Trace is { Count: > 0 } ? Snapshots(row.Id) : null;
     public IReadOnlyList<NodeVariableSnapshot> Snapshots(string runId)
     {
         lock(_lock)
@@ -277,17 +300,20 @@ public sealed class SqliteStore
             return rows;
         }
     }
-    public List<CycleRecord> Cycles()
+    // F12: the 300ms machine snapshot must not re-hydrate every recent run's node
+    // snapshots. Callers that need full evidence (run detail, replay) opt in.
+    public List<CycleRecord> Cycles(int limit=100,bool withSnapshots=true)
     {
         lock (_lock)
         {
             using var c=Open();using var q=c.CreateCommand();
-            q.CommandText="SELECT payload_json FROM production_runs ORDER BY started_utc DESC LIMIT 100";
+            q.CommandText="SELECT payload_json FROM production_runs ORDER BY started_utc DESC LIMIT $limit";
+            q.Parameters.AddWithValue("$limit",Math.Max(1,limit));
             using var reader=q.ExecuteReader();var list=new List<CycleRecord>();
             while(reader.Read())
             {
                 var row=JsonSerializer.Deserialize<CycleRecord>(reader.GetString(0));
-                if(row!=null)list.Add(row with { Snapshots=Snapshots(row.Id) });
+                if(row!=null)list.Add(row with { Snapshots=withSnapshots?HydrateSnapshots(row):Array.Empty<NodeVariableSnapshot>() });
             }
             return list;
         }
@@ -313,10 +339,62 @@ public sealed class SqliteStore
         lock (_lock)
         {
             using var c=Open();using var q=c.CreateCommand();
-            q.CommandText="SELECT payload_json FROM audit_events ORDER BY time_utc ASC LIMIT 50000";
+            // F07: load the NEWEST rows. ASC+LIMIT returned the oldest 50k, so the
+            // latest operations became invisible after a restart.
+            q.CommandText="SELECT payload_json FROM audit_events ORDER BY time_utc DESC LIMIT 50000";
             using var reader=q.ExecuteReader();var list=new List<AuditEntry>();
             while(reader.Read()){var row=JsonSerializer.Deserialize<AuditEntry>(reader.GetString(0));if(row!=null)list.Add(row);}
+            list.Reverse();
             return list;
+        }
+    }
+    public RecoveryStateRecord? LoadRecoveryState()
+    {
+        lock (_lock)
+        {
+            using var c=Open();using var q=c.CreateCommand();
+            q.CommandText="SELECT required,reason,run_id,action,raised_utc,acknowledged_by,acknowledged_utc FROM recovery_state WHERE singleton=1";
+            using var r=q.ExecuteReader();
+            if(!r.Read())return null;
+            return new RecoveryStateRecord(r.GetInt32(0)==1,r.GetString(1),
+                r.IsDBNull(2)?null:r.GetString(2),r.IsDBNull(3)?null:r.GetString(3),
+                r.IsDBNull(4)?null:r.GetString(4),r.IsDBNull(5)?null:r.GetString(5),
+                r.IsDBNull(6)?null:r.GetString(6));
+        }
+    }
+    public void RaiseRecoveryState(string reason,string? runId,string? action)
+    {
+        lock (_lock)
+        {
+            using var c=Open();using var q=c.CreateCommand();
+            q.CommandText="""
+                INSERT INTO recovery_state(singleton,required,reason,run_id,action,raised_utc,acknowledged_by,acknowledged_utc)
+                VALUES(1,1,$reason,$run,$action,$raised,NULL,NULL)
+                ON CONFLICT(singleton) DO UPDATE SET
+                  required=1,reason=excluded.reason,run_id=excluded.run_id,action=excluded.action,
+                  raised_utc=excluded.raised_utc,acknowledged_by=NULL,acknowledged_utc=NULL
+                """;
+            q.Parameters.AddWithValue("$reason",reason);
+            q.Parameters.AddWithValue("$run",(object?)runId??DBNull.Value);
+            q.Parameters.AddWithValue("$action",(object?)action??DBNull.Value);
+            q.Parameters.AddWithValue("$raised",DateTimeOffset.UtcNow.ToString("O"));
+            q.ExecuteNonQuery();
+        }
+    }
+    public void ClearRecoveryState(string actor)
+    {
+        lock (_lock)
+        {
+            using var c=Open();using var q=c.CreateCommand();
+            q.CommandText="""
+                INSERT INTO recovery_state(singleton,required,reason,run_id,action,raised_utc,acknowledged_by,acknowledged_utc)
+                VALUES(1,0,'',NULL,NULL,NULL,$actor,$at)
+                ON CONFLICT(singleton) DO UPDATE SET
+                  required=0,acknowledged_by=excluded.acknowledged_by,acknowledged_utc=excluded.acknowledged_utc
+                """;
+            q.Parameters.AddWithValue("$actor",actor);
+            q.Parameters.AddWithValue("$at",DateTimeOffset.UtcNow.ToString("O"));
+            q.ExecuteNonQuery();
         }
     }
     public (string ActiveId,List<RecipeRevision> Revisions)? ReadRecipes()

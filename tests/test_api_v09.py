@@ -4,6 +4,7 @@ Run: python tests/test_api_v09.py
 """
 import json,os,shutil,socket,subprocess,tempfile,time,urllib.request,urllib.error,sys
 from pathlib import Path
+import contextlib
 ROOT=Path(__file__).resolve().parents[1]
 if not shutil.which('dotnet'):
  print('SKIP (unverified): .NET SDK unavailable; API integration tests were not executed')
@@ -42,7 +43,7 @@ with tempfile.TemporaryDirectory(prefix='devicecontrol-v09-api-') as folder:
   admin=session['token']
   status,listing=request('/api/flows',token=engineer)
   active=listing['active']['id']
-  cfg=json.loads((ROOT/'backend/DeviceControl.Api/config/station.json').read_text())
+  cfg=json.loads((ROOT/'backend/DeviceControl.Api/config/station.json').read_text(encoding='utf-8'))
   bad=json.loads(json.dumps(cfg['sequence']))
   bad[0]['device']='ClampExtended'   # structurally valid, normal scenario never completes
   s,d=request('/api/flows/draft','POST',{'definition':bad,'expectedActiveVersionId':active},engineer)
@@ -69,7 +70,7 @@ with tempfile.TemporaryDirectory(prefix='devicecontrol-v09-api-') as folder:
   assert s==409,(s,stale)
   import sqlite3
   db=root/'data/devicecontrol.db'
-  with sqlite3.connect(db) as conn:
+  with contextlib.closing(sqlite3.connect(db)) as conn:
    assert conn.execute('SELECT count(*) FROM workflow_quality_reports WHERE flow_id=? AND passed=1',(fresh,)).fetchone()[0]>=2
    assert conn.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
   print('PASS V0.9 C# HTTP API: publish gate, failed evidence, role denial, optimistic locking, SQLite')

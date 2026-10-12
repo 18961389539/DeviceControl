@@ -4,6 +4,7 @@ Skip is reported explicitly as UNVERIFIED, never PASS.
 """
 import json,os,sqlite3,shutil,socket,subprocess,sys,tempfile,time,urllib.request,urllib.error
 from pathlib import Path
+import contextlib
 ROOT=Path(__file__).resolve().parents[1]
 if not shutil.which('dotnet'):
  print('UNVERIFIED V1.5 HTTP: .NET 10 SDK absent')
@@ -81,7 +82,7 @@ with tempfile.TemporaryDirectory(prefix='dc-v15-') as directory:
   assert (root/'data'/'deployments'/(deployment+'.json')).exists()
   backup=root/'data'/'deployments'/'backups'/'B'/(deployment+'.db')
   assert backup.exists() and backup.stat().st_size>0
-  with sqlite3.connect(backup) as db:assert db.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
+  with contextlib.closing(sqlite3.connect(backup)) as db:assert db.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
  finally:halt(proc)
  # Durable deployment evidence must survive a new process.
  proc=boot()

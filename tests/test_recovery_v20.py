@@ -7,12 +7,13 @@ from pathlib import Path
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from tools.recovery_sandbox import inspect
+import contextlib
 
 ID='dep-'+'a'*32
 
 def write_snapshot(db):
     db.parent.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(db) as conn:
+    with contextlib.closing(sqlite3.connect(db)) as conn:
         conn.executescript('''CREATE TABLE active_workflow(singleton INTEGER PRIMARY KEY,version_id TEXT);
         CREATE TABLE active_recipe(singleton INTEGER PRIMARY KEY,id TEXT);
         INSERT INTO active_workflow VALUES(1,'flow-1');

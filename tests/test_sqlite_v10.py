@@ -3,14 +3,15 @@ crash marker semantics and immutable node snapshots. Does NOT execute C#.
 """
 from pathlib import Path
 import sqlite3,hashlib,json,tempfile,re
+import contextlib
 ROOT=Path(__file__).resolve().parents[1]
-source=(ROOT/'backend/DeviceControl.Api/SqliteStore.cs').read_text()
+source=(ROOT/'backend/DeviceControl.Api/SqliteStore.cs').read_text(encoding='utf-8')
 match=re.search(r'cmd\.CommandText\s*=\s*"""\s*(CREATE TABLE IF NOT EXISTS schema_version.*?INSERT OR IGNORE INTO schema_version.*?;)\s*"""',source,re.S)
 assert match,'Unable to extract actual C# schema'
 v4=match.group(1)
-v3=(ROOT/'tests/fixtures/schema_v3.sql').read_text()
+v3=(ROOT/'tests/fixtures/schema_v3.sql').read_text(encoding='utf-8')
 with tempfile.TemporaryDirectory(prefix='dc-v10-') as tmp:
- with sqlite3.connect(str(Path(tmp)/'control.db')) as db:
+ with contextlib.closing(sqlite3.connect(str(Path(tmp)/'control.db'))) as db:
   db.execute('PRAGMA foreign_keys=ON')
   db.executescript(v3)
   db.execute('INSERT INTO workflow_revisions VALUES (?,?,?,?,?,?,?,?)',('flow-a','Published',None,'system','t0','sha','[]','initial'))

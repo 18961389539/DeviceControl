@@ -1,0 +1,4 @@
+test-deps/
+probes/bin/
+probes/obj/
+__pycache__/

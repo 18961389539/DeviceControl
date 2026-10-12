@@ -12,6 +12,7 @@ import hashlib
 import json
 import os
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -20,6 +21,24 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PY = sys.executable
 NODE = shutil.which('node') or 'node'
+
+def _terminate_tree(proc):
+    """F11: a timeout must take the whole process tree down. `dotnet run` spawns a
+    child app; killing only the direct child leaves orphaned listeners behind."""
+    try:
+        if os.name == 'nt':
+            subprocess.run(['taskkill', '/PID', str(proc.pid), '/T', '/F'],
+                           capture_output=True, timeout=20)
+        else:
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+    except Exception:
+        try: proc.kill()
+        except Exception: pass
+
+def write_progress(out, profile, results, complete=False):
+    partial = {'version': '2.0-rc', 'complete': complete, 'profile': profile,
+               'tests': results, 'passed': sum(x['status'] == 'PASS' for x in results)}
+    (out / 'progress.json').write_text(json.dumps(partial, ensure_ascii=False, indent=2), encoding='utf-8')
 
 def definitions(browser=True):
     js = [
@@ -65,21 +84,24 @@ def dotnet_tasks():
 
 def execute(label, args, timeout, directory):
     started = time.monotonic()
+    proc = subprocess.Popen(args, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            text=True, errors='replace',
+                            env={**os.environ, 'PYTHONUNBUFFERED': '1'},
+                            start_new_session=(os.name != 'nt'))
     try:
-        result = subprocess.run(args, cwd=ROOT, capture_output=True, text=True,
-                                errors='replace', timeout=timeout,
-                                env={**os.environ, 'PYTHONUNBUFFERED': '1'})
-        status = 'PASS' if result.returncode == 0 else 'FAIL'
-        out = (result.stdout or '') + ('\n[stderr]\n' + result.stderr if result.stderr else '')
-        rc = result.returncode
-    except subprocess.TimeoutExpired as e:
+        out, err = proc.communicate(timeout=timeout)
+        status = 'PASS' if proc.returncode == 0 else 'FAIL'
+        rc = proc.returncode
+        out = (out or '') + ('\n[stderr]\n' + err if err else '')
+    except subprocess.TimeoutExpired:
         status, rc = 'TIMEOUT', None
-        def decoded(x):
-            if x is None: return ''
-            return x.decode(errors='replace') if isinstance(x, bytes) else x
-        out = decoded(e.stdout) + '\n[stderr]\n' + decoded(e.stderr) + f'\n[TIMEOUT {timeout}s]'
-    except OSError as e:
-        status, rc, out = 'ERROR', None, str(e)
+        _terminate_tree(proc)
+        try:
+            out, err = proc.communicate(timeout=15)
+        except Exception:
+            out, err = '', ''
+        out = (out or '') + ('\n[stderr]\n' + (err or '') if err else '') + \
+              f'\n[TIMEOUT {timeout}s; process tree terminated]'
     elapsed = round(time.monotonic() - started, 2)
     safe = ''.join(ch if ch.isalnum() or ch in '-_.' else '_' for ch in label)
     log = directory / (safe + '.log')
@@ -109,16 +131,15 @@ def main():
         if not suite: ap.error('--only did not select any cases')
     for label, command, timeout in suite:
         results.append(execute(label, command, timeout, logs))
-        # Persist partial evidence even if an outer runner times out or is killed.
-        partial = {'version':'2.0-rc','complete':False, 'profile':args.profile,
-                   'tests':results, 'passed':sum(x['status']=='PASS' for x in results)}
-        (out/'progress.json').write_text(json.dumps(partial,ensure_ascii=False,indent=2),encoding='utf-8')
+        # F11: persist partial evidence after EVERY case, offline and dotnet phases alike.
+        write_progress(out, args.profile, results)
     sdk = shutil.which('dotnet')
     if sdk:
         # Offline profile is for local triage only; it does not run dotnet, even when present.
         if args.profile == 'release':
             for label, command, timeout in dotnet_tasks():
                 results.append(execute(label, command, timeout, logs))
+                write_progress(out, args.profile, results)
     else:
         if args.profile == 'release':
             for label, command, _ in dotnet_tasks():

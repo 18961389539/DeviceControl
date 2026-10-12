@@ -6,6 +6,9 @@ class FlowEditor {
     this.opts=opts;this.data=null;this.sequence=[];this.selectedId=null;this.selectedVersion=null;
     this.dragged=null;this.busy=false;this.changed=false;this.clipboard=null;this.history=new window.WorkflowEditTools.EditHistory([]);
     this.stationId='A';this.stationCache={};this.readEpoch=0;
+    // F14: warn before a refresh/close silently discards unsaved canvas changes.
+    window.addEventListener('beforeunload',e=>{
+      if(this.changed){e.preventDefault();e.returnValue='存在未保存的流程修改'}});
     this.$=id=>document.getElementById(id);
     const panel=this.$('panel-workflow');
     panel.addEventListener('click',e=>this.clicked(e));
@@ -147,7 +150,10 @@ class FlowEditor {
       }else if(a==='rollback'){
         if(!confirm('将创建一个新的发布版本，内容复制自 '+this.selectedVersion+'，确认？'))return;
         result=await this.opts.send('/api/flows/rollback',{id:this.selectedVersion});
-      }else if(a==='reset') {this.resetWorkspace(this.data.active.definition);this.selectedVersion=this.data.active.id;this.opts.notice('已还原工作区');return}
+      }else if(a==='reset') {
+        // F14: never discard unsaved canvas changes without an explicit confirm.
+        if(this.changed&&!confirm('重置将丢弃未保存的画布修改，继续？'))return;
+        this.resetWorkspace(this.data.active.definition);this.selectedVersion=this.data.active.id;this.opts.notice('已还原工作区');return}
       const v=result?.data||result;
       await this.reload(v?.id||this.selectedVersion);
       await this.opts.refreshed();

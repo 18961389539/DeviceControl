@@ -1,10 +1,10 @@
 """Static seam checks only: no .NET SDK present locally."""
 from pathlib import Path
 p=Path(__file__).resolve().parents[1]/'backend'/'DeviceControl.Api'
-reg=(p/'MultiStationRegistry.cs').read_text()
-api=(p/'Program.cs').read_text()
-paths=(p/'StationStoragePaths.cs').read_text()
-perm=(p/'Governance.cs').read_text()
+reg=(p/'MultiStationRegistry.cs').read_text(encoding='utf-8')
+api=(p/'Program.cs').read_text(encoding='utf-8')
+paths=(p/'StationStoragePaths.cs').read_text(encoding='utf-8')
+perm=(p/'Governance.cs').read_text(encoding='utf-8')
 assert 'new SimIoController(bCfg)' in reg
 assert 'new SqliteStore(environment, "B")' in reg
 assert 'new RunJournal(environment, bStore, "B")' in reg

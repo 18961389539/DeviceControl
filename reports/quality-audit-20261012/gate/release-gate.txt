@@ -1,0 +1,53 @@
+DeviceControl V2.0 software quality gate
+Profile: release; browser: True; .NET SDK found: True
+Passed: 18, failed: 28, blocked: 0
+RELEASE APPROVED: NO
+
+PASS             offline:preview-build
+PASS             node:test_mock.mjs
+PASS             node:test_governance.mjs
+PASS             node:test_workflow_v05.mjs
+PASS             node:test_workflow_v06.mjs
+PASS             node:test_workflow_v07.mjs
+PASS             node:test_workflow_v08.mjs
+PASS             node:test_replay_v10.mjs
+PASS             node:test_station_v11.mjs
+PASS             node:test_resources_v12.mjs
+PASS             node:test_workspace_v13.mjs
+PASS             node:test_templates_v14.mjs
+PASS             node:test_upgrade_rules_v15.mjs
+PASS             node:test_recovery_v18.mjs
+FAIL             python:test_recovery_sandbox_v19.py
+FAIL             python:test_recovery_v20.py
+FAIL             python:test_recovery_v19_static.py
+FAIL             python:test_recovery_v18_static.py
+FAIL             python:test_rollout_files_v16.py
+FAIL             python:test_rollout_v17_static.py
+FAIL             python:test_station_files_v12.py
+FAIL             python:test_template_files_v14.py
+FAIL             python:test_upgrade_files_v15.py
+PASS             python:test_sqlite_schema.py
+FAIL             python:test_sqlite_migration_v08.py
+FAIL             python:test_sqlite_reliability.py
+FAIL             python:test_sqlite_migration_v09.py
+FAIL             python:test_sqlite_v10.py
+FAIL             python:test_v20_recovery_contract.py
+FAIL             browser:test_browser_v19.py
+FAIL             browser:test_browser_v18.py
+FAIL             browser:test_browser_v17.py
+FAIL             browser:test_browser_v16.py
+PASS             dotnet:build-api
+PASS             dotnet:build-contracts
+PASS             dotnet:contract-runner
+TIMEOUT          http:test_api_v09.py
+FAIL             http:test_api_v10.py
+FAIL             http:test_api_v12.py
+FAIL             http:test_api_v13.py
+FAIL             http:test_api_v14.py
+FAIL             http:test_api_v15.py
+FAIL             http:test_api_v16.py
+FAIL             http:test_api_v17.py
+FAIL             http:test_api_v18.py
+FAIL             http:test_api_v19.py
+
+This is a software-only simulation. Not hardware / industrial safety qualification.

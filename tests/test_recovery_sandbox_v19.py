@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from tools.recovery_sandbox import inspect
+import contextlib
 
 DEP='dep-'+'e'*32
 
@@ -11,7 +12,7 @@ def run():
  with tempfile.TemporaryDirectory(prefix='dc-v19-test-') as tmp:
   data=Path(tmp);backups=data/'deployments'/'backups'/'A';backups.mkdir(parents=True)
   db=backups/(DEP+'.db');journal=data/'deployments'/(DEP+'.json')
-  with sqlite3.connect(db) as con:
+  with contextlib.closing(sqlite3.connect(db)) as con:
    con.executescript('''CREATE TABLE active_workflow(singleton INTEGER,version_id TEXT);
    CREATE TABLE active_recipe(singleton INTEGER,id TEXT);
    INSERT INTO active_workflow VALUES(1,'flow-before');

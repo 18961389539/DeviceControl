@@ -9,7 +9,7 @@ async def run():
   page=await browser.new_page(viewport={'width':1460,'height':920},device_scale_factor=1)
   errors=[]
   page.on('pageerror',lambda e:errors.append(str(e)))
-  await page.set_content((ROOT/'tests'/'fixtures'/'DeviceControl_V0.9_Preview.html').read_text(),wait_until='load')
+  await page.set_content((ROOT/'tests'/'fixtures'/'DeviceControl_V0.9_Preview.html').read_text(encoding='utf-8'),wait_until='load')
   await page.locator('#loginForm button[type="submit"]').click()
   await page.locator('#loginOverlay').wait_for(state='hidden')
   await page.locator('.navigation [data-tab="quality"]').click()

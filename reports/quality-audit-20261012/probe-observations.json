@@ -1,0 +1,43 @@
+[
+  {
+    "id": "F01",
+    "firstBootRecovery": true,
+    "secondBootRecovery": false,
+    "persistedOutcome": "Interrupted"
+  },
+  {
+    "id": "F03",
+    "staleDraftPublished": true,
+    "activeName": "older"
+  },
+  {
+    "id": "F02",
+    "failure": "SqliteException",
+    "memoryActive": "dba6c303e2",
+    "diskActive": "96a18849e0",
+    "originalActive": "96a18849e0",
+    "runtimeRecovery": false
+  },
+  {
+    "id": "F04",
+    "deploymentStatus": "Interrupted",
+    "cycleAccepted": true,
+    "state": "Running"
+  },
+  {
+    "id": "F01-stop",
+    "beforeRestartRecovery": true,
+    "afterRestartRecovery": false
+  },
+  {
+    "id": "F05",
+    "guardClosed": false,
+    "visionOk": true
+  },
+  {
+    "id": "F07",
+    "inserted": 50001,
+    "returned": 50000,
+    "latestEventReturned": false
+  }
+]

@@ -20,9 +20,14 @@ public sealed class DemoSessions
         if (!Roles.TryGetValue(username, out var role) ||
             !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(password), Encoding.UTF8.GetBytes("demo123")))
             throw new UnauthorizedAccessException("账号或密码错误（仅演示账号）");
+        // F12: actively purge expired sessions instead of waiting for token access.
+        var now = DateTimeOffset.UtcNow;
+        foreach (var key in _sessions.Keys)
+            if (_sessions.TryGetValue(key, out var entry) && entry.Expires <= now)
+                _sessions.TryRemove(key, out _);
         var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
         var user = new SimUser(username, role);
-        _sessions[token] = (user, DateTimeOffset.UtcNow.AddHours(8));
+        _sessions[token] = (user, now.AddHours(8));
         return (token, user);
     }
     public SimUser? Get(string? token)
@@ -135,7 +140,7 @@ public sealed class RecipeStore
     private readonly object _lock = new();
     private readonly string _filename;
     private readonly SqliteStore _db;
-    private readonly List<RecipeRevision> _revisions;
+    private List<RecipeRevision> _revisions;
     private string _active;
     public RecipeStore(IHostEnvironment env,SqliteStore db, string? scope = null)
     {
@@ -164,12 +169,19 @@ public sealed class RecipeStore
     }
     public IReadOnlyList<RecipeRevision> List() { lock (_lock) return _revisions.AsEnumerable().Reverse().ToArray(); }
     public RecipeRevision Active { get { lock (_lock) return _revisions.First(v => v.Id == _active); } }
-    public RecipeRevision Draft(RecipeValues values, string author)
+    public RecipeRevision Draft(RecipeValues values, string author, string? expectedActiveVersionId = null)
     {
         lock (_lock)
         {
+            // F03: optional optimistic token, mirroring FlowRevisions.Draft.
+            if (expectedActiveVersionId != null && expectedActiveVersionId != _active)
+                throw new InvalidOperationException("版本冲突：配方草稿的基准版本已被替换，请刷新后重试");
             var row = Make(values, author, "Draft", _active, "待验证");
-            _revisions.Add(row); Persist(); return row;
+            // F02: commit first; swap memory only after the transaction succeeds.
+            var candidate = new List<RecipeRevision>(_revisions) { row };
+            _db.SaveRecipes(_active, candidate);
+            _revisions = candidate;
+            return row;
         }
     }
     public RecipeRevision Validate(string id)
@@ -179,7 +191,11 @@ public sealed class RecipeStore
             var (r, i) = Find(id, "Draft");
             Check(r.Values);
             var next = r with { Status = "Validated", Reason = "静态校验通过" };
-            _revisions[i] = next; Persist(); return next;
+            var candidate = new List<RecipeRevision>(_revisions);
+            candidate[i] = next;
+            _db.SaveRecipes(_active, candidate);
+            _revisions = candidate;
+            return next;
         }
     }
     public RecipeRevision Publish(string id, DeviceRuntime runtime)
@@ -189,11 +205,20 @@ public sealed class RecipeStore
             lock (_lock)
             {
             var (r, i) = Find(id, "Validated");
+            // F03: reject stale drafts whose baseline was replaced, same as FlowRevisions.
+            if (r.SourceId != _active)
+                throw new InvalidOperationException("版本冲突：配方草稿的基准版本已被替换，拒绝发布");
             Check(r.Values);
             var previous = _revisions.FindIndex(x => x.Id == _active);
-            if (previous >= 0) _revisions[previous] = _revisions[previous] with { Status = "Superseded" };
+            var candidate = new List<RecipeRevision>(_revisions);
+            if (previous >= 0) candidate[previous] = candidate[previous] with { Status = "Superseded" };
             var next = r with { Status = "Published", Reason = "经管理员发布" };
-            _revisions[i] = next; _active = next.Id; Persist(); return next;
+            candidate[i] = next;
+            // F02: the whole set (supersede + publish + active pointer) commits atomically
+            // before any in-memory state changes.
+            _db.SaveRecipes(next.Id, candidate);
+            _revisions = candidate; _active = next.Id;
+            return next;
             }
         });
     }
@@ -208,9 +233,13 @@ public sealed class RecipeStore
             if (source.Status is not ("Published" or "Superseded")) throw new InvalidOperationException("只能回滚到曾经发布过的版本");
             Check(source.Values);
             var previous = _revisions.FindIndex(x => x.Id == _active);
-            if (previous >= 0) _revisions[previous] = _revisions[previous] with { Status = "Superseded" };
             var release = Make(source.Values, actor, "Published", id, "回滚发布自 " + id);
-            _revisions.Add(release); _active = release.Id; Persist(); return release;
+            var candidate = new List<RecipeRevision>(_revisions);
+            if (previous >= 0) candidate[previous] = candidate[previous] with { Status = "Superseded" };
+            candidate.Add(release);
+            _db.SaveRecipes(release.Id, candidate);
+            _revisions = candidate; _active = release.Id;
+            return release;
             }
         });
     }
@@ -235,5 +264,6 @@ public sealed class RecipeStore
     private sealed record RecipeState(string ActiveId, List<RecipeRevision> Revisions);
 }
 public sealed record LoginRequest(string Username, string Password);
-public sealed record RecipeDraftRequest(string Name, double VisionOffsetMm, int ExtraDwellMs);
+public sealed record RecipeDraftRequest(string Name, double VisionOffsetMm, int ExtraDwellMs,
+    string? ExpectedActiveVersionId = null);
 public sealed record RollbackRequest(string Id);
