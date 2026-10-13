@@ -5,6 +5,7 @@
   class StationConsole {
     constructor({root,backend,token,user,offline,coordinator,notify,openStation}){
       this.root=root;this.backend=backend;this.token=token;this.user=user;this.offline=offline;this.coordinator=coordinator;this.notify=notify;this.openStation=openStation;
+      this.api=global.DeviceControlApiClient.create({root});
       this.overviews=[];this.snaps={};this.owner=null;this.resources={leases:[],queue:[],events:[]};this.log=[];
       this.locked=false;this.busy=false;this.polling=false;
       this.panel=document.getElementById('panel-stations');
@@ -57,18 +58,9 @@
       document.getElementById('fleetRefresh').disabled=this.busy||!this.user()||this.locked;
     }
     async request(path,body){
-      // F09: application-level timeout; a half-open connection must not freeze polling.
       const write=body!==undefined;
-      const controller=new AbortController();
-      const timer=setTimeout(()=>controller.abort(),write?15000:8000);
-      let response;
-      try{
-        response=await fetch(this.root+path,{method:write?'POST':'GET',headers:{'Content-Type':'application/json','X-Sim-Token':this.token()},body:write?JSON.stringify(body):undefined,signal:controller.signal});
-      }catch(e){
-        if(e&&e.name==='AbortError')throw Error(write?'写操作超时：结果未知，不会自动重发':'数据获取超时，界面可能非最新');
-        throw e;
-      }finally{clearTimeout(timer)}
-      const value=await response.json();if(!response.ok)throw Error(value.error||'HTTP '+response.status);return value;
+      const response=await this.api(path,{method:write?'POST':'GET',headers:{'Content-Type':'application/json','X-Sim-Token':this.token()},body:write?JSON.stringify(body):undefined});
+      return await response.json();
     }
     async refresh(){
       if(!this.user()||this.polling||this.locked)return;
@@ -116,7 +108,7 @@
         else if(action==='reset')await this.post(id,'/api/fault/reset');
         else if(action==='confirm')await this.post(id,'/api/recovery/confirm');
         this.record('工站 '+id+'：'+({prepare:'轴已完成准备',auto:'切换自动',manual:'切换手动',start:'已提交启动请求',stop:'已提交软件停止',reset:'报警复位',confirm:'恢复确认'}[action]||action));
-      }catch(e){this.record('工站 '+id+' 操作失败：'+e.message,true)}
+      }catch(e){this.record('工站 '+id+' 操作失败：'+global.DeviceControlApiClient.describe(e),true)}
       finally{this.busy=false;await this.refresh();this.render()}
     }
   }

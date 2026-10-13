@@ -87,6 +87,10 @@ public sealed class SqliteStore
               run_id TEXT, action TEXT,
               raised_utc TEXT, acknowledged_by TEXT, acknowledged_utc TEXT
             );
+            CREATE TABLE IF NOT EXISTS manual_action_intents(
+              id TEXT PRIMARY KEY, action TEXT NOT NULL, target TEXT NOT NULL,
+              started_utc TEXT NOT NULL, completed_utc TEXT, outcome TEXT, error TEXT
+            );
             CREATE TABLE IF NOT EXISTS recipe_revisions(
               id TEXT PRIMARY KEY, state TEXT NOT NULL, payload_json TEXT NOT NULL
             );
@@ -95,7 +99,41 @@ public sealed class SqliteStore
             INSERT OR IGNORE INTO schema_version(version,applied_utc) VALUES(2,strftime('%Y-%m-%dT%H:%M:%fZ','now'));
             INSERT OR IGNORE INTO schema_version(version,applied_utc) VALUES(3,strftime('%Y-%m-%dT%H:%M:%fZ','now'));
             INSERT OR IGNORE INTO schema_version(version,applied_utc) VALUES(4,strftime('%Y-%m-%dT%H:%M:%fZ','now'));
+            INSERT OR IGNORE INTO schema_version(version,applied_utc) VALUES(5,strftime('%Y-%m-%dT%H:%M:%fZ','now'));
             """;
+        cmd.ExecuteNonQuery();
+        MigrateV5(cmd);
+    }
+    /// <summary>v5: explicit audit attribution (station/deployment) and command-scoped
+    /// query columns. Existing rows keep NULL station_id and are matched by the legacy
+    /// path heuristic; new rows are attributed explicitly.</summary>
+    private static void MigrateV5(SqliteCommand cmd)
+    {
+        AddColumnIfMissing(cmd, "audit_events", "station_id", "TEXT");
+        AddColumnIfMissing(cmd, "audit_events", "command_id", "TEXT");
+        AddColumnIfMissing(cmd, "audit_events", "deployment_id", "TEXT");
+        AddColumnIfMissing(cmd, "manual_action_intents", "command_id", "TEXT");
+        AddColumnIfMissing(cmd, "run_inflight", "command_id", "TEXT");
+        AddColumnIfMissing(cmd, "production_runs", "command_id", "TEXT");
+        cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_audit_command ON audit_events(command_id)";
+        cmd.ExecuteNonQuery();
+        cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_audit_station ON audit_events(station_id,time_utc DESC)";
+        cmd.ExecuteNonQuery();
+        cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_runs_command ON production_runs(command_id)";
+        cmd.ExecuteNonQuery();
+        cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_intents_command ON manual_action_intents(command_id)";
+        cmd.ExecuteNonQuery();
+    }
+    private static void AddColumnIfMissing(SqliteCommand cmd, string table, string column, string type)
+    {
+        cmd.Parameters.Clear();
+        cmd.CommandText = "PRAGMA table_info(" + table + ")";
+        var exists = false;
+        using (var reader = cmd.ExecuteReader())
+            while (reader.Read())
+                if (string.Equals(reader.GetString(1), column, StringComparison.OrdinalIgnoreCase)) { exists = true; break; }
+        if (exists) return;
+        cmd.CommandText = "ALTER TABLE " + table + " ADD COLUMN " + column + " " + type;
         cmd.ExecuteNonQuery();
     }
     private SqliteConnection Open()
@@ -146,13 +184,14 @@ public sealed class SqliteStore
         {
             using var c=Open();using var q=c.CreateCommand();
             q.CommandText="""
-                INSERT INTO run_inflight(run_id,started_utc,flow_version,recipe_id)
-                VALUES($id,$started,$flow,$recipe)
+                INSERT INTO run_inflight(run_id,started_utc,flow_version,recipe_id,command_id)
+                VALUES($id,$started,$flow,$recipe,$command)
                 """;
             q.Parameters.AddWithValue("$id",row.Id);
             q.Parameters.AddWithValue("$started",row.StartedAt);
             q.Parameters.AddWithValue("$flow",(object?)row.FlowVersion??DBNull.Value);
             q.Parameters.AddWithValue("$recipe",(object?)row.RecipeId??DBNull.Value);
+            q.Parameters.AddWithValue("$command",(object?)row.CommandId??DBNull.Value);
             q.ExecuteNonQuery();
         }
     }
@@ -163,30 +202,87 @@ public sealed class SqliteStore
         lock (_lock)
         {
             using var c=Open();using var tr=c.BeginTransaction();using var q=c.CreateCommand();q.Transaction=tr;
-            q.CommandText="SELECT run_id,started_utc,flow_version,recipe_id FROM run_inflight ORDER BY started_utc";
+            q.CommandText="SELECT run_id,started_utc,flow_version,recipe_id,command_id FROM run_inflight ORDER BY started_utc";
             var pending=new List<CycleStartRecord>();
             using(var r=q.ExecuteReader()) while(r.Read())
                 pending.Add(new CycleStartRecord(r.GetString(0),r.GetString(1),r.IsDBNull(3)?null:r.GetString(3),
-                    r.IsDBNull(2)?null:r.GetString(2)));
+                    r.IsDBNull(2)?null:r.GetString(2),r.IsDBNull(4)?null:r.GetString(4)));
             foreach(var item in pending)
             {
                 var row=new CycleRecord(item.Id,item.StartedAt,DateTimeOffset.UtcNow.ToString("O"),
-                    "Interrupted",0,Array.Empty<StepRecord>(),"进程意外退出；执行轨迹不可恢复",item.RecipeId,item.FlowVersion);
+                    "Interrupted",0,Array.Empty<StepRecord>(),"进程意外退出；执行轨迹不可恢复",item.RecipeId,item.FlowVersion,
+                    CommandId:item.CommandId);
                 q.Parameters.Clear();q.CommandText="""
                     INSERT OR IGNORE INTO production_runs
-                    (id,started_utc,ended_utc,outcome,duration_ms,flow_version,recipe_id,reason,payload_json)
-                    VALUES($id,$start,$end,$outcome,0,$flow,$recipe,$reason,$json)
+                    (id,started_utc,ended_utc,outcome,duration_ms,flow_version,recipe_id,reason,payload_json,command_id)
+                    VALUES($id,$start,$end,$outcome,0,$flow,$recipe,$reason,$json,$command)
                     """;
                 q.Parameters.AddWithValue("$id",row.Id);q.Parameters.AddWithValue("$start",row.StartedAt);
                 q.Parameters.AddWithValue("$end",row.EndedAt);q.Parameters.AddWithValue("$outcome",row.Outcome);
                 q.Parameters.AddWithValue("$flow",(object?)row.FlowVersion??DBNull.Value);
                 q.Parameters.AddWithValue("$recipe",(object?)row.RecipeId??DBNull.Value);
                 q.Parameters.AddWithValue("$reason",row.Reason);
+                q.Parameters.AddWithValue("$command",(object?)item.CommandId??DBNull.Value);
                 q.Parameters.AddWithValue("$json",JsonSerializer.Serialize(row));q.ExecuteNonQuery();
+            }
+            var manualIntentCount = 0;
+            q.Parameters.Clear(); q.CommandText="SELECT COUNT(*) FROM manual_action_intents";
+            manualIntentCount = Convert.ToInt32(q.ExecuteScalar());
+            if (pending.Count > 0 || manualIntentCount > 0)
+            {
+                var reason = pending.Count > 0
+                    ? $"启动发现 {pending.Count} 个未完成周期；已标记 Interrupted"
+                    : $"启动发现 {manualIntentCount} 个未核实的手动动作意图";
+                q.Parameters.Clear(); q.CommandText="""
+                    INSERT INTO recovery_state(singleton,required,reason,run_id,action,raised_utc,acknowledged_by,acknowledged_utc)
+                    VALUES(1,1,$reason,NULL,$action,$at,NULL,NULL)
+                    ON CONFLICT(singleton) DO UPDATE SET required=1,reason=excluded.reason,
+                      action=excluded.action,raised_utc=excluded.raised_utc,
+                      acknowledged_by=NULL,acknowledged_utc=NULL
+                    """;
+                q.Parameters.AddWithValue("$reason",reason);
+                q.Parameters.AddWithValue("$action",manualIntentCount > 0 ? "ManualActionIntent" : "StartupInterruptedCycles");
+                q.Parameters.AddWithValue("$at",DateTimeOffset.UtcNow.ToString("O")); q.ExecuteNonQuery();
             }
             q.Parameters.Clear();q.CommandText="DELETE FROM run_inflight";q.ExecuteNonQuery();
             tr.Commit();return pending.Count;
         }
+    }
+    public void BeginManualAction(string id, string action, string target, string? commandId = null)
+    {
+        lock (_lock)
+        {
+            using var c=Open(); using var q=c.CreateCommand();
+            q.CommandText="INSERT INTO manual_action_intents(id,action,target,started_utc,command_id) VALUES($id,$action,$target,$at,$command)";
+            q.Parameters.AddWithValue("$id",id); q.Parameters.AddWithValue("$action",action);
+            q.Parameters.AddWithValue("$target",target); q.Parameters.AddWithValue("$at",DateTimeOffset.UtcNow.ToString("O"));
+            q.Parameters.AddWithValue("$command",(object?)commandId??DBNull.Value);
+            q.ExecuteNonQuery();
+        }
+    }
+    public void CompleteManualAction(string id, bool succeeded, string? error)
+    {
+        lock (_lock)
+        {
+            using var c=Open(); using var tr=c.BeginTransaction(); using var q=c.CreateCommand(); q.Transaction=tr;
+            if (!succeeded)
+            {
+                q.CommandText="""
+                    INSERT INTO recovery_state(singleton,required,reason,run_id,action,raised_utc,acknowledged_by,acknowledged_utc)
+                    VALUES(1,1,$reason,NULL,'ManualAction',$at,NULL,NULL)
+                    ON CONFLICT(singleton) DO UPDATE SET required=1,reason=excluded.reason,action=excluded.action,
+                      raised_utc=excluded.raised_utc,acknowledged_by=NULL,acknowledged_utc=NULL
+                    """;
+                q.Parameters.AddWithValue("$reason","手动动作失败或结果未知："+(error??"未知错误"));
+                q.Parameters.AddWithValue("$at",DateTimeOffset.UtcNow.ToString("O")); q.ExecuteNonQuery();
+            }
+            q.Parameters.Clear(); q.CommandText="DELETE FROM manual_action_intents WHERE id=$id";
+            q.Parameters.AddWithValue("$id",id); q.ExecuteNonQuery(); tr.Commit();
+        }
+    }
+    public bool HasUnresolvedManualActions()
+    {
+        lock (_lock) { using var c=Open(); using var q=c.CreateCommand(); q.CommandText="SELECT EXISTS(SELECT 1 FROM manual_action_intents)"; return Convert.ToInt32(q.ExecuteScalar())!=0; }
     }
     public void UpsertCycle(CycleRecord row)
     {
@@ -196,15 +292,42 @@ public sealed class SqliteStore
         lock (_lock)
         {
             using var c = Open();using var transaction=c.BeginTransaction();using var q=c.CreateCommand();q.Transaction=transaction;
+            // A terminal result for a live cycle must establish the recovery gate
+            // before it can remove the durable in-flight marker. Historical JSONL
+            // hydration has no marker and therefore cannot reopen already-confirmed
+            // old failures after a restart.
+            q.CommandText = "SELECT EXISTS(SELECT 1 FROM run_inflight WHERE run_id=$run)";
+            q.Parameters.AddWithValue("$run", row.Id);
+            var wasInFlight = Convert.ToInt32(q.ExecuteScalar()) != 0;
+            var requiresRecovery = wasInFlight &&
+                (row.Outcome.Equals("Failed", StringComparison.OrdinalIgnoreCase) ||
+                 row.Outcome.Equals("Stopped", StringComparison.OrdinalIgnoreCase) ||
+                 row.Outcome.Equals("Interrupted", StringComparison.OrdinalIgnoreCase));
+            if (requiresRecovery)
+            {
+                q.Parameters.Clear();
+                q.CommandText = """
+                    INSERT INTO recovery_state(singleton,required,reason,run_id,action,raised_utc,acknowledged_by,acknowledged_utc)
+                    VALUES(1,1,$reason,$run,'CycleTerminalResult',$at,NULL,NULL)
+                    ON CONFLICT(singleton) DO UPDATE SET required=1,reason=excluded.reason,run_id=excluded.run_id,
+                      action=excluded.action,raised_utc=excluded.raised_utc,acknowledged_by=NULL,acknowledged_utc=NULL
+                    """;
+                q.Parameters.AddWithValue("$reason", "周期以 " + row.Outcome + " 结束；需要人工核实设备状态：" + (row.Reason ?? "无原因详情"));
+                q.Parameters.AddWithValue("$run", row.Id);
+                q.Parameters.AddWithValue("$at", DateTimeOffset.UtcNow.ToString("O"));
+                q.ExecuteNonQuery();
+            }
+            q.Parameters.Clear();
             q.CommandText="""
-                INSERT OR IGNORE INTO production_runs(id,started_utc,ended_utc,outcome,duration_ms,flow_version,recipe_id,reason,payload_json)
-                VALUES($id,$start,$end,$status,$ms,$flow,$recipe,$reason,$json)
+                INSERT OR IGNORE INTO production_runs(id,started_utc,ended_utc,outcome,duration_ms,flow_version,recipe_id,reason,payload_json,command_id)
+                VALUES($id,$start,$end,$status,$ms,$flow,$recipe,$reason,$json,$command)
                 """;
             q.Parameters.AddWithValue("$id",row.Id);q.Parameters.AddWithValue("$start",row.StartedAt);
             q.Parameters.AddWithValue("$end",row.EndedAt);q.Parameters.AddWithValue("$status",row.Outcome);
             q.Parameters.AddWithValue("$ms",row.DurationMs);q.Parameters.AddWithValue("$flow",(object?)row.FlowVersion??DBNull.Value);
             q.Parameters.AddWithValue("$recipe",(object?)row.RecipeId??DBNull.Value);
             q.Parameters.AddWithValue("$reason",(object?)row.Reason??DBNull.Value);
+            q.Parameters.AddWithValue("$command",(object?)row.CommandId??DBNull.Value);
             // Avoid embedding a second, unverified copy of the node snapshots in cycle JSON.
             // Query methods hydrate strictly from the SHA-checked evidence table.
             q.Parameters.AddWithValue("$json",JsonSerializer.Serialize(row with { Snapshots = null }));q.ExecuteNonQuery();
@@ -324,14 +447,18 @@ public sealed class SqliteStore
         {
             using var c=Open();using var q=c.CreateCommand();
             q.CommandText="""
-                INSERT OR IGNORE INTO audit_events(id,time_utc,actor,role,method,path,http_status,trace_id,payload_json)
-                VALUES($id,$time,$actor,$role,$method,$path,$status,$trace,$json)
+                INSERT OR IGNORE INTO audit_events(id,time_utc,actor,role,method,path,http_status,trace_id,payload_json,station_id,command_id,deployment_id)
+                VALUES($id,$time,$actor,$role,$method,$path,$status,$trace,$json,$station,$command,$deployment)
                 """;
             q.Parameters.AddWithValue("$id",row.Id);q.Parameters.AddWithValue("$time",row.Time);
             q.Parameters.AddWithValue("$actor",row.Actor);q.Parameters.AddWithValue("$role",row.Role);
             q.Parameters.AddWithValue("$method",row.Method);q.Parameters.AddWithValue("$path",row.Path);
             q.Parameters.AddWithValue("$status",row.Status);q.Parameters.AddWithValue("$trace",row.TraceId);
-            q.Parameters.AddWithValue("$json",JsonSerializer.Serialize(row));q.ExecuteNonQuery();
+            q.Parameters.AddWithValue("$json",JsonSerializer.Serialize(row));
+            q.Parameters.AddWithValue("$station",(object?)row.StationId??DBNull.Value);
+            q.Parameters.AddWithValue("$command",(object?)row.CommandId??DBNull.Value);
+            q.Parameters.AddWithValue("$deployment",(object?)row.DeploymentId??DBNull.Value);
+            q.ExecuteNonQuery();
         }
     }
     public List<AuditEntry> Audits()
@@ -346,6 +473,83 @@ public sealed class SqliteStore
             while(reader.Read()){var row=JsonSerializer.Deserialize<AuditEntry>(reader.GetString(0));if(row!=null)list.Add(row);}
             list.Reverse();
             return list;
+        }
+    }
+    public object PageAudits(int page, int pageSize, string? stationId = null)
+    {
+        page=Math.Max(1,page); pageSize=Math.Clamp(pageSize,1,100);
+        lock (_lock)
+        {
+            using var c=Open(); using var count=c.CreateCommand();
+            // R05: new rows carry an explicit station_id. Rows written before the v5
+            // migration (station_id IS NULL) fall back to the legacy path heuristic;
+            // fleet/governance paths are excluded there so a global upgrade/rollout
+            // can never be reported as a station-A change again.
+            var filter = stationId is null ? "" :
+                "WHERE (station_id=$station OR (station_id IS NULL AND (" +
+                "substr(path,1,length($stationPrefix))=$stationPrefix COLLATE NOCASE OR " +
+                "($station='A' AND substr(path,1,5)='/api/' " +
+                "AND substr(path,1,14)<>'/api/stations/' AND substr(path,1,11)<>'/api/auth/' " +
+                "AND substr(path,1,10)<>'/api/audit' AND substr(path,1,14)<>'/api/templates' " +
+                "AND substr(path,1,13)<>'/api/upgrades' AND substr(path,1,13)<>'/api/rollouts' " +
+                "AND substr(path,1,16)<>'/api/diagnostics' AND substr(path,1,13)<>'/api/commands'))))";
+            count.CommandText="SELECT COUNT(*) FROM audit_events "+filter;
+            if (stationId is not null) { count.Parameters.AddWithValue("$station",stationId); count.Parameters.AddWithValue("$stationPrefix","/api/stations/"+stationId+"/"); }
+            var total=Convert.ToInt32(count.ExecuteScalar());
+            using var q=c.CreateCommand(); q.CommandText="SELECT payload_json FROM audit_events "+filter+" ORDER BY time_utc DESC,id DESC LIMIT $limit OFFSET $offset";
+            if (stationId is not null) { q.Parameters.AddWithValue("$station",stationId); q.Parameters.AddWithValue("$stationPrefix","/api/stations/"+stationId+"/"); }
+            q.Parameters.AddWithValue("$limit",pageSize); q.Parameters.AddWithValue("$offset",(page-1)*pageSize);
+            using var r=q.ExecuteReader(); var rows=new List<AuditEntry>();
+            while(r.Read()){var row=JsonSerializer.Deserialize<AuditEntry>(r.GetString(0));if(row is not null)rows.Add(row);}
+            return new { total,page,pageSize,items=rows };
+        }
+    }
+    /// <summary>R03: audit rows for one command ID. Indexed lookup; legacy rows that
+    /// predate the command_id column are matched in memory by the caller.</summary>
+    public List<AuditEntry> AuditsByCommand(string commandId)
+    {
+        lock (_lock)
+        {
+            using var c=Open(); using var q=c.CreateCommand();
+            q.CommandText="SELECT payload_json FROM audit_events WHERE command_id=$id ORDER BY time_utc DESC,id DESC LIMIT 200";
+            q.Parameters.AddWithValue("$id",commandId);
+            using var r=q.ExecuteReader(); var rows=new List<AuditEntry>();
+            while(r.Read()){var row=JsonSerializer.Deserialize<AuditEntry>(r.GetString(0));if(row is not null)rows.Add(row);}
+            return rows;
+        }
+    }
+    /// <summary>R03: manual-action intents (durable intents; unresolved rows only,
+    /// completed intents are deleted after their outcome is committed).</summary>
+    public List<ManualIntentView> ManualIntentsByCommand(string commandId)
+    {
+        lock (_lock)
+        {
+            using var c=Open(); using var q=c.CreateCommand();
+            q.CommandText="SELECT id,action,target,started_utc,completed_utc,outcome,error FROM manual_action_intents WHERE command_id=$id ORDER BY started_utc DESC LIMIT 50";
+            q.Parameters.AddWithValue("$id",commandId);
+            using var r=q.ExecuteReader(); var rows=new List<ManualIntentView>();
+            while(r.Read())
+                rows.Add(new ManualIntentView(r.GetString(0),r.GetString(1),r.GetString(2),r.GetString(3),
+                    r.IsDBNull(4)?null:r.GetString(4),r.IsDBNull(5)?null:r.GetString(5),r.IsDBNull(6)?null:r.GetString(6)));
+            return rows;
+        }
+    }
+    /// <summary>R03: cycles started under one command ID (metadata only; node
+    /// snapshots hydrate on demand through the existing run endpoints).</summary>
+    public List<CycleRecord> CyclesByCommand(string commandId)
+    {
+        lock (_lock)
+        {
+            using var c=Open(); using var q=c.CreateCommand();
+            q.CommandText="SELECT payload_json FROM production_runs WHERE command_id=$id ORDER BY started_utc DESC LIMIT 20";
+            q.Parameters.AddWithValue("$id",commandId);
+            using var r=q.ExecuteReader(); var rows=new List<CycleRecord>();
+            while(r.Read())
+            {
+                var row=JsonSerializer.Deserialize<CycleRecord>(r.GetString(0));
+                if(row is not null)rows.Add(row with { Snapshots=null });
+            }
+            return rows;
         }
     }
     public RecoveryStateRecord? LoadRecoveryState()
@@ -385,7 +589,7 @@ public sealed class SqliteStore
     {
         lock (_lock)
         {
-            using var c=Open();using var q=c.CreateCommand();
+            using var c=Open();using var tr=c.BeginTransaction();using var q=c.CreateCommand();q.Transaction=tr;
             q.CommandText="""
                 INSERT INTO recovery_state(singleton,required,reason,run_id,action,raised_utc,acknowledged_by,acknowledged_utc)
                 VALUES(1,0,'',NULL,NULL,NULL,$actor,$at)
@@ -395,6 +599,10 @@ public sealed class SqliteStore
             q.Parameters.AddWithValue("$actor",actor);
             q.Parameters.AddWithValue("$at",DateTimeOffset.UtcNow.ToString("O"));
             q.ExecuteNonQuery();
+            // An explicit human recovery confirmation resolves any interrupted manual
+            // action intents only after the runtime has checked physical/simulated state.
+            q.Parameters.Clear(); q.CommandText="DELETE FROM manual_action_intents"; q.ExecuteNonQuery();
+            tr.Commit();
         }
     }
     public (string ActiveId,List<RecipeRevision> Revisions)? ReadRecipes()

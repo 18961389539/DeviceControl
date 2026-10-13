@@ -39,6 +39,8 @@ public sealed class FleetRolloutManager
     private readonly StationTemplateCatalog _catalog;
     private readonly StationUpgradeManager _upgrades;
     private readonly string _folder;
+    private readonly List<string> _startupIssues = new();
+    public IReadOnlyList<string> StartupIssues { get { lock (_gate) return _startupIssues.ToArray(); } }
     private readonly JsonSerializerOptions _json = new() { PropertyNameCaseInsensitive = true, WriteIndented = true };
     public FleetRolloutManager(IHostEnvironment env, MultiStationRegistry fleet,
         StationTemplateCatalog catalog, StationUpgradeManager upgrades)
@@ -54,13 +56,19 @@ public sealed class FleetRolloutManager
         foreach (var path in Directory.GetFiles(_folder, "roll-*.json"))
         {
             var id = Path.GetFileNameWithoutExtension(path);
-            var record = JsonSerializer.Deserialize<FleetRollout>(File.ReadAllText(path), _json)
-                ?? throw new InvalidOperationException("灰度部署记录损坏");
-            if (record.Status == "Deploying")
-                Save(record with { Status = "Interrupted",
-                    Reason = "启动时发现未完成灰度部署；人工检查单站日志后处理" });
+            try
+            {
+                var record = JsonSerializer.Deserialize<FleetRollout>(File.ReadAllText(path), _json)
+                    ?? throw new InvalidOperationException("灰度部署记录为空");
+                if (record.Status == "Deploying")
+                    Save(record with { Status = "Interrupted",
+                        Reason = "启动时发现未完成灰度部署；人工检查单站日志后处理" });
+            }
+            catch (Exception ex) { lock (_gate) _startupIssues.Add(Path.GetFileName(path) + ": " + ex.Message); }
         }
     }
+    private void EnsureHealthy()
+    { if (_startupIssues.Count > 0) throw new InvalidOperationException("灰度历史存在损坏记录；为避免覆盖未知工站状态，已禁用灰度变更。请先人工修复或归档原文件"); }
     public RolloutRecoveryReport RecoveryReport(string id)
     {
         lock (_gate)
@@ -135,8 +143,11 @@ public sealed class FleetRolloutManager
     {
         var path = PathFor(id);
         if (!File.Exists(path)) throw new ArgumentException("灰度批次不存在");
-        var value = JsonSerializer.Deserialize<FleetRollout>(File.ReadAllText(path), _json)
-            ?? throw new InvalidOperationException("灰度部署记录损坏");
+        FleetRollout value;
+        try { value = JsonSerializer.Deserialize<FleetRollout>(File.ReadAllText(path), _json)
+            ?? throw new InvalidOperationException("灰度部署记录损坏"); }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
+        { throw new InvalidOperationException("灰度记录 " + Path.GetFileName(path) + " 损坏，原文件已保留，需人工修复或归档：" + ex.Message, ex); }
         // An interrupted process must not silently continue the next deployment.
         if (value.Status == "Deploying") return value with { Status = "Interrupted",
             Reason = "部署进程中断；核对单站部署历史后人工处理" };
@@ -153,15 +164,21 @@ public sealed class FleetRolloutManager
         }
         finally { if (File.Exists(tmp)) File.Delete(tmp); }
     }
-    public FleetRollout[] List() { lock (_gate) return Directory.GetFiles(_folder, "roll-*.json")
-        .Select(x => Load(Path.GetFileNameWithoutExtension(x)))
-        .OrderByDescending(x => x.CreatedAt, StringComparer.Ordinal).ToArray(); }
+    public FleetRollout[] List() { lock (_gate)
+    {
+        var rows = new List<FleetRollout>();
+        foreach (var file in Directory.GetFiles(_folder, "roll-*.json"))
+        { try { rows.Add(Load(Path.GetFileNameWithoutExtension(file))); }
+          catch (Exception ex) { var issue = Path.GetFileName(file) + ": " + ex.Message; if (!_startupIssues.Contains(issue)) _startupIssues.Add(issue); } }
+        return rows.OrderByDescending(x => x.CreatedAt, StringComparer.Ordinal).ToArray();
+    } }
     public FleetRollout Get(string id) { lock (_gate) return Load(id); }
     private static bool IsOpen(string status) => status is not ("Completed" or "Aborted");
     public FleetRollout Create(RolloutCreateRequest request, string actor)
     {
         lock (_gate)
         {
+            EnsureHealthy();
             if (request.StationIds == null || request.StationIds.Length is < 2 or > 12)
                 throw new ArgumentException("灰度部署要求 2～12 个工站（包含试点）");
             if (request.WaveSize is < 1 or > 3) throw new ArgumentException("每批最多 3 个工站");
@@ -225,6 +242,7 @@ public sealed class FleetRolloutManager
     {
         lock (_gate)
         {
+            EnsureHealthy();
             var row = Load(id);
             if (row.Status is not ("Paused" or "Interrupted"))
                 throw new InvalidOperationException("只能在暂停或中断批次执行人工恢复核对");
@@ -240,7 +258,11 @@ public sealed class FleetRolloutManager
             if (snap.Busy || snap.State != "Idle" || snap.Mode != "Manual" || snap.RecoveryRequired || snap.Alarm is not null)
                 throw new InvalidOperationException("工站必须空闲、手动、无报警且无恢复请求");
             if (station.Flows.Active.Id != step.ExpectedFlowId || station.Recipes.Active.Id != step.ExpectedRecipeId)
-                throw new InvalidOperationException("工站不在原始版本基线上；禁止自动判定或重试，需单站处理后再核对");
+                // R01 (conservative): a single-station rollback restores CONTENT but
+                // publishes NEW version IDs, so the old batch can never return to its
+                // recorded baseline by ID. State the alternative path explicitly
+                // instead of leaving the operator to guess what the 409 means.
+                throw new InvalidOperationException("工站 " + stationId + " 不在批次原始版本基线上（单站回滚恢复内容会发布新的版本 ID，内容恢复不等于 ID 恢复）。旧批次不能在此工站续跑：请先关闭本批次（终止 Abort），再基于当前恢复后的版本重建灰度批次；禁止盲目重试或放宽基线比较。");
             if (_upgrades.History(stationId).Any(d => d.Status is "InProgress" or "Interrupted" or "ManualRecoveryRequired"))
                 throw new InvalidOperationException("仍存在未解决的单站部署记录；请先使用单站日志人工恢复");
             var updated = row.Steps.ToArray();
@@ -255,6 +277,7 @@ public sealed class FleetRolloutManager
     {
         lock (_gate)
         {
+            EnsureHealthy();
             var value = Load(id);
             if (value.Status is not ("PilotPending" or "WaveReady"))
                 throw new InvalidOperationException("必须完成当前批次的运行证据验证，或先解除暂停");
@@ -292,8 +315,8 @@ public sealed class FleetRolloutManager
                 // Optimistic baseline prevents an unrelated publish from being overwritten.
                 if (station.Flows.Active.Id != step.ExpectedFlowId || station.Recipes.Active.Id != step.ExpectedRecipeId)
                 {
-                    value.Steps[idx] = step with { Status = "Failed", Error = "流程或配方基线发生变化" };
-                    value = value with { Status = "Paused", Reason = step.StationId + " 的版本发生冲突" };
+                    value.Steps[idx] = step with { Status = "Failed", Error = "流程或配方基线已变化（可能是单站回滚恢复发布了新版本 ID）；旧批次不能在此站续跑，需关闭批次后基于当前版本重建" };
+                    value = value with { Status = "Paused", Reason = step.StationId + " 的版本发生冲突；旧批次不能续跑，请关闭批次并基于当前版本重建" };
                     Save(value); return value;
                 }
                 // Persist applying intent before entering V1.5 deployment transaction.
@@ -357,6 +380,7 @@ public sealed class FleetRolloutManager
     {
         lock (_gate)
         {
+            EnsureHealthy();
             var value = Load(id);
             if (value.Status != "AwaitingEvidence")
                 throw new InvalidOperationException("当前没有可确认的部署批次");
@@ -375,6 +399,7 @@ public sealed class FleetRolloutManager
     {
         lock (_gate)
         {
+            EnsureHealthy();
             var value = Load(id);
             if (value.Status is not ("PilotPending" or "WaveReady" or "AwaitingEvidence"))
                 throw new InvalidOperationException("当前状态不能暂停");
@@ -386,6 +411,7 @@ public sealed class FleetRolloutManager
     {
         lock (_gate)
         {
+            EnsureHealthy();
             var value = Load(id);
             if (value.Status != "Paused") throw new InvalidOperationException("当前不是已暂停状态");
             // A failed / interrupted station needs manual reconciliation, not blind retries.
@@ -400,6 +426,7 @@ public sealed class FleetRolloutManager
     {
         lock (_gate)
         {
+            EnsureHealthy();
             var value = Load(id);
             if (!IsOpen(value.Status)) throw new InvalidOperationException("批次已经结束");
             value = value with { Status = "Aborted", Reason = "人工结束：" + (reason ?? "") };

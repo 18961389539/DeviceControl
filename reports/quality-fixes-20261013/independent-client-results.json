@@ -1,0 +1,24 @@
+[
+  {
+    "name": "N04 full response body deadline",
+    "passed": true,
+    "configuredTimeoutMs": 150,
+    "elapsedMs": 169,
+    "error": "数据获取超时，界面显示的可能不是最新状态"
+  },
+  {
+    "name": "N04 write timeout stays unknown and is not resent",
+    "passed": true,
+    "writes": 1,
+    "error": "写操作超时：结果未知。请先核对运行记录与审计，设备动作不会自动重发"
+  },
+  {
+    "name": "N04 malformed complete JSON rejected",
+    "passed": true,
+    "error": "服务器返回了无效 JSON：Unexpected token 'b', \"broken-json\" is not valid JSON"
+  },
+  {
+    "name": "N04 complete response succeeds",
+    "passed": true
+  }
+]

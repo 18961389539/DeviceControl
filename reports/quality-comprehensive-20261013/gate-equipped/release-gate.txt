@@ -1,0 +1,60 @@
+DeviceControl V2.0 software quality gate
+Profile: release; browser: True; .NET SDK found: True
+Passed: 52, failed: 0, blocked: 1
+RELEASE APPROVED: NO
+
+PASS             offline:preview-build
+PASS             node:test_mock.mjs
+PASS             node:test_governance.mjs
+PASS             node:test_workflow_v05.mjs
+PASS             node:test_workflow_v06.mjs
+PASS             node:test_workflow_v07.mjs
+PASS             node:test_workflow_v08.mjs
+PASS             node:test_replay_v10.mjs
+PASS             node:test_station_v11.mjs
+PASS             node:test_resources_v12.mjs
+PASS             node:test_workspace_v13.mjs
+PASS             node:test_templates_v14.mjs
+PASS             node:test_upgrade_rules_v15.mjs
+PASS             node:test_recovery_v18.mjs
+PASS             node:test_api_client_v20.mjs
+PASS             node:test_api_client_v21.mjs
+PASS             python:test_recovery_sandbox_v19.py
+BLOCKED          python:test_recovery_v20.py
+PASS             python:test_recovery_v19_static.py
+PASS             python:test_recovery_v18_static.py
+PASS             python:test_rollout_files_v16.py
+PASS             python:test_rollout_v17_static.py
+PASS             python:test_station_files_v12.py
+PASS             python:test_template_files_v14.py
+PASS             python:test_upgrade_files_v15.py
+PASS             python:test_sqlite_schema.py
+PASS             python:test_sqlite_migration_v08.py
+PASS             python:test_sqlite_reliability.py
+PASS             python:test_sqlite_migration_v09.py
+PASS             python:test_sqlite_v10.py
+PASS             python:test_v20_recovery_contract.py
+PASS             browser:test_browser_v19.py
+PASS             browser:test_browser_v18.py
+PASS             browser:test_browser_v17.py
+PASS             browser:test_browser_v16.py
+PASS             browser:test_browser_v21.py
+PASS             dotnet:build-api
+PASS             dotnet:build-contracts
+PASS             dotnet:contract-runner
+PASS             http:test_api_v09.py
+PASS             http:test_api_v10.py
+PASS             http:test_api_v12.py
+PASS             http:test_api_v13.py
+PASS             http:test_api_v14.py
+PASS             http:test_api_v15.py
+PASS             http:test_api_v16.py
+PASS             http:test_api_v17.py
+PASS             http:test_api_v18.py
+PASS             http:test_api_v19.py
+PASS             http:test_api_v21.py
+PASS             http:test_api_v22.py
+PASS             http:test_api_v23.py
+PASS             http:test_api_v24.py
+
+This is a software-only simulation. Not hardware / industrial safety qualification.

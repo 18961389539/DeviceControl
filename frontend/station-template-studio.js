@@ -19,6 +19,7 @@
   class StationTemplateStudio {
     constructor({root,backend,token,user,offline,coordinator,notify,onDeployed}){
       Object.assign(this,{root,backend,token,user,offline,coordinator,notify,onDeployed});
+      this.api=global.DeviceControlApiClient.create({root});
       this.templates=[];this.selected='';this.diff=[];this.error='';this.busy=false;
       this.panel=document.getElementById('panel-templates');
       this.panel.addEventListener('click',e=>{const b=e.target.closest('button[data-template-action]');if(b&&!b.disabled)void this.act(b.dataset.templateAction)});
@@ -29,8 +30,8 @@
     get selectedRevision(){return this.templates.find(v=>v.id===this.selected)}
     get role(){return ({Operator:1,Engineer:2,Admin:3})[this.user()?.role]||0}
     async call(path,body){
-      const res=await fetch(this.root+path,{method:body===undefined?'GET':'POST',headers:{'X-Sim-Token':this.token(),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
-      const data=await res.json();if(!res.ok)throw Error(data.error||'HTTP '+res.status);return data;
+      const res=await this.api(path,{method:body===undefined?'GET':'POST',headers:{'X-Sim-Token':this.token(),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+      return await res.json();
     }
     stationOptions(){return Object.keys(this.offline).sort();}
     async refresh(){
@@ -127,7 +128,7 @@
         }
         if(action!=='compare')this.diff=[];
         this.notify('模板操作完成：'+action);
-      }catch(e){this.error=e.message;this.notify(e.message,true)}
+      }catch(e){this.error=global.DeviceControlApiClient.describe(e);this.notify(this.error,true)}
       finally{this.busy=false;if(this.backend()&&this.user()&&action!=='compare')await this.refresh();else this.render()}
     }
   }

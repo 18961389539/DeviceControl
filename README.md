@@ -2,6 +2,23 @@
 
 **仍是软件 Simulation。没有真实硬件控制或安全评级。** V2.0 不扩展设备功能，主要改善发布门禁与部署备份来源校验。
 
+## 2026-10-13 稳定性修复与验收
+
+- 本轮针对 N01–N09 增加受控部署恢复、周期/手动动作恢复门禁事务、共享 API 请求截止时间、配置和灰度损坏隔离、真实 HTTP 失败审计、Windows 子进程清理、可观测性和 readiness。变更与逐项限制见 [质量复核报告](reports/quality-audit-20261013/QUALITY_REVIEW.md)；验收记录见 [修复验收目录](reports/quality-fixes-20261013/)。
+- 当前 .NET 10 SDK 可用。C# 状态与 SQLite 故障回归：`dotnet run -c Release --project backend/DeviceControl.ContractTests/DeviceControl.ContractTests.csproj`；共享前端 API 客户端：`node tests/test_api_client_v20.mjs`；完整严格门禁：`python tools/release_gate_v20.py --profile release`。
+- Windows 无符号链接能力时，恢复沙箱路径检查以专用退出码报告 **BLOCKED**，正式门禁不会将其记作 PASS。CI 配置要求在具备符号链接能力的环境验证该路径；Windows 可用 junction 的补充检查不能替代 symlink 验收。
+- 本轮未执行 72 小时稳定性、真实硬件或干净机器验收；这些不构成通过结论。G01–G03 仍按各自限制保留，不表示全面工业适用性。
+
+## Q01–Q08 整改轮（2026-10-13，全面复审之后）
+
+- **审计持久性（Q01/Q02）**：待补审计改为磁盘队列 + 提交确认（轮转槽、有界视图不再丢弃事实、部分失败保留未确认行）；通道不可写时记录显式丢失标记并对**需要留痕的新变更** fail-closed（停止/复位/恢复/丢失确认仍可用）；命令查询区分"已确认 / 待补 / 丢失范围"，未命中不再暗示未到达。
+- **启动隔离（Q03）**：动态工站的非法文件名、大小写重复、超容量、目录与内容错误全部逐文件隔离，最小诊断宿主不再被拖垮，原文件一律保留。
+- **降级可见性（Q04）**：`X-Audit-Status` 加入 CORS 暴露头，状态栏区分"审计降级 / 审计不可用"。
+- **暂停与资源生命周期（Q05/Q06）**：暂停（断点 / 人工门 / 资源等待）纳入 40ms 条件监视并锁存失效；人工等待**先释放**共享 lease，未开始动作的资源争用超时不再触发机构恢复。
+- **门禁可信（Q07）**：未执行任务（UNVERIFIED/SKIP/BLOCKED）在任何情况下不得计为 PASS；结构化 `RESULT:` 契约 + 退出码 77。
+- **证据绑定（Q08）**：`MANIFEST_SHA256.txt` 与 `DeviceControl_V2.0_ReleaseStatus.json` 由 `tools/release_manifest.py` 从当前修订生成并校验（`--verify` 是门禁任务），任何修改都会使旧证据失效。
+- 详细逐项说明与限制：[docs/Q01_Q08_FIXES.md](docs/Q01_Q08_FIXES.md)；状态与证据绑定：[docs/V20_ACCEPTANCE.md](docs/V20_ACCEPTANCE.md)。
+
 ## V2.0 修正
 
 - `tools/release_gate_v20.py`：Node 工作流、Python/SQLite、Chromium、.NET 10 编译、契约和真实 HTTP 集成分项验收。每例独立超时、日志；`release-gate.json` 和 `release-gate.txt` 为机器/人工可读报告；执行中 `progress.json` 持续落盘。完整模式遇到缺失 SDK **失败，不允许把跳过当通过**。
@@ -19,7 +36,9 @@ python tools/release_gate_v20.py --profile release   # 正式发布门禁，缺 
 python tools/release_gate_v20.py --profile offline --no-browser --only 'recovery_v20,recovery_sandbox_v19' # 快速诊断
 ```
 
-**发布结论：V2.0 RC / RELEASE APPROVED: NO。** 此环境 `dotnet` 命令不存在且安装源不可达，尚未执行真实 C# 编译、HTTP 集成和服务重启验收。当前已分别通过 Node、SQLite 五组、恢复沙箱与四条浏览器回归，但没有将这些结果冒充全部 .NET 验收。参见 `docs/V20_ACCEPTANCE.md`。
+**历史状态（修复前）**：先前验收曾因环境缺少 .NET SDK 而未执行 C# 编译、HTTP 集成和服务重启。这是历史记录，不代表当前工具可用性；当前修复后的验收状态以本节命令运行结果及报告中的记录为准。发布仍须通过严格门禁，不能以离线或定向回归替代。
+
+> 以下 V1.x 各版本段落（V1.9 及更早）为**历史版本记录**。其中"当前环境没有 .NET 10 SDK / 未执行"等结论属于当时执行环境，不代表当前可用性；当前状态以顶部 V2.0 章节、`DeviceControl_V2.0_ReleaseStatus.json` 绑定证据与 `python tools/release_gate_v20.py --profile release` 的结果为准。
 
 ---
 

@@ -5,6 +5,7 @@ import json,os,shutil,socket,subprocess,tempfile,time,urllib.request,urllib.erro
 from pathlib import Path
 import contextlib
 ROOT=Path(__file__).resolve().parents[1]
+from dotnet_harness import start_api, stop_api
 if not shutil.which('dotnet'):
  print('UNVERIFIED V1.2 C# API: .NET SDK is not installed')
  sys.exit(0)
@@ -17,8 +18,7 @@ with tempfile.TemporaryDirectory(prefix='devicecontrol-v12-') as directory:
  base=f'http://127.0.0.1:{port}'
  env={**os.environ,'SimListenUrl':base,'ASPNETCORE_CONTENTROOT':str(root)}
  project=str(ROOT/'backend/DeviceControl.Api/DeviceControl.Api.csproj')
- process=subprocess.Popen(['dotnet','run','--no-launch-profile','--project',project],cwd=root,env=env,
-                         stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
+ process=start_api(root, env)
  def request(path,method='GET',body=None,token=None):
   raw=None if body is None else json.dumps(body).encode('utf8')
   req=urllib.request.Request(base+path,method=method,data=raw,
@@ -102,6 +102,4 @@ with tempfile.TemporaryDirectory(prefix='devicecontrol-v12-') as directory:
     assert db.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
   print('PASS V1.2 C# HTTP: legacy concurrent start, FIFO resource monitoring, scoped RBAC, state/recipe/history/storage isolation, A vs B recovery')
  finally:
-  process.terminate()
-  try:process.wait(timeout=8)
-  except subprocess.TimeoutExpired:process.kill();process.wait()
+  stop_api(process)

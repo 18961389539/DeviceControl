@@ -54,7 +54,7 @@ class OfflineRollouts{
     if(!step||!['Failed','Applying'].includes(step.status))throw Error('工站没有待人工核对的失败步骤');
     const item=this.offline[stationId],g=item.governance,state=item.machine.snapshot();
     if(state.busy||state.state!=='Idle'||state.mode!=='Manual'||state.recoveryRequired||state.alarm)throw Error('工站必须空闲、手动、无报警');
-    if(g.flows.activeId!==step.expectedFlowId||g.activeId!==step.expectedRecipeId)throw Error('不在原始版本基线上；禁止盲目重试');
+    if(g.flows.activeId!==step.expectedFlowId||g.activeId!==step.expectedRecipeId)throw Error('不在原始版本基线上（内容恢复会发布新的版本 ID）；旧批次不能续跑，请关闭批次后基于当前版本重建');
     if(this.upgrades().some(x=>x.stationId===stationId&&['InProgress','Interrupted','ManualRecoveryRequired'].includes(x.status)))throw Error('单站部署日志尚未解决');
     step.status='Pending';step.error=null;step.recoveryActor=actor;step.recoveryNote=note.trim();step.reconciledAt=stamp();
     row.status='Paused';row.reason='人工核对已记录，确认后可继续';row.updatedAt=stamp();return row;
@@ -129,6 +129,7 @@ class OfflineRollouts{
 class FleetRolloutStudio{
  constructor({root,backend,token,user,offline,templates,upgradeStudio,notify,onChanged}){
   Object.assign(this,{root,backend,token,user,offline,templates,upgradeStudio,notify,onChanged});
+ this.api=global.DeviceControlApiClient.create({root});
   this.mock=new OfflineRollouts({offline,templates,upgrades:()=>upgradeStudio.history});
   this.rows=[];this.selected='';this.busy=false;this.info='';this.recovery=null;
   this.el=document.getElementById('rolloutDashboard');
@@ -138,7 +139,7 @@ class FleetRolloutStudio{
  }
  get role(){return ({Operator:1,Engineer:2,Admin:3})[this.user()?.role]||0}
  get current(){return this.rows.find(x=>x.id===this.selected)}
- async call(path,body){const r=await fetch(this.root+path,{method:body===undefined?'GET':'POST',headers:{'X-Sim-Token':this.token(),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const v=await r.json();if(!r.ok)throw Error(v.error||'HTTP '+r.status);return v.data}
+ async call(path,body){const r=await this.api(path,{method:body===undefined?'GET':'POST',headers:{'X-Sim-Token':this.token(),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),station:this.target?.()||undefined});return (await r.json()).data}
  async refresh(){try{this.rows=this.backend()?await this.call('/api/rollouts'):this.mock.list();if(!this.rows.some(x=>x.id===this.selected))this.selected=this.rows[0]?.id||'';this.render()}catch(e){this.info=e.message;this.render()}}
  render(){
   const select=document.getElementById('rolloutHistory'),old=this.selected;
@@ -203,9 +204,19 @@ class FleetRolloutStudio{
       const stationId=document.getElementById('rolloutReconcileStation').value;
       const note=document.getElementById('rolloutReconcileNote').value;
       const body={stationId,note};
-      if(this.backend())await this.call('/api/rollouts/'+id+'/reconcile',body);else this.mock.reconcile(id,body,actor);
-      this.info='已记录人工核对，可按当前批次状态继续（不会自动部署）';
-      this.diagnostics=null;
+      try{
+        if(this.backend())await this.call('/api/rollouts/'+id+'/reconcile',body);else this.mock.reconcile(id,body,actor);
+        this.info='已记录人工核对，可按当前批次状态继续（不会自动部署）';
+        this.diagnostics=null;
+      }catch(e){
+        // R01 (conservative): a single-station rollback restores CONTENT but publishes
+        // NEW version IDs. The old batch can never return to its recorded baseline,
+        // so show the替代 steps explicitly instead of leaving a bare 409.
+        if(/原始版本基线/.test(e.message||'')){
+          this.info='该工站已不在批次原始版本基线上（内容恢复会发布新的版本 ID，内容恢复不等于 ID 恢复）。替代路径：① 终止（Abort）关闭本批次 → ② 在「⑤ 已有工站」升级历史中确认已恢复的版本 → ③ 基于当前版本重建灰度批次。旧批次不会自动续跑，也不放宽基线比较。';
+          this.notify('旧批次不能在此工站续跑：请关闭本批次并基于当前版本重建',true);
+        } else throw e;
+      }
     }else if(action==='inspect'){
       const check=this.backend()?await this.call('/api/rollouts/'+id+'/evidence'):this.mock.inspect(id);
       this.info=check.pass?'质量与周期证据齐全，可以确认验收':check.blockers.join('；');this.notify(this.info,!check.pass);
@@ -230,7 +241,7 @@ class FleetRolloutStudio{
       this.notify(this.info||'灰度批次状态已更新');
     }
     await this.refresh();
-  }catch(e){this.info=e.message;this.notify(e.message,true)}finally{this.busy=false;this.render()}
+  }catch(e){this.info=global.DeviceControlApiClient.describe(e);this.notify(this.info,true)}finally{this.busy=false;this.render()}
  }
 }
 global.OfflineRollouts=OfflineRollouts;global.FleetRolloutStudio=FleetRolloutStudio;

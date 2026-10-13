@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -10,12 +9,15 @@ public sealed record StationUpgradePlan(string Id, string TemplateId, string Sta
     string ExpiresAt, string Actor, bool Ready, string[] Blockers);
 public sealed record UpgradePreflightRequest(string TemplateId, string StationId);
 public sealed record UpgradeApplyRequest(string PlanId);
-public sealed record UpgradeRollbackRequest(string DeploymentId);
+public sealed record UpgradeRollbackRequest(string DeploymentId, string? ExpectedCurrentFlowId = null,
+    string? ExpectedCurrentRecipeId = null, string? RecoveryNote = null);
 public sealed record BackupIntegrity(string DeploymentId, string Status, string? ActualSha256, string Message);
 public sealed record StationDeploymentRecord(string Id, string StationId, string TemplateId, string PlanId,
     string Actor, string StartedAt, string? FinishedAt, string Status, string? Error,
     FlowRevision BeforeFlow, RecipeRevision BeforeRecipe,
-    string? AfterFlowId, string? AfterRecipeId, string? BackupFile = null, string? BackupSha256 = null);
+    string? AfterFlowId, string? AfterRecipeId, string? BackupFile = null, string? BackupSha256 = null,
+    string? RecoveryNote = null, string? RecoveryObservedBy = null, string? RecoveryObservedAt = null,
+    string? RecoveryObservedFlowId = null, string? RecoveryObservedRecipeId = null);
 
 /// <summary>
 /// V1.5: Simulation-only existing-station software upgrade (FLOW+RECIPE ONLY).
@@ -35,7 +37,8 @@ public sealed class StationUpgradeManager
     // F04: lock-free unresolved-deployment snapshot. DeviceRuntime consults this on
     // cycle start / Auto / configuration change; taking _gate there would invert the
     // lock order against Apply (which holds _gate across the machine lock).
-    private readonly ConcurrentDictionary<string, string?> _unresolved = new(StringComparer.OrdinalIgnoreCase);
+    private IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> _unresolved =
+        new Dictionary<string, IReadOnlyDictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
     private string? _activeApplyId;
     private readonly JsonSerializerOptions _json = new() { WriteIndented = true, PropertyNameCaseInsensitive = true };
     public StationUpgradeManager(IHostEnvironment environment, MultiStationRegistry fleet, StationTemplateCatalog catalog)
@@ -71,31 +74,39 @@ public sealed class StationUpgradeManager
     }
     /// <summary>F04: station-scoped unresolved-deployment reason, or null. An unreadable
     /// record fails closed for every station (key "") because its owner is unknown.</summary>
-    public string? UnresolvedReason(string stationId)
+    public string? UnresolvedReason(string stationId, string? exceptDeploymentId = null)
     {
-        if (_unresolved.TryGetValue("", out var global)) return global;
-        return _unresolved.TryGetValue(stationId, out var reason) ? reason : null;
+        var snapshot = Volatile.Read(ref _unresolved);
+        if (snapshot.TryGetValue("", out var global) && global.Any(x => x.Key != exceptDeploymentId))
+            return global.First(x => x.Key != exceptDeploymentId).Value;
+        if (!snapshot.TryGetValue(stationId, out var station)) return null;
+        return station.FirstOrDefault(x => x.Key != exceptDeploymentId).Value;
     }
     private void RefreshUnresolved()
     {
-        var found = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        var found = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
         foreach (var path in Directory.GetFiles(_folder, "dep-*.json"))
         {
             var id = Path.GetFileNameWithoutExtension(path);
             try
             {
                 var row = ReadRecord(id);
-                if (row.Id == _activeApplyId) continue; // the apply in progress owns its own record
+                if (row.Id == _activeApplyId) continue;
                 if (row.Status is "InProgress" or "Interrupted" or "ManualRecoveryRequired")
                 {
                     var key = string.IsNullOrWhiteSpace(row.StationId) ? "" : row.StationId;
-                    found[key] = $"存在未解决的部署 {row.Id}（{row.Status}），必须先人工检查并回滚";
+                    if (!found.TryGetValue(key, out var entries)) found[key] = entries = new(StringComparer.Ordinal);
+                    entries[row.Id] = $"存在未解决的部署 {row.Id}（{row.Status}），必须先人工检查并回滚";
                 }
             }
-            catch { found[""] = $"部署记录 {id} 损坏且无法读取，已阻止所有工站运行；请人工核对后修复或归档该记录"; }
+            catch
+            {
+                if (!found.TryGetValue("", out var entries)) found[""] = entries = new(StringComparer.Ordinal);
+                entries[id] = $"部署记录 {id} 损坏且无法读取，已阻止所有工站运行；请人工核对后修复或归档该记录";
+            }
         }
-        _unresolved.Clear();
-        foreach (var kv in found) _unresolved[kv.Key] = kv.Value;
+        Volatile.Write(ref _unresolved, found.ToDictionary(x => x.Key,
+            x => (IReadOnlyDictionary<string, string>)x.Value, StringComparer.OrdinalIgnoreCase));
     }
     public BackupIntegrity InspectBackup(string deploymentId)
     {
@@ -288,7 +299,8 @@ public sealed class StationUpgradeManager
             });
         }
     }
-    public StationDeploymentRecord Rollback(string deploymentId, string actor)
+    public StationDeploymentRecord Rollback(string deploymentId, string actor,
+        string? expectedCurrentFlowId = null, string? expectedCurrentRecipeId = null, string? recoveryNote = null)
     {
         lock (_gate)
         {
@@ -296,29 +308,54 @@ public sealed class StationUpgradeManager
             if (record.Status is not ("Succeeded" or "InProgress" or "Interrupted" or "ManualRecoveryRequired"))
                 throw new InvalidOperationException("此部署记录不允许回滚");
             var station = _fleet.Get(record.StationId);
-            return station.Machine.WithConfigurationChange(() =>
+            var recovering = record.Status is "InProgress" or "Interrupted" or "ManualRecoveryRequired";
+            if (recovering)
             {
-                // If someone has published a newer version, a blind rollback is unsafe.
-                if (record.Status == "Succeeded" &&
-                    (station.Flows.Active.Id != record.AfterFlowId || station.Recipes.Active.Id != record.AfterRecipeId))
-                    throw new InvalidOperationException("发布版本已变化，拒绝覆盖；先人工核对");
-                try
+                var state = station.Machine.Snapshot();
+                if (state.Busy || state.State != "Idle" || state.Mode != "Manual")
+                    throw new InvalidOperationException("部署恢复要求工站空闲且处于手动模式");
+                var currentFlow = station.Flows.Active.Id;
+                var currentRecipe = station.Recipes.Active.Id;
+                var flowKnown = currentFlow == record.BeforeFlow.Id || currentFlow == record.AfterFlowId;
+                var recipeKnown = currentRecipe == record.BeforeRecipe.Id || currentRecipe == record.AfterRecipeId;
+                if (!flowKnown || !recipeKnown)
                 {
-                    if (station.Recipes.Active.Id != record.BeforeRecipe.Id)
-                        station.Recipes.Rollback(record.BeforeRecipe.Id, actor, station.Machine);
-                    if (station.Flows.Active.Id != record.BeforeFlow.Id)
-                        station.Machine.RollbackFlow(record.BeforeFlow.Id, actor);
-                    record = record with { Status = "RolledBack", Error = null,
-                        FinishedAt = DateTimeOffset.UtcNow.ToString("O") };
-                    Persist(record); RefreshUnresolved(); return record;
+                    if (string.IsNullOrWhiteSpace(recoveryNote) || recoveryNote.Trim().Length < 8 || recoveryNote.Trim().Length > 500 ||
+                        expectedCurrentFlowId != currentFlow || expectedCurrentRecipeId != currentRecipe)
+                        throw new InvalidOperationException("现行版本与部署日志结果未知；须由管理员提交与现行版本完全一致的核对值及至少 8 字符说明后才可受控恢复");
+                    record = record with { RecoveryNote = recoveryNote.Trim(), RecoveryObservedBy = actor,
+                        RecoveryObservedAt = DateTimeOffset.UtcNow.ToString("O"),
+                        RecoveryObservedFlowId = currentFlow, RecoveryObservedRecipeId = currentRecipe };
+                    Persist(record);
                 }
-                catch (Exception ex)
+                if ((currentFlow != record.BeforeFlow.Id || currentRecipe != record.BeforeRecipe.Id) &&
+                    InspectBackup(record.Id).Status != "Verified")
+                    throw new InvalidOperationException("部署备份缺失或校验失败，拒绝回滚");
+            }
+            Func<StationDeploymentRecord> rollback = () => station.Machine.WithConfigurationChange(() =>
                 {
-                    record = record with { Status = "ManualRecoveryRequired", Error = ex.Message,
-                        FinishedAt = DateTimeOffset.UtcNow.ToString("O") };
-                    Persist(record); RefreshUnresolved(); throw;
-                }
-            });
+                    // For completed deployments, refuse any drift from the exact recorded after-state.
+                    if (record.Status == "Succeeded" &&
+                        (station.Flows.Active.Id != record.AfterFlowId || station.Recipes.Active.Id != record.AfterRecipeId))
+                        throw new InvalidOperationException("发布版本已变化，拒绝覆盖；先人工核对");
+                    try
+                    {
+                        if (station.Recipes.Active.Id != record.BeforeRecipe.Id)
+                            station.Recipes.Rollback(record.BeforeRecipe.Id, actor, station.Machine);
+                        if (station.Flows.Active.Id != record.BeforeFlow.Id)
+                            station.Machine.RollbackFlow(record.BeforeFlow.Id, actor);
+                        record = record with { Status = "RolledBack", Error = null,
+                            FinishedAt = DateTimeOffset.UtcNow.ToString("O") };
+                        Persist(record); RefreshUnresolved(); return record;
+                    }
+                    catch (Exception ex)
+                    {
+                        record = record with { Status = "ManualRecoveryRequired", Error = ex.ToString(),
+                            FinishedAt = DateTimeOffset.UtcNow.ToString("O") };
+                        Persist(record); RefreshUnresolved(); throw;
+                    }
+                });
+            return recovering ? station.Machine.WithDeploymentRecoveryContext(record.Id, rollback) : rollback();
         }
     }
 }

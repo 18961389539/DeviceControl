@@ -1,0 +1,61 @@
+[
+  {
+    "name": "audit_dual_write_failure",
+    "writeStatus": 200,
+    "lookupBefore": {
+      "commandId": "probe-lost-logout",
+      "found": false,
+      "audit": [],
+      "manualIntents": [],
+      "runs": [],
+      "events": [],
+      "guidance": "未找到该命令 ID 的记录：可能尚未到达服务端、ID 输入有误，或该命令早于本次审计迁移。"
+    },
+    "auditBefore": {
+      "degraded": true,
+      "pending": 2,
+      "failures": 2,
+      "lastError": "SQLite Error 19: 'probe audit rejection'."
+    },
+    "lookupAfter": {
+      "commandId": "probe-lost-logout",
+      "found": false,
+      "audit": [],
+      "manualIntents": [],
+      "runs": [],
+      "events": [],
+      "guidance": "未找到该命令 ID 的记录：可能尚未到达服务端、ID 输入有误，或该命令早于本次审计迁移。"
+    },
+    "readyAfter": true,
+    "exposedHeaders": "X-Command-Id,X-Trace-Id,X-Request-Id",
+    "auditResponseHeader": "ok"
+  },
+  {
+    "name": "audit_spool_eviction",
+    "seededRows": 10000,
+    "replayedRows": 9999,
+    "firstRecordPersisted": false,
+    "spoolExistsAfterFlush": false,
+    "auditAfter": {
+      "degraded": false,
+      "pending": 0,
+      "failures": 1,
+      "lastError": null
+    }
+  },
+  {
+    "name": "managed_filename_isolation",
+    "startupError": ".NET API process exited during startup (3762504530)",
+    "exitCode": 3762504530,
+    "listenerAvailable": false,
+    "log": "managed-startup-error.txt"
+  },
+  {
+    "name": "paused_interlock_loss",
+    "stateDuringLoss": "Running",
+    "recoveryDuringLoss": false,
+    "alarmDuringLoss": null,
+    "guardDuringLoss": false,
+    "outcomeAfterResume": "Completed"
+  }
+]

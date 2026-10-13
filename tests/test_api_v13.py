@@ -2,6 +2,7 @@
 import copy,json,os,shutil,socket,subprocess,tempfile,time,urllib.request,urllib.error,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
+from dotnet_harness import start_api, stop_api
 if not shutil.which('dotnet'):
  print('UNVERIFIED V1.3 C# HTTP integration: .NET 10 SDK absent')
  sys.exit(0)
@@ -13,7 +14,7 @@ with tempfile.TemporaryDirectory(prefix='devicecontrol-v13-') as directory:
  base=f'http://127.0.0.1:{port}'
  env={**os.environ,'SimListenUrl':base,'ASPNETCORE_CONTENTROOT':str(root)}
  project=str(ROOT/'backend/DeviceControl.Api/DeviceControl.Api.csproj')
- proc=subprocess.Popen(['dotnet','run','--no-launch-profile','--project',project],cwd=root,env=env,stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
+ proc=start_api(root, env)
  def request(path,method='GET',body=None,token=None):
   raw=None if body is None else json.dumps(body).encode()
   req=urllib.request.Request(base+path,method=method,data=raw,
@@ -64,6 +65,4 @@ with tempfile.TemporaryDirectory(prefix='devicecontrol-v13-') as directory:
   assert all(not x['path'].startswith('/api/stations/A/') for x in b_audit)
   print('PASS V1.3 C# HTTP: A/B isolated flow publish, audit filtering, read APIs and RBAC')
  finally:
-  proc.terminate()
-  try:proc.wait(timeout=8)
-  except subprocess.TimeoutExpired:proc.kill();proc.wait()
+  stop_api(proc)

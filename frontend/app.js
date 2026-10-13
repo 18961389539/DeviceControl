@@ -1,25 +1,6 @@
 (() => {
   const root='http://127.0.0.1:5088';
-  // F09: unified fetch with application-level timeouts. Reads mark staleness instead of
-  // silently keeping old state; writes report "result unknown" and are never auto-resent.
-  const READ_TIMEOUT_MS=8000,WRITE_TIMEOUT_MS=15000;
-  let dataStale=false;
-  async function apiFetch(path,opts={}){
-    const write=(opts.method||'GET')!=='GET';
-    const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),write?WRITE_TIMEOUT_MS:READ_TIMEOUT_MS);
-    try{
-      const res=await fetch(root+path,{...opts,signal:controller.signal});
-      if(!write)dataStale=false;
-      return res;
-    }catch(e){
-      if(e&&e.name==='AbortError'){
-        if(write)throw Error('写操作超时：结果未知。请核对运行记录与审计，设备动作不会自动重发');
-        dataStale=true;throw Error('数据获取超时，界面显示的可能不是最新状态');
-      }
-      throw e;
-    }finally{clearTimeout(timer)}
-  }
+  const apiFetch=window.DeviceControlApiClient.create({root});
   const machineA=new MockRuntime(window.STATION_CONFIG);
   const machineB=new MockRuntime(window.STATION_CONFIG_B);
   machineA.stationId='A';machineB.stationId='B';
@@ -37,8 +18,10 @@
   let selectedAxis='X',selectedCylinder='Clamp',toastTimer=null,polling=false;
   let historyFilter='All',selectedCycleId=null;
   let user=null,token=null,governanceData=null,auditData=null,recoveryData=null,selectedRecipeId=null,auditPage=1;
+  let auditStatus=null;
   const $=id=>document.getElementById(id);
   const h=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const describeError=e=>window.DeviceControlApiClient.describe(e);
   const names={PartPresent:'产品到位',GuardClosed:'防护门状态（普通 DI）',AirPressureOk:'气压正常',ClampExtended:'夹紧伸出到位',ClampRetracted:'夹紧缩回到位',StopperExtended:'阻挡伸出到位',StopperRetracted:'阻挡缩回到位',ClampExtend:'夹紧伸出阀',ClampRetract:'夹紧缩回阀',StopperExtend:'阻挡伸出阀',StopperRetract:'阻挡缩回阀',XStuck:'X 轴卡滞',YStuck:'Y 轴卡滞',ClampStuck:'夹紧气缸卡滞',StopperStuck:'阻挡气缸卡滞'};
   const stateText={Idle:'待机',Running:'运行中',Stopping:'停止中',Fault:'故障',Manual:'手动',Auto:'自动',Retracted:'缩回到位',Extended:'伸出到位',Unknown:'位置未知'};
   const titles={templates:'配置模板与部署',stations:'多工站调度',dashboard:'生产总览',manual:'手动调试',io:'IO 监控',config:'机构与互锁',sequence:'流程调试',analytics:'运行分析',events:'报警与日志',recovery:'故障恢复向导',governance:'配方版本与审计',workflow:'流程设计器',replay:'历史回放',quality:'流程质量门禁'};
@@ -55,8 +38,7 @@
     try{
       const target=window.StationWorkspace.ensureStation(id);
       let targetConfig=offline[target]?.machine.cfg || window.STATION_CONFIG;
-      if(usingBackend){const res=await apiFetch(apiPath('/api/config',target),{headers:{'X-Sim-Token':token}});
-        if(!res.ok)throw Error('读取工站 '+target+' 配置失败');targetConfig=await res.json();}
+      if(usingBackend){try{targetConfig=await (await apiFetch(apiPath('/api/config',target),{headers:{'X-Sim-Token':token}})).json()}catch(e){throw Error('读取工站 '+target+' 配置失败：'+e.message)}}
       // Avoid changing context until the target has passed validation and can be loaded.
       if(!offline[target]){const shadow=new MockRuntime(targetConfig);shadow.stationId=target;shadow.sharedCoordinator=coordinator;offline[target]={machine:shadow,governance:new GovernanceMock(shadow)}}
       editor?.switchStation(target);
@@ -82,9 +64,10 @@
   }
   async function registerRemoteStations(){
     if(!usingBackend||!user)return;
-    const r=await apiFetch('/api/stations',{headers:{'X-Sim-Token':token}});
-    if(!r.ok)throw Error('读取工站注册表失败');
-    const items=(await r.json()).stations||[];
+    let registry;
+    try{registry=await (await apiFetch('/api/stations',{headers:{'X-Sim-Token':token}})).json()}
+    catch(e){throw Error('读取工站注册表失败：'+e.message)}
+    const items=registry.stations||[];
     items.forEach(s=>window.StationWorkspace.register(s.id));
     updateStationOptions();
   }
@@ -97,13 +80,10 @@
   async function detectBackend(){
     if(location.protocol==='file:'){render();return}
     try{
-      const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),650);
-      const res=await fetch(root+'/api/health',{signal:controller.signal});clearTimeout(timeout);
-      if(!res.ok)throw Error('服务不可用');
-      const health=await res.json();if(health.mode!=='Simulation')throw Error('本界面仅可连接仿真服务');
+      const health=await (await apiFetch('/api/health')).json();if(health.mode!=='Simulation')throw Error('本界面仅可连接仿真服务');
       usingBackend=true;
       // Do not auto-authorize or silently reuse a previous session. Explicit login is required.
-      if(user){const r=await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}});if(!r.ok)throw Error('无法读取站点配置');cfg=await r.json();populateSelectors();await refresh();}
+      if(user){try{cfg=await (await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}})).json()}catch(e){throw Error('无法读取站点配置：'+e.message)}populateSelectors();await refresh();}
     }catch(e){if(usingBackend){disconnected=true;toast('后端连接异常，控制已锁定：'+e.message,true)}else toast('未检测到 C# 本地仿真服务，已启用浏览器离线演示')}
     render();
   }
@@ -113,9 +93,10 @@
     if(!user)throw Error('请先登录');
     const target=workspace.id;
     if(!usingBackend)return offline[target].governance.post(path,body,user);
-    const resp=await apiFetch(apiPath(path,target),{method:'POST',headers:{'Content-Type':'application/json','X-Sim-Token':token},body:JSON.stringify(body)});
-    let value;try{value=await resp.json()}catch{throw Error('后端未返回有效 JSON')}
-    if(!resp.ok)throw Error(value.error||'请求失败 '+resp.status);return value;
+    // R03: the shared client throws for !ok and classifies unconfirmable writes as
+    // "result unknown" (error.resultUnknown) carrying command/trace IDs.
+    const resp=await apiFetch(apiPath(path,target),{method:'POST',headers:{'Content-Type':'application/json','X-Sim-Token':token},body:JSON.stringify(body),station:target});
+    return await resp.json();
   }
   async function refresh(){
     if(polling||disconnected||!user||switching)return;
@@ -123,10 +104,18 @@
     try{
       if(usingBackend){
         const heads={'X-Sim-Token':token};
-        const [res,fres]=await Promise.all([apiFetch(apiPath('/api/snapshot',context.station),{headers:heads}),apiFetch(apiPath('/api/flow',context.station),{headers:heads})]);
-        if(!res.ok||!fres.ok)throw Error('HTTP '+(res.ok?fres.status:res.status));
-        const [nextSnapshot,nextFlow]=await Promise.all([res.json(),fres.json()]);
-        if(workspace.isCurrent(context)){snapshot=nextSnapshot;flow=nextFlow}
+        // R07: freshness is per station/domain; only a successful read whose payload
+        // passes the contract check may mark it fresh, and stale responses from a
+        // previous station are still rejected below. R04: the audit-health header is
+        // surfaced in the status line; degraded audit refuses version/deployment writes.
+        const [snapRes,flowRes]=await Promise.all([
+          apiFetch(apiPath('/api/snapshot',context.station),{headers:heads,freshness:'snapshot:'+context.station,
+            expect:v=>!!v&&typeof v==='object'&&typeof v.state==='string'&&!!v.axes&&!!v.inputs}),
+          apiFetch(apiPath('/api/flow',context.station),{headers:heads,freshness:'flow:'+context.station,
+            expect:v=>!!v&&typeof v==='object'&&typeof v.version==='string'})
+        ]);
+        const [nextSnapshot,nextFlow]=[await snapRes.json(),await flowRes.json()];
+        if(workspace.isCurrent(context)){snapshot=nextSnapshot;flow=nextFlow;auditStatus=snapRes.headers.get('X-Audit-Status')||null}
       }else if(workspace.isCurrent(context)) {snapshot=offline[context.station].machine.snapshot();flow=offline[context.station].machine.flow.snapshot()}
     }catch(e){if(workspace.isCurrent(context)){disconnected=true;toast('本地仿真 API 已断开，所有控制已锁定，不会自动切换到浏览器模拟器',true)}}
     finally{polling=false;render()}
@@ -135,7 +124,7 @@
     if(switching)return;
     const context=workspace.context();inFlight++;render();
     try{await request(path,body);await refresh();if(!workspace.isCurrent(context))return;if(currentTab==='governance'||currentTab==='recovery')await loadGovernance();toast('指令已执行（仿真）')}
-    catch(e){toast(e.message||'命令失败',true);await refresh()}
+    catch(e){toast(describeError(e),true);await refresh()}
     finally{inFlight--;render()}
   }
   function populateSelectors(){
@@ -152,10 +141,9 @@
     if(backendProbe)await backendProbe;
     if(disconnected)throw Error('服务断开，请刷新页面后重试');
     if(usingBackend){
-      const res=await apiFetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
-      const value=await res.json();if(!res.ok)throw Error(value.error||'登录失败');token=value.token;user=value.user;
-      const cfgRes=await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}});
-      if(!cfgRes.ok)throw Error('登录后读取配置失败');cfg=await cfgRes.json();
+      const value=await (await apiFetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})})).json();
+      token=value.token;user=value.user;
+      try{cfg=await (await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}})).json()}catch(e){throw Error('登录后读取配置失败：'+e.message)}
     }else user=governance.login(username,password);
     $('loginOverlay').classList.add('hidden');await registerRemoteStations();populateSelectors();void stationConsole?.refresh();await refresh();await loadGovernance();render();
   }
@@ -175,8 +163,7 @@
       if(path.startsWith('/api/audit'))return gov.auditPage(auditPage,40);
       if(path==='/api/recovery/checklist')return gov.checklist();
     }
-    const res=await apiFetch(apiPath(path,target),{headers:{'X-Sim-Token':token}});
-    if(!res.ok){const v=await res.json().catch(()=>({}));throw Error(v.error||'API '+res.status)}return res.json();
+    return await (await apiFetch(apiPath(path,target),{headers:{'X-Sim-Token':token}})).json();
   }
   async function loadGovernance(){
     if(!user||switching)return;
@@ -238,7 +225,7 @@
     txt('workspaceTag','工作区 '+workspace.id);txt('workspaceBreadcrumb','STATION '+workspace.id);
     txt('userLabel',user?user.name+' · '+user.role:'未登录');$('logoutButton').disabled=!user;
     txt('connectionLabel',disconnected?'已断开 · 锁定':usingBackend?'C# 本地模拟后端':'浏览器模拟驱动');
-    txt('sourceMode',disconnected?'连接丢失':dataStale?'数据可能过期':usingBackend?'本地 API · Simulation':'离线 Simulation');
+    txt('sourceMode',disconnected?'连接丢失':auditStatus==='degraded'?'审计降级 · 数据可能过期':auditStatus==='unavailable'?'审计不可用 · 变更已受限':apiFetch.isDataStale()?'数据可能过期':usingBackend?'本地 API · Simulation':'离线 Simulation');
     txt('clock',new Date().toLocaleTimeString('zh-CN',{hour12:false}));
     txt('stateValue',stateText[d.state]||d.state);
     $('stateDot').className='state-dot '+(disconnected||d.state==='Fault'?'error':d.state==='Running'||d.state==='Stopping'?'running':'ok');
@@ -378,6 +365,22 @@
       if(action==='audit-refresh'){await loadGovernance();return}
       if(action==='audit-prev'||action==='audit-next'){auditPage+=action==='audit-prev'?-1:1;await loadGovernance();return}
       if(action==='audit-export'){try{exportAudit();toast('本页审计记录已导出')}catch(e){toast(e.message,true)}return}
+      if(action==='command-lookup'){
+        // R03/R08: reconcile a "result unknown" write by its concrete command ID.
+        const raw=window.prompt('输入要核对的命令 ID（写操作错误提示中的 X-Command-Id）：');
+        const id=(raw||'').trim();if(!id)return;
+        try{
+          const response=await securedGet('/api/commands/'+encodeURIComponent(id));
+          const data=response?.data||{};
+          const box=$('commandLookup');box.style.display='block';
+          const audit=(data.audit||[]).map(x=>`${new Date(x.time).toLocaleTimeString('zh-CN')} ${x.method} ${x.path} → ${x.status} ${x.outcome}${x.errorMessage?'（'+x.errorMessage+'）':''}`).join('；');
+          const runs=(data.runs||[]).map(x=>`${x.id} → ${x.outcome}`).join('；');
+          box.innerHTML=data.found
+            ?`<b>命令 ${h(id)}</b>：审计 ${data.audit.length} 条${audit?'（'+h(audit)+'）':''}；运行记录 ${data.runs.length} 条${runs?'（'+h(runs)+'）':''}；未完结手动意图 ${data.manualIntents.length} 条；关联事件 ${data.events.length} 条`
+            :`<b>命令 ${h(id)}</b>：${h(data.guidance||'未找到该命令 ID 的记录')}`;
+        }catch(e){toast('命令查询失败：'+e.message,true)}
+        return;
+      }
       const id=selectedRecipeId;
       if(action==='draft'){
         const body={name:$('recipeName').value.trim(),visionOffsetMm:Number($('recipeOffset').value),extraDwellMs:Number($('recipeDwell').value)};
@@ -425,7 +428,7 @@
     read:()=>securedGet('/api/flows'),
     send:async(path,body)=>request(path,body),
     refreshed:async()=>{
-      if(usingBackend){const res=await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}});if(!res.ok)throw Error('更新站点配置失败');cfg=await res.json()}
+      if(usingBackend){try{cfg=await (await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}})).json()}catch(e){throw Error('更新站点配置失败：'+e.message)}}
       else cfg=offline[workspace.id].machine.cfg;
       await refresh();
     }
@@ -441,7 +444,7 @@
   upgradeStudio=new window.StationUpgradeStudio({root,backend:()=>usingBackend,token:()=>token,user:()=>user,
     offline,templates:()=>templateStudio.templates,notify:toast,onChanged:async id=>{
       if(id===workspace.id){
-        if(usingBackend){const r=await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}});if(r.ok)cfg=await r.json();}
+        if(usingBackend){try{cfg=await (await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}})).json()}catch{/* 配置刷新失败不阻断后续操作，状态轮询会恢复 */}}
         await refresh();if(currentTab==='workflow')await editor.open();
       }
       await stationConsole.refresh();

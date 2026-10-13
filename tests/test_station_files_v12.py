@@ -21,8 +21,11 @@ assert 'parts.Skip(3)' in perm
 assert 'Path.Combine(baseFolder, "stations", scope)' in paths
 assert 'Regex.IsMatch' in paths
 assert 'SharedResourceCoordinator.KeysFor(node)' in engine
-assert 'await _shared.AcquireAsync(' in engine
-assert 'sharedLease?.Dispose()' in engine
+# Q05/Q06: the acquisition is awaited through the monitored wait, and release is
+# idempotent so the operator gate can release before an unbounded human wait.
+assert '_shared.AcquireAsync(' in engine and 'WaitMonitoredAsync(' in engine
+assert 'void ReleaseAcquired()' in engine and 'ReleaseAcquired();' in engine
+assert 'lease?.Dispose()' in engine
 assert 'request.Keys.Any(_held.ContainsKey)' in coordinator
 assert 'await request.Signal.Task.WaitAsync(' in coordinator
 assert 'SharedResources' in config and 'ResourceWaitTimeoutMs' in config

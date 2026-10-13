@@ -17,6 +17,7 @@
  class StationUpgradeStudio {
    constructor({root,backend,token,user,offline,templates,notify,onChanged}){
      Object.assign(this,{root,backend,token,user,offline,templates,notify,onChanged});
+   this.api=global.DeviceControlApiClient.create({root});
      this.plan=null;this.history=[];this.busy=false;this.error='';this.selectedHistory='';
      this.panel=document.getElementById('panel-templates');
      this.panel.addEventListener('click',e=>{const b=e.target.closest('button[data-upgrade]');if(b&&!b.disabled)void this.act(b.dataset.upgrade)});
@@ -27,7 +28,7 @@
    get role(){return ({Operator:1,Engineer:2,Admin:3})[this.user()?.role]||0}
    get selectedTemplate(){return this.templates().find(v=>v.id===document.getElementById('templateSelect').value)}
    get target(){return document.getElementById('upgradeStation').value}
-   async call(path,body){const r=await fetch(this.root+path,{method:body===undefined?'GET':'POST',headers:{'X-Sim-Token':this.token(),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const value=await r.json();if(!r.ok)throw Error(value.error||'HTTP '+r.status);return value.data}
+   async call(path,body){const r=await this.api(path,{method:body===undefined?'GET':'POST',headers:{'X-Sim-Token':this.token(),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),station:this.target});return (await r.json()).data}
    async refresh(){
      if(this.backend()&&this.user()&&!this.busy){try{this.history=await this.call('/api/upgrades/history');this.error=''}catch(e){this.error=e.message}}
      this.render();
@@ -99,7 +100,19 @@
        }else if(action==='rollback'){
          const row=this.history.find(r=>r.id===this.selectedHistory);if(!row)throw Error('请选择部署记录');
          if(this.backend()){
-           const changed=await this.call('/api/upgrades/rollback',{deploymentId:row.id});this.notify('已回滚：'+changed.id);
+           let body={deploymentId:row.id},changed;
+           try{changed=await this.call('/api/upgrades/rollback',body)}catch(e){
+             if(e.status!==409||!e.message.includes('结果未知'))throw e;
+             const station=row.stationId;
+             const flow=prompt(`部署 ${row.id} 的提交结果未知。先查 GET /api/stations/${station}/flows 与 /api/stations/${station}/recipes 的当前活动版本，并完成现场核对。输入确认看到的流程版本 ID：`);
+             if(!flow)throw Error('已取消受控恢复');
+             const recipe=prompt('输入确认看到的配方活动版本 ID：');if(!recipe)throw Error('已取消受控恢复');
+             const note=prompt('简述版本核对依据（8–500 字符）；管理员将作为恢复证据持久记录：');
+             if(!note)throw Error('已取消受控恢复');
+             body={deploymentId:row.id,expectedCurrentFlowId:flow.trim(),expectedCurrentRecipeId:recipe.trim(),recoveryNote:note.trim()};
+             changed=await this.call('/api/upgrades/rollback',body);
+           }
+           this.notify('已回滚：'+changed.id);
          }else{
            const target=this.offline[row.stationId],g=target?.governance;
            if(!target||checks({status:'Published',config:target.machine.cfg},target).length)throw Error('工站不处于可回滚的空闲手动状态');
@@ -110,7 +123,7 @@
          }
          this.plan=null;await this.onChanged(row.stationId);await this.refresh();
        }
-     }catch(e){this.error=e.message;this.notify(e.message,true)}finally{this.busy=false;this.render()}
+     }catch(e){this.error=global.DeviceControlApiClient.describe(e);this.notify(this.error,true)}finally{this.busy=false;this.render()}
    }
  }
  global.StationUpgradeStudio=StationUpgradeStudio;

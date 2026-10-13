@@ -1,0 +1,306 @@
+[
+  {
+    "name": "N01 interrupted deployment blocks Auto",
+    "passed": true,
+    "evidence": {
+      "status": 409,
+      "body": {
+        "ok": false,
+        "error": "需要先完成故障恢复确认"
+      }
+    }
+  },
+  {
+    "name": "N01 real changed-version deployment can be rolled back",
+    "passed": true,
+    "evidence": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "id": "dep-88b9489ebdae49f8a440f75821f34ca4",
+          "stationId": "B",
+          "templateId": "tmpl-225ed1c1065a",
+          "planId": "plan-024c081d0faa4251aecd15b358e981a3",
+          "actor": "admin",
+          "startedAt": "2026-10-13T10:48:30.5055970+00:00",
+          "finishedAt": "2026-10-13T10:48:31.3736125+00:00",
+          "status": "RolledBack",
+          "error": null,
+          "beforeFlow": {
+            "id": "flow-2cb64c059a",
+            "status": "Published",
+            "sourceId": null,
+            "author": "system",
+            "createdAt": "2026-10-13T10:48:29.9165014+00:00",
+            "hash": "E58B270BDA36E3E3B12630E25D9362CCC4EAE1456C824713D8070BAA0BFB278E",
+            "definition": [
+              {
+                "id": "part",
+                "type": "WaitInput",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [],
+                "label": "等待产品到位",
+                "device": "PartPresent",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 2000,
+                "durationMs": 0,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "vision",
+                "type": "VisionLocate",
+                "onError": "Retry",
+                "maxRetries": 1,
+                "children": [],
+                "label": "视觉定位",
+                "device": "",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 0,
+                "sharedResources": [
+                  "CELL-SHARED"
+                ],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "xy-approach",
+                "type": "Parallel",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [
+                  {
+                    "id": "x-place",
+                    "type": "AxisMove",
+                    "onError": "Abort",
+                    "maxRetries": 0,
+                    "children": [],
+                    "label": "X 轴视觉定位",
+                    "device": "X",
+                    "useVisionX": true,
+                    "positionMm": 0,
+                    "timeoutMs": 0,
+                    "durationMs": 0,
+                    "sharedResources": [],
+                    "resourceWaitTimeoutMs": 2500
+                  },
+                  {
+                    "id": "y-place",
+                    "type": "AxisMove",
+                    "onError": "Abort",
+                    "maxRetries": 0,
+                    "children": [],
+                    "label": "Y 轴工艺定位",
+                    "device": "Y",
+                    "useVisionX": false,
+                    "positionMm": 40,
+                    "timeoutMs": 0,
+                    "durationMs": 0,
+                    "sharedResources": [],
+                    "resourceWaitTimeoutMs": 2500
+                  }
+                ],
+                "label": "X/Y 双轴并行定位",
+                "device": "",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 0,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "stopper-extend",
+                "type": "CylinderExtend",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [],
+                "label": "阻挡气缸伸出",
+                "device": "Stopper",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 0,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "clamp-extend",
+                "type": "CylinderExtend",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [],
+                "label": "夹紧气缸伸出",
+                "device": "Clamp",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 0,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "dwell",
+                "type": "Delay",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [],
+                "label": "工艺保持",
+                "device": "",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 250,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "clamp-retract",
+                "type": "CylinderRetract",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [],
+                "label": "夹紧气缸缩回",
+                "device": "Clamp",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 0,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "stopper-retract",
+                "type": "CylinderRetract",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [],
+                "label": "阻挡气缸缩回",
+                "device": "Stopper",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 0,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "xy-return",
+                "type": "Parallel",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [
+                  {
+                    "id": "y-return",
+                    "type": "AxisMove",
+                    "onError": "Abort",
+                    "maxRetries": 0,
+                    "children": [],
+                    "label": "Y 轴返回等待位",
+                    "device": "Y",
+                    "useVisionX": false,
+                    "positionMm": 0,
+                    "timeoutMs": 0,
+                    "durationMs": 0,
+                    "sharedResources": [],
+                    "resourceWaitTimeoutMs": 2500
+                  },
+                  {
+                    "id": "x-return",
+                    "type": "AxisMove",
+                    "onError": "Abort",
+                    "maxRetries": 0,
+                    "children": [],
+                    "label": "X 轴返回等待位",
+                    "device": "X",
+                    "useVisionX": false,
+                    "positionMm": 0,
+                    "timeoutMs": 0,
+                    "durationMs": 0,
+                    "sharedResources": [],
+                    "resourceWaitTimeoutMs": 2500
+                  }
+                ],
+                "label": "X/Y 双轴并行复归",
+                "device": "",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 0,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              }
+            ],
+            "reason": "初始流程配置"
+          },
+          "beforeRecipe": {
+            "id": "7cff195fb1",
+            "sourceId": null,
+            "status": "Published",
+            "createdAt": "2026-10-13T10:48:29.9158395+00:00",
+            "author": "system",
+            "values": {
+              "name": "默认工艺",
+              "visionOffsetMm": 0,
+              "extraDwellMs": 0
+            },
+            "hash": "9CD54541DAD59B28",
+            "reason": "初始化基准版本"
+          },
+          "afterFlowId": "flow-047c46fb28",
+          "afterRecipeId": "35ee2f85c4",
+          "backupFile": "backups\\B\\dep-88b9489ebdae49f8a440f75821f34ca4.db",
+          "backupSha256": "642F300F87E8785226752A2F8B4FB81B3958CAB316D2BF12F5C4AD9AB6B46334"
+        }
+      }
+    }
+  },
+  {
+    "name": "N01 rollback persists resolved status",
+    "passed": true,
+    "evidence": {
+      "status": "RolledBack"
+    }
+  },
+  {
+    "name": "N01 rollback restores recipe content",
+    "passed": true,
+    "evidence": {
+      "before": {
+        "name": "默认工艺",
+        "visionOffsetMm": 0,
+        "extraDwellMs": 0
+      },
+      "after": {
+        "name": "默认工艺",
+        "visionOffsetMm": 0,
+        "extraDwellMs": 0
+      }
+    }
+  },
+  {
+    "name": "N01 configuration recovery preserves independent runtime recovery gate",
+    "passed": true,
+    "evidence": true
+  },
+  {
+    "name": "N01 independent human recovery can complete after deployment rollback",
+    "passed": true,
+    "evidence": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": true
+      }
+    }
+  },
+  {
+    "name": "N01 confirmed recovery stays cleared after restart",
+    "passed": true,
+    "evidence": false
+  }
+]

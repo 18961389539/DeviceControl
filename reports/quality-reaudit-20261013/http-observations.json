@@ -1,0 +1,75 @@
+[
+  {
+    "id": "R01",
+    "rollbackStatus": "RolledBack",
+    "flowContentRestored": true,
+    "recipeContentRestored": true,
+    "originalFlowId": "flow-fe259ea643",
+    "currentFlowId": "flow-128af5cdfb",
+    "originalRecipeId": "d6697bac98",
+    "currentRecipeId": "354328d810",
+    "reconcileHttpStatus": 409,
+    "reconcileResponse": {
+      "ok": false,
+      "error": "工站不在原始版本基线上；禁止自动判定或重试，需单站处理后再核对"
+    }
+  },
+  {
+    "id": "R01-alternative",
+    "abortHttpStatus": 200,
+    "newBatchHttpStatus": 200,
+    "newBatchUsesRestoredFlowId": true
+  },
+  {
+    "id": "R02",
+    "guardClosed": false,
+    "cycleOutcome": "Completed",
+    "state": "Idle",
+    "recoveryRequired": false,
+    "completedCounter": 1
+  },
+  {
+    "id": "R04",
+    "mutationHttpStatus": 200,
+    "actualMode": "Manual",
+    "auditRowsAdded": 0,
+    "readyHttpStatus": 200,
+    "ready": true,
+    "diagnostics": {
+      "ok": true,
+      "failedStations": {},
+      "deploymentStartupIssues": [],
+      "templateStartupIssues": [],
+      "rolloutStartupIssues": [],
+      "eventWriteFailures": {
+        "A": 0,
+        "B": 0
+      }
+    }
+  },
+  {
+    "id": "R05",
+    "targetStation": "B",
+    "globalApplyEntriesInA": 0,
+    "globalRollbackEntriesInA": 1,
+    "targetBHasRollbackAudit": false,
+    "targetBHasRolloutAdvanceAudit": false
+  },
+  {
+    "id": "R08",
+    "frontendOrigin": "http://127.0.0.1:5173",
+    "httpStatus": 200,
+    "traceHeader": null,
+    "commandHeader": null,
+    "body": {
+      "ok": true,
+      "data": true
+    }
+  },
+  {
+    "id": "R06",
+    "onlyStationBCorrupted": true,
+    "healthAccessible": false,
+    "processExitCode": 3762504530
+  }
+]

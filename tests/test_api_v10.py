@@ -5,6 +5,7 @@ import json,os,shutil,socket,subprocess,tempfile,time,urllib.request,urllib.erro
 from pathlib import Path
 import contextlib
 ROOT=Path(__file__).resolve().parents[1]
+from dotnet_harness import start_api, stop_api
 if not shutil.which('dotnet'):
  print('SKIP UNVERIFIED: no .NET SDK; V1.0 API tests did NOT run')
  sys.exit(0)
@@ -26,8 +27,7 @@ with tempfile.TemporaryDirectory(prefix='devicecontrol-v10-') as folder:
    with urllib.request.urlopen(r,timeout=5) as response:return response.status,json.load(response)
   except urllib.error.HTTPError as e:return e.code,json.load(e)
  def boot():
-  p=subprocess.Popen(['dotnet','run','--no-launch-profile','--project',project],cwd=root,env=env,
-                     stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
+  p=start_api(root, env)
   for _ in range(180):
    if p.poll() is not None:raise RuntimeError('V1.0 API failed to launch')
    try:
@@ -94,6 +94,4 @@ with tempfile.TemporaryDirectory(prefix='devicecontrol-v10-') as folder:
   print('PASS V1.0 HTTP: completed cycle evidence, ordinal consistency, readonly API, kill/restart recovery, login & SQLite')
  finally:
   if process is not None:
-   process.terminate()
-   try:process.wait(timeout=8)
-   except subprocess.TimeoutExpired:process.kill();process.wait()
+   stop_api(process)

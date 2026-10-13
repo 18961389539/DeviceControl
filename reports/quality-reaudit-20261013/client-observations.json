@@ -1,0 +1,31 @@
+[
+  {
+    "id": "R03",
+    "scenario": "/drop",
+    "committedAtServer": 1,
+    "error": "fetch failed",
+    "explicitlyUnknown": false,
+    "commandIdReturnedToCaller": null
+  },
+  {
+    "id": "R03",
+    "scenario": "/bad",
+    "committedAtServer": 1,
+    "error": "服务器返回了无效 JSON：Expected property name or '}' in JSON at position 1 (line 1 column 2)",
+    "explicitlyUnknown": false,
+    "commandIdReturnedToCaller": null
+  },
+  {
+    "id": "R03",
+    "scenario": "/slow",
+    "committedAtServer": 1,
+    "error": "写操作超时：结果未知。请先核对运行记录与审计，设备动作不会自动重发",
+    "explicitlyUnknown": true,
+    "commandIdReturnedToCaller": null
+  },
+  {
+    "id": "R07",
+    "staleAfterTimeout": true,
+    "staleAfterHttp503": false
+  }
+]

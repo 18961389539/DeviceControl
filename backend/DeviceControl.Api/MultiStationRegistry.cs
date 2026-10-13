@@ -33,12 +33,38 @@ public sealed class StationContext
     }
 }
 
+/// <summary>R06: fail-closed primary-station config loader. A corrupt fixed-station
+/// config must not kill the process: health/ready/diagnostics stay reachable and the
+/// affected station's routes are refused with the concrete load error.</summary>
+public sealed class StationBootstrap
+{
+    public string ConfigPath { get; }
+    public StationConfig? PrimaryConfig { get; }
+    public string? PrimaryError { get; }
+    public StationBootstrap(IHostEnvironment environment)
+    {
+        ConfigPath = Path.Combine(environment.ContentRootPath, "config", "station.json");
+        try { PrimaryConfig = StationConfig.Load(ConfigPath); }
+        catch (Exception ex) { PrimaryError = ex.Message; }
+    }
+    public StationConfig RequirePrimaryConfig()
+        => PrimaryConfig ?? throw new StationUnavailableException(
+            "固定工站 A 配置加载失败（" + PrimaryError + "）；该工站全部功能已停止，请修复配置后重启");
+}
+
+/// <summary>Thrown when a station's runtime could not be initialized (corrupt config
+/// or unreadable database). Routes for that station answer 503 with this reason.</summary>
+public sealed class StationUnavailableException : Exception
+{
+    public StationUnavailableException(string message) : base(message) { }
+}
+
 /// <summary>
 /// V1.2: isolated A/B simulation runtimes with one process-local node-level
 /// shared resource coordinator; old A routes are retained. The coordinator
 /// never allows partial multi-key acquisition. Not a real safety interlock.
 /// </summary>
-public sealed class MultiStationRegistry
+public sealed class MultiStationRegistry : IAsyncDisposable
 {
     private readonly object _gate = new();
     private readonly Dictionary<string, StationContext> _stations;
@@ -49,35 +75,73 @@ public sealed class MultiStationRegistry
     private readonly RunEligibilityRegistry _eligibility;
     private const int MaxStations = 12;
 
-    public MultiStationRegistry(IHostEnvironment environment, StationConfig cfg,
-        DeviceRuntime runtime, SqliteStore store, RunJournal journal,
-        FlowRevisions flows, RecipeStore recipes, SharedResourceCoordinator coordinator,
-        RunEligibilityRegistry eligibility)
+    public MultiStationRegistry(IHostEnvironment environment, IServiceProvider services,
+        SharedResourceCoordinator coordinator, RunEligibilityRegistry eligibility)
     {
         _environment = environment;
         _coordinator = coordinator;
         _eligibility = eligibility;
-        runtime.AttachSharedResources(coordinator, "A");
-        _stations = new(StringComparer.OrdinalIgnoreCase)
+        _stations = new(StringComparer.OrdinalIgnoreCase);
+        // R06: the fixed stations use the same fail-closed isolation as managed
+        // stations. A broken config or database fails that station closed and is
+        // recorded for diagnosis; it must never take the whole service down.
+        try
         {
-            ["A"] = new StationContext("A", cfg, runtime, store, journal, flows, recipes)
-        };
-        var bConfigPath = Path.Combine(environment.ContentRootPath, "config", "station-B.json");
-        var bCfg = File.Exists(bConfigPath) ? StationConfig.Load(bConfigPath) :
-            JsonSerializer.Deserialize<StationConfig>(JsonSerializer.Serialize(cfg))!;
-        if (!File.Exists(bConfigPath)) { bCfg.ProfileId = "DEMO-STATION-B"; bCfg.Validate(); }
-        _stations.Add("B", BuildStation("B", bCfg));
+            var cfg = services.GetRequiredService<StationConfig>();
+            var runtime = services.GetRequiredService<DeviceRuntime>();
+            var store = services.GetRequiredService<SqliteStore>();
+            var journal = services.GetRequiredService<RunJournal>();
+            var flows = services.GetRequiredService<FlowRevisions>();
+            var recipes = services.GetRequiredService<RecipeStore>();
+            runtime.AttachSharedResources(coordinator, "A");
+            _stations["A"] = new StationContext("A", cfg, runtime, store, journal, flows, recipes);
+        }
+        catch (Exception ex) { _failedStations["A"] = "固定工站 A 初始化失败：" + ex.Message; }
+        try
+        {
+            var bConfigPath = Path.Combine(environment.ContentRootPath, "config", "station-B.json");
+            StationConfig bCfg;
+            if (File.Exists(bConfigPath)) bCfg = StationConfig.Load(bConfigPath);
+            else
+            {
+                // The derived-B fallback needs a healthy primary config; without it B
+                // fails closed with its own reason instead of guessing a structure.
+                var template = services.GetRequiredService<StationConfig>();
+                bCfg = JsonSerializer.Deserialize<StationConfig>(JsonSerializer.Serialize(template))!;
+                bCfg.ProfileId = "DEMO-STATION-B"; bCfg.Validate();
+            }
+            _stations.Add("B", BuildStation("B", bCfg));
+        }
+        catch (Exception ex) { _failedStations["B"] = "固定工站 B 初始化失败：" + ex.Message; }
         _managedFolder = Path.Combine(environment.ContentRootPath, "config", "managed-stations");
-        Directory.CreateDirectory(_managedFolder);
-        foreach (var path in Directory.GetFiles(_managedFolder, "*.json").OrderBy(x => x))
+        // Q03: directory access, file-name canonicalization, duplicate/capacity checks
+        // and content errors are ALL isolated per file. A bad managed station must
+        // never prevent the minimal diagnostic host from starting, the affected file
+        // is preserved, and nothing is guessed or auto-deleted.
+        IEnumerable<string> managedFiles = Array.Empty<string>();
+        try
         {
-            var id = CanonicalStationId(Path.GetFileNameWithoutExtension(path));
-            if (_stations.ContainsKey(id) || _stations.Count >= MaxStations)
-                throw new InvalidOperationException("持久化工站目录包含重复 ID 或超过容量");
+            Directory.CreateDirectory(_managedFolder);
+            managedFiles = Directory.GetFiles(_managedFolder, "*.json").OrderBy(x => x, StringComparer.Ordinal).ToArray();
+        }
+        catch (Exception ex)
+        {
+            _failedStations["(managed-stations)"] = "动态工站目录不可用，已停用动态工站加载：" + ex.Message;
+        }
+        foreach (var path in managedFiles)
+        {
+            var rawName = Path.GetFileNameWithoutExtension(path);
+            string id;
+            try { id = CanonicalStationId(rawName); }
+            catch (Exception ex) { _failedStations[rawName] = "文件名不合法，已跳过该文件（原文件保留）：" + ex.Message; continue; }
+            if (_stations.ContainsKey(id))
+            { _failedStations[rawName] = "工站 ID 与已加载工站重复（含大小写等价），已跳过该文件（原文件保留）"; continue; }
+            if (_stations.Count >= MaxStations)
+            { _failedStations[rawName] = "超过最大工站数 " + MaxStations + "，已跳过该文件（原文件保留）"; continue; }
             // F13: one corrupt managed-station file fails that station closed and is
             // recorded for diagnosis; it must not take the whole service down.
             try { _stations.Add(id, BuildStation(id, StationConfig.Load(path))); }
-            catch (Exception ex) { _failedStations[id] = ex.Message; }
+            catch (Exception ex) { _failedStations[rawName] = ex.Message; }
         }
     }
     /// <summary>F13: stations that failed to load, with the reason. They stay out of
@@ -89,6 +153,7 @@ public sealed class MultiStationRegistry
     /// <summary>F04: invoked for every newly created station so the caller can register
     /// its run-eligibility check (the upgrade manager does not exist yet at construction).</summary>
     public Action<string>? OnStationAdded { get; set; }
+    public Action<string>? OnStationRemoved { get; set; }
 
     public static string CanonicalStationId(string id)
     {
@@ -107,11 +172,20 @@ public sealed class MultiStationRegistry
         var db = new SqliteStore(_environment, id);
         var recipes = new RecipeStore(_environment, db, id);
         var flows = new FlowRevisions(db, cfg);
-        var journal = new RunJournal(_environment, db, id);
-        var machine = new DeviceRuntime(cfg, io, motion, cylinders,
-            camera, interlocks, journal, recipes, flows, _eligibility);
-        machine.AttachSharedResources(_coordinator, id);
-        return new StationContext(id, cfg, machine, db, journal, flows, recipes);
+        RunJournal? journal = null;
+        try
+        {
+            journal = new RunJournal(_environment, db, id);
+            var machine = new DeviceRuntime(cfg, io, motion, cylinders,
+                camera, interlocks, journal, recipes, flows, _eligibility);
+            machine.AttachSharedResources(_coordinator, id);
+            return new StationContext(id, cfg, machine, db, journal, flows, recipes);
+        }
+        catch
+        {
+            if (journal is not null) journal.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            throw;
+        }
     }
     public void ValidateNewIds(IReadOnlyCollection<string> ids)
     {
@@ -142,18 +216,23 @@ public sealed class MultiStationRegistry
             // Persist the immutable software configuration with CreateNew; never overwrite.
             using (var stream = new FileStream(file, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                 JsonSerializer.Serialize(stream, cfg);
+            StationContext? created = null;
             try
             {
-                var station = BuildStation(id, cfg);
-                var draft = station.Recipes.Draft(recipe, "template-deploy");
-                station.Recipes.Validate(draft.Id);
-                station.Recipes.Publish(draft.Id, station.Machine);
-                _stations.Add(id, station);
+                // Register a temporary fail-closed eligibility check before the new
+                // runtime publishes its initial recipe; remove it on any failed create.
                 OnStationAdded?.Invoke(id);
-                return station;
+                created = BuildStation(id, cfg);
+                var draft = created.Recipes.Draft(recipe, "template-deploy");
+                created.Recipes.Validate(draft.Id);
+                created.Recipes.Publish(draft.Id, created.Machine);
+                _stations.Add(id, created);
+                return created;
             }
             catch
             {
+                if (created is not null) created.Journal.DisposeAsync().AsTask().GetAwaiter().GetResult();
+                OnStationRemoved?.Invoke(id);
                 File.Delete(file);
                 if (Directory.Exists(dataDir)) Directory.Delete(dataDir, recursive: true);
                 throw;
@@ -175,6 +254,12 @@ public sealed class MultiStationRegistry
                 stations = _stations.Values.OrderBy(s => s.Id).Select(s => s.Overview()).ToArray() };
     }
     public object Resources() => _coordinator.Snapshot();
+    public async ValueTask DisposeAsync()
+    {
+        StationContext[] stations;
+        lock (_gate) stations = _stations.Values.ToArray();
+        foreach (var station in stations.DistinctBy(x => x.Journal)) await station.Journal.DisposeAsync().ConfigureAwait(false);
+    }
     public void Start(string stationId)
     {
         lock (_gate)

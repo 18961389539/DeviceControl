@@ -5,12 +5,18 @@ Release succeeds ONLY if offline regressions, Chromium smoke, .NET 10 build,
 contract runner and real HTTP tests all return exit code 0. Tests are bounded,
 independently logged and machine-readable. Without dotnet: no release approval.
 Does not connect to industrial hardware.
+
+Q07 status contract: a task's status comes from `classify_output` - an explicit
+`RESULT: PASS|FAIL|BLOCKED|SKIP` marker plus the exit code. Exit code 0 is NEVER
+sufficient by itself: an unexecuted task printing UNVERIFIED/SKIP, or carrying
+exit code 77 (BLOCKED), is refused for release instead of being counted as PASS.
 """
 import argparse
 import datetime as dt
 import hashlib
 import json
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -21,6 +27,38 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PY = sys.executable
 NODE = shutil.which('node') or 'node'
+
+# Q07: unified structured-status contract. A task may print `RESULT: PASS|FAIL|BLOCKED|SKIP`
+# as its final verdict line. Statuses are derived from the marker AND the exit code;
+# an unexecuted task (UNVERIFIED / SKIP / BLOCKED) can never be counted as PASS, and a
+# strict release is refused while any task is not PASS.
+RESULT_MARKER = re.compile(r'^RESULT:\s*(PASS|FAIL|BLOCKED|SKIP)\b(.*)$', re.MULTILINE)
+UNEXECUTED_HINT = re.compile(r'\b(UNVERIFIED|SKIP)\b|\bBLOCKED\b')
+
+def classify_output(text, returncode):
+    """Map a task's output plus exit code to PASS / FAIL / BLOCKED.
+
+    - exit code 77 is the project-wide BLOCKED convention;
+    - an explicit `RESULT:` marker wins (a PASS marker contradicted by a non-zero
+      exit code is treated as FAIL, never PASS);
+    - a zero exit code with an UNVERIFIED/SKIP/BLOCKED notice is BLOCKED, not PASS;
+    - everything else falls back to the exit code."""
+    text = text or ''
+    if returncode == 77:
+        return 'BLOCKED'
+    marker = None
+    for candidate in RESULT_MARKER.finditer(text):
+        marker = candidate  # last marker wins
+    if marker is not None:
+        status = 'BLOCKED' if marker.group(1) in ('BLOCKED', 'SKIP') else marker.group(1)
+        if status == 'PASS' and returncode != 0:
+            return 'FAIL'
+        return status
+    if returncode != 0:
+        return 'FAIL'
+    if UNEXECUTED_HINT.search(text):
+        return 'BLOCKED'
+    return 'PASS'
 
 def _terminate_tree(proc):
     """F11: a timeout must take the whole process tree down. `dotnet run` spawns a
@@ -47,7 +85,7 @@ def definitions(browser=True):
         'test_replay_v10.mjs', 'test_station_v11.mjs',
         'test_resources_v12.mjs', 'test_workspace_v13.mjs',
         'test_templates_v14.mjs', 'test_upgrade_rules_v15.mjs',
-        'test_recovery_v18.mjs'
+        'test_recovery_v18.mjs', 'test_api_client_v20.mjs', 'test_api_client_v21.mjs'
     ]
     py = [
         'test_recovery_sandbox_v19.py', 'test_recovery_v20.py',
@@ -59,13 +97,15 @@ def definitions(browser=True):
         'test_sqlite_migration_v09.py', 'test_sqlite_v10.py',
         'test_v20_recovery_contract.py'
     ]
-    tasks = [('offline:preview-build', [PY, 'tools/build_preview.py'], 60)]
+    tasks = [('offline:preview-build', [PY, 'tools/build_preview.py'], 60),
+             ('manifest:verify', [PY, 'tools/release_manifest.py', '--verify'], 60),
+             ('python:test_gate_classification.py', [PY, 'tests/test_gate_classification.py'], 30)]
     tasks += [('node:' + name, [NODE, 'tests/' + name], 50) for name in js]
     tasks += [('python:' + name, [PY, 'tests/' + name], 50) for name in py]
     if browser:
         tasks += [('browser:' + name, [PY, 'tests/' + name], 90) for name in (
             'test_browser_v19.py', 'test_browser_v18.py',
-            'test_browser_v17.py', 'test_browser_v16.py')]
+            'test_browser_v17.py', 'test_browser_v16.py', 'test_browser_v21.py')]
     return tasks
 
 def dotnet_tasks():
@@ -79,7 +119,9 @@ def dotnet_tasks():
             'test_api_v09.py', 'test_api_v10.py', 'test_api_v12.py',
             'test_api_v13.py', 'test_api_v14.py', 'test_api_v15.py',
             'test_api_v16.py', 'test_api_v17.py', 'test_api_v18.py',
-            'test_api_v19.py')]
+            'test_api_v19.py', 'test_api_v21.py', 'test_api_v22.py', 'test_api_v23.py',
+            'test_api_v24.py', 'test_api_v25.py', 'test_api_v26.py',
+            'test_api_v27.py', 'test_api_v28.py')]
     ]
 
 def execute(label, args, timeout, directory):
@@ -90,9 +132,10 @@ def execute(label, args, timeout, directory):
                             start_new_session=(os.name != 'nt'))
     try:
         out, err = proc.communicate(timeout=timeout)
-        status = 'PASS' if proc.returncode == 0 else 'FAIL'
         rc = proc.returncode
         out = (out or '') + ('\n[stderr]\n' + err if err else '')
+        # Q07: the exit code alone never decides; structured output decides.
+        status = classify_output(out, proc.returncode)
     except subprocess.TimeoutExpired:
         status, rc = 'TIMEOUT', None
         _terminate_tree(proc)
@@ -147,7 +190,7 @@ def main():
                                 'exitCode': None, 'seconds': 0, 'log': None, 'command': command})
     passed = sum(x['status']=='PASS' for x in results)
     failed = [x for x in results if x['status'] in ('FAIL','ERROR','TIMEOUT')]
-    blocked = [x for x in results if x['status']=='BLOCKED_NO_SDK']
+    blocked = [x for x in results if x['status'].startswith('BLOCKED')]
     complete = (args.profile=='release' and not args.no_browser and not failed
                 and not blocked and len(results)==len(suite)+len(dotnet_tasks()))
     root_files = [ROOT/'backend/DeviceControl.Api/Program.cs',

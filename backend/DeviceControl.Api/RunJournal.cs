@@ -1,16 +1,21 @@
 using System.Text.Json;
+using System.Threading.Channels;
 
 namespace DeviceControl.Api;
 
 // SQLite-backed simulation-only cycle journal. It is not certified or tamper-proof.
-public sealed class RunJournal
+public sealed class RunJournal : IAsyncDisposable
 {
     private readonly object _sync = new();
     private readonly string _path;
     private readonly string _eventsPath;
     private readonly SqliteStore _db;
+    private readonly Channel<RunEventEntry> _eventQueue = Channel.CreateBounded<RunEventEntry>(new BoundedChannelOptions(4096)
+    { SingleReader = true, SingleWriter = false, FullMode = BoundedChannelFullMode.Wait });
     private readonly List<CycleRecord> _cycles = new();
     private int _eventWriteFailures;
+    private Task _eventWriter = Task.CompletedTask;
+    private int _eventQueueCompleted;
     public int RecoveredInterruptions { get; }
     // F01: durable recovery gate, loaded once at construction and mutated only
     // through Raise/Clear below. A restart must never silently drop the requirement.
@@ -35,12 +40,25 @@ public sealed class RunJournal
         // F12: recent-cycle metadata only; node snapshots hydrate on demand.
         _cycles.AddRange(_db.Cycles(limit:100, withSnapshots:false).AsEnumerable().Reverse());
         if (_cycles.Count > 100) _cycles.RemoveRange(0, _cycles.Count - 100);
+        // Start the worker only after recovery and journal hydration succeeded.
+        _eventWriter = Task.Run(WriteEventsAsync);
     }
     public IReadOnlyList<CycleRecord> Recent()
     {
         lock (_sync) return _cycles.AsEnumerable().Reverse().ToArray();
     }
     public void BeginCycle(CycleStartRecord record) => _db.BeginCycle(record);
+    public string BeginManualAction(string action, string target, string? commandId = null)
+    {
+        var id = Guid.NewGuid().ToString("N");
+        _db.BeginManualAction(id, action, target, commandId);
+        return id;
+    }
+    public void CompleteManualAction(string id, bool succeeded, string? error)
+    {
+        _db.CompleteManualAction(id, succeeded, error);
+        lock (_sync) RecoveryState = _db.LoadRecoveryState();
+    }
     public void Append(CycleRecord record)
     {
         lock (_sync)
@@ -62,44 +80,93 @@ public sealed class RunJournal
     }
     /// <summary>F10: append-only run event log. Never throws into the runtime path;
     /// failures are counted and surfaced through the diagnostics endpoint.</summary>
-    public void AppendEvent(string level, string message, string? runId = null)
+    public void AppendEvent(string level, string message, string? runId = null, string? nodeId = null,
+        string? commandId = null, string? traceId = null, string? errorDetail = null)
     {
-        var line = JsonSerializer.Serialize(new RunEventEntry(DateTimeOffset.UtcNow.ToString("O"), level, message, runId));
-        lock (_sync)
+        var row = new RunEventEntry(DateTimeOffset.UtcNow.ToString("O"), level, message, runId, nodeId, commandId, traceId, errorDetail);
+        if (!_eventQueue.Writer.TryWrite(row))
         {
-            try
-            {
-                File.AppendAllText(_eventsPath, line + "\n");
-                var info = new FileInfo(_eventsPath);
-                if (info.Length > 8 * 1024 * 1024) TrimEventLog();
-            }
-            catch (IOException) { _eventWriteFailures++; }
+            lock (_sync) _eventWriteFailures++;
         }
     }
     public int EventWriteFailures { get { lock (_sync) return _eventWriteFailures; } }
-    private void TrimEventLog()
+    /// <summary>R03: run events for one command ID, read from the durable event log so
+    /// a write whose HTTP response was lost can still be reconciled. Diagnostic
+    /// reads only; never replays or re-executes anything.</summary>
+    public IReadOnlyList<RunEventEntry> EventsForCommand(string? commandId, int limit = 100)
     {
-        // Keep the most recent ~1MB; retention is a local diagnostic aid, not an audit ledger.
-        var bytes = File.ReadAllBytes(_eventsPath);
-        if (bytes.Length <= 1024 * 1024) return;
-        var start = bytes.Length - 1024 * 1024;
-        while (start < bytes.Length && bytes[start] != (byte)'\n') start++;
-        File.WriteAllBytes(_eventsPath, bytes[(start + 1)..]);
+        if (string.IsNullOrWhiteSpace(commandId) || !File.Exists(_eventsPath))
+            return Array.Empty<RunEventEntry>();
+        var matches = new List<RunEventEntry>();
+        foreach (var line in File.ReadLines(_eventsPath))
+        {
+            try
+            {
+                var row = JsonSerializer.Deserialize<RunEventEntry>(line);
+                if (row is not null && string.Equals(row.CommandId, commandId, StringComparison.Ordinal))
+                    matches.Add(row);
+            }
+            catch (JsonException) { /* tolerate a truncated final record */ }
+        }
+        if (matches.Count > limit) return matches.Skip(matches.Count - limit).ToArray();
+        return matches;
+    }
+    public async ValueTask FlushEventsAsync()
+    {
+        if (Interlocked.Exchange(ref _eventQueueCompleted, 1) == 0) _eventQueue.Writer.TryComplete();
+        await _eventWriter.ConfigureAwait(false);
+    }
+    public ValueTask DisposeAsync() => FlushEventsAsync();
+    private async Task WriteEventsAsync()
+    {
+        await foreach (var row in _eventQueue.Reader.ReadAllAsync())
+        {
+            try
+            {
+                File.AppendAllText(_eventsPath, JsonSerializer.Serialize(row) + "\n");
+                if (new FileInfo(_eventsPath).Length > 8 * 1024 * 1024) RotateEventLog();
+            }
+            catch (IOException) { lock (_sync) _eventWriteFailures++; }
+            catch (UnauthorizedAccessException) { lock (_sync) _eventWriteFailures++; }
+        }
+    }
+    private void RotateEventLog()
+    {
+        const int keepBytes=1024*1024;
+        var temp=_eventsPath+"."+Guid.NewGuid().ToString("N")+".tmp";
+        try
+        {
+            using (var input=new FileStream(_eventsPath,FileMode.Open,FileAccess.Read,FileShare.ReadWrite))
+            {
+                var start=Math.Max(0,input.Length-keepBytes); input.Position=start;
+                if(start>0){while(input.Position<input.Length&&input.ReadByte()!='\n'){} }
+                using var output=new FileStream(temp,FileMode.CreateNew,FileAccess.Write,FileShare.None);
+                input.CopyTo(output); output.Flush(true);
+            }
+            File.Move(temp,_eventsPath,true);
+        }
+        finally { if(File.Exists(temp))File.Delete(temp); }
     }
 }
 
 public sealed record RecoveryStateRecord(bool Required, string Reason, string? RunId, string? Action,
     string? RaisedUtc, string? AcknowledgedBy, string? AcknowledgedUtc);
-public sealed record RunEventEntry(string TimeUtc, string Level, string Message, string? RunId);
+public sealed record RunEventEntry(string TimeUtc, string Level, string Message, string? RunId,
+    string? NodeId = null, string? CommandId = null, string? TraceId = null, string? ErrorDetail = null);
 
 public record StepRecord(int Index, string Label, string Type, string Device,
     string Outcome, long DurationMs, string? Error);
 public record CycleRecord(string Id, string StartedAt, string EndedAt, string Outcome,
     long DurationMs, IReadOnlyList<StepRecord> Steps, string? Reason, string? RecipeId = null, string? FlowVersion = null,
     IReadOnlyList<FlowTrace>? Trace = null,
-    IReadOnlyList<NodeVariableSnapshot>? Snapshots = null);
+    IReadOnlyList<NodeVariableSnapshot>? Snapshots = null,
+    string? CommandId = null);
 
-public sealed record CycleStartRecord(string Id, string StartedAt, string? RecipeId, string? FlowVersion);
+public sealed record CycleStartRecord(string Id, string StartedAt, string? RecipeId, string? FlowVersion,
+    string? CommandId = null);
+/// <summary>R03: unresolved manual-action intent as stored in SQLite.</summary>
+public sealed record ManualIntentView(string Id, string Action, string Target, string StartedUtc,
+    string? CompletedUtc, string? Outcome, string? Error);
 public sealed record NodeVariableSnapshot(int Ordinal, string NodeId, string CapturedUtc,
     IReadOnlyDictionary<string,bool> Inputs,
     IReadOnlyDictionary<string,AxisStatus> Axes,

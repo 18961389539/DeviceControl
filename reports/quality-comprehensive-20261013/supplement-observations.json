@@ -1,0 +1,280 @@
+[
+  {
+    "name": "operator_pause_resource_hold",
+    "bFlowStatus": "Paused",
+    "bWaiting": {
+      "kind": "error",
+      "index": 0,
+      "message": "视觉 NG: 未检测到产品"
+    },
+    "resourceSnapshot": {
+      "policy": "AtomicFIFO",
+      "mode": "Simulation",
+      "safetyRated": false,
+      "leases": [
+        {
+          "resource": "CELL-SHARED",
+          "stationId": "B",
+          "nodeId": "vision-wait",
+          "ticket": "1252b5f214",
+          "since": "2026-10-13T14:02:45.3084270+00:00"
+        }
+      ],
+      "queue": [],
+      "events": [
+        {
+          "at": "2026-10-13T14:02:45.3085889+00:00",
+          "action": "queued",
+          "stationId": "B",
+          "nodeId": "vision-wait",
+          "ticket": "1252b5f214",
+          "resources": [
+            "CELL-SHARED"
+          ]
+        },
+        {
+          "at": "2026-10-13T14:02:45.3088881+00:00",
+          "action": "granted",
+          "stationId": "B",
+          "nodeId": "vision-wait",
+          "ticket": "1252b5f214",
+          "resources": [
+            "CELL-SHARED"
+          ]
+        }
+      ]
+    },
+    "aVisionStatus": 409,
+    "aVisionBody": {
+      "ok": false,
+      "error": "资源等待超时：CELL-SHARED"
+    },
+    "aWaitSeconds": 2.534,
+    "aState": "Fault",
+    "aRecoveryRequired": true
+  },
+  {
+    "name": "operator_stop_resource_release",
+    "resourcesAfterStop": {
+      "policy": "AtomicFIFO",
+      "mode": "Simulation",
+      "safetyRated": false,
+      "leases": [],
+      "queue": [],
+      "events": [
+        {
+          "at": "2026-10-13T14:02:45.3085889+00:00",
+          "action": "queued",
+          "stationId": "B",
+          "nodeId": "vision-wait",
+          "ticket": "1252b5f214",
+          "resources": [
+            "CELL-SHARED"
+          ]
+        },
+        {
+          "at": "2026-10-13T14:02:45.3088881+00:00",
+          "action": "granted",
+          "stationId": "B",
+          "nodeId": "vision-wait",
+          "ticket": "1252b5f214",
+          "resources": [
+            "CELL-SHARED"
+          ]
+        },
+        {
+          "at": "2026-10-13T14:02:45.6587888+00:00",
+          "action": "queued",
+          "stationId": "A",
+          "nodeId": "manual-vision",
+          "ticket": "e9da57c890",
+          "resources": [
+            "CELL-SHARED"
+          ]
+        },
+        {
+          "at": "2026-10-13T14:02:48.1737939+00:00",
+          "action": "timed-out",
+          "stationId": "A",
+          "nodeId": "manual-vision",
+          "ticket": "e9da57c890",
+          "resources": [
+            "CELL-SHARED"
+          ]
+        },
+        {
+          "at": "2026-10-13T14:02:48.2047926+00:00",
+          "action": "released",
+          "stationId": "B",
+          "nodeId": "vision-wait",
+          "ticket": "1252b5f214",
+          "resources": [
+            "CELL-SHARED"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "short_snapshot_latency_sample",
+    "requests": 160,
+    "clients": 8,
+    "stations": 2,
+    "p95Ms": 4.1,
+    "p99Ms": 4.57,
+    "maxMs": 5.49,
+    "requestsPerSecond": 2050.5,
+    "statusCounts": {
+      "200": 160
+    },
+    "scope": "Settled simulations, short snapshot HTTP only; not production throughput or soak acceptance"
+  },
+  {
+    "name": "manifest_provenance",
+    "matched": 76,
+    "missing": [
+      "DeviceControl_V0.7_Preview.html",
+      "DeviceControl_V0.8_Performance.png",
+      "DeviceControl_V0.8_Preview.html",
+      "DeviceControl_V0.8_Quality.png",
+      "DeviceControl_V0.8_Regression_Replay.png",
+      "DeviceControl_V0.8_Regression_Studio06.png",
+      "DeviceControl_V0.8_Regression_Studio07.png",
+      "DeviceControl_V0.9_Preview.html",
+      "DeviceControl_V0.9_Quality.png",
+      "DeviceControl_V1.0_Preview.html",
+      "DeviceControl_V1.0_Quality.png",
+      "DeviceControl_V1.1_Preview.html",
+      "DeviceControl_V1.1_Stations.png",
+      "DeviceControl_V1.2_Preview.html",
+      "DeviceControl_V1.2_Stations.png",
+      "DeviceControl_V1.3_Preview.html",
+      "DeviceControl_V1.3_Workspace.png",
+      "DeviceControl_V1.4_Preview.html",
+      "DeviceControl_V1.4_Templates.png",
+      "DeviceControl_V1.5_Preview.html",
+      "DeviceControl_V1.5_TestResults.txt",
+      "DeviceControl_V1.5_Upgrades.png",
+      "DeviceControl_V1.6_CompatUpgrades.png",
+      "DeviceControl_V1.6_Preview.html",
+      "DeviceControl_V1.6_TestResults.txt",
+      "DeviceControl_V1.7_Preview.html",
+      "DeviceControl_V1.7_TestResults.txt",
+      "DeviceControl_V1.8_Maintenance_Compat.png",
+      "DeviceControl_V1.8_Preview.html",
+      "DeviceControl_V1.8_TestResults.txt",
+      "DeviceControl_V1.9_Preview.html",
+      "DeviceControl_V1.9_TestResults.txt",
+      "DeviceControl_V2.0_Preview.html",
+      "DeviceControl_V2.0_Preview.png",
+      "test_core.log",
+      "tests/V18_legacy_regression.log",
+      "tools/patch_backend_v05.py",
+      "tools/patch_front_v05.py",
+      "tools/patch_mock_v05.py",
+      "tools/upgrade_v05.py"
+    ],
+    "mismatched": [
+      ".github/workflows/software-check.yml",
+      ".gitignore",
+      "DeviceControl_V1.6_Rollout.png",
+      "DeviceControl_V1.7_Maintenance.png",
+      "DeviceControl_V1.8_Recovery.png",
+      "DeviceControl_V1.9_Sandbox.png",
+      "README.md",
+      "backend/DeviceControl.Api/DeviceControl.Api.csproj",
+      "backend/DeviceControl.Api/DeviceRuntime.cs",
+      "backend/DeviceControl.Api/FleetRolloutManager.cs",
+      "backend/DeviceControl.Api/Governance.cs",
+      "backend/DeviceControl.Api/MultiStationRegistry.cs",
+      "backend/DeviceControl.Api/Program.cs",
+      "backend/DeviceControl.Api/RunJournal.cs",
+      "backend/DeviceControl.Api/SimHardware.cs",
+      "backend/DeviceControl.Api/SqliteStore.cs",
+      "backend/DeviceControl.Api/StationTemplateCatalog.cs",
+      "backend/DeviceControl.Api/StationUpgradeManager.cs",
+      "backend/DeviceControl.ContractTests/Program.cs",
+      "frontend/app.js",
+      "frontend/deployment-sandbox-ui.js",
+      "frontend/fleet-rollout-studio.js",
+      "frontend/flow-editor.js",
+      "frontend/index.html",
+      "frontend/station-console.js",
+      "frontend/station-data.js",
+      "frontend/station-template-studio.js",
+      "frontend/station-upgrade-studio.js",
+      "tests/test_api_v09.py",
+      "tests/test_api_v10.py",
+      "tests/test_api_v11.py",
+      "tests/test_api_v12.py",
+      "tests/test_api_v13.py",
+      "tests/test_api_v14.py",
+      "tests/test_api_v15.py",
+      "tests/test_api_v16.py",
+      "tests/test_api_v17.py",
+      "tests/test_api_v18.py",
+      "tests/test_api_v19.py",
+      "tests/test_browser.py",
+      "tests/test_browser_v05.py",
+      "tests/test_browser_v06.py",
+      "tests/test_browser_v07.py",
+      "tests/test_browser_v08.py",
+      "tests/test_browser_v09.py",
+      "tests/test_browser_v10.py",
+      "tests/test_browser_v11.py",
+      "tests/test_browser_v12.py",
+      "tests/test_browser_v13.py",
+      "tests/test_browser_v14.py",
+      "tests/test_browser_v15.py",
+      "tests/test_browser_v15_latest.py",
+      "tests/test_browser_v16.py",
+      "tests/test_browser_v16_conflict.py",
+      "tests/test_browser_v17.py",
+      "tests/test_browser_v17_compat_v15_latest.py",
+      "tests/test_browser_v17_compat_v16.py",
+      "tests/test_browser_v17_compat_v16_conflict.py",
+      "tests/test_browser_v18.py",
+      "tests/test_browser_v18_compat_v16.py",
+      "tests/test_browser_v18_compat_v17.py",
+      "tests/test_browser_v19.py",
+      "tests/test_recovery_sandbox_v19.py",
+      "tests/test_recovery_v18_static.py",
+      "tests/test_recovery_v19_static.py",
+      "tests/test_recovery_v20.py",
+      "tests/test_rollout_files_v16.py",
+      "tests/test_rollout_v17_static.py",
+      "tests/test_sqlite_migration_v08.py",
+      "tests/test_sqlite_migration_v09.py",
+      "tests/test_sqlite_schema.py",
+      "tests/test_sqlite_v10.py",
+      "tests/test_station_files_v11.py",
+      "tests/test_station_files_v12.py",
+      "tests/test_template_files_v14.py",
+      "tests/test_upgrade_files_v15.py",
+      "tests/test_v20_recovery_contract.py",
+      "tools/build_preview.py",
+      "tools/release_gate_v20.py",
+      "tools/sqlite_check_backup.py"
+    ],
+    "releaseStatus": {
+      "version": "2.0-rc",
+      "releaseApproved": false,
+      "fullReleaseGateExecuted": false,
+      "dotnetSdkAvailable": false,
+      "reason": "C# build, contract and HTTP integration gates are not runnable in this environment",
+      "passedEvidence": [
+        "Node 13 sampled test runs",
+        "SQLite 5 standalone suites",
+        "V2.0 sandbox provenance regression",
+        "V1.9/1.8/1.7/1.6 browser regressions"
+      ],
+      "blockedGates": [
+        "dotnet build",
+        "dotnet contract runner",
+        "real HTTP integration",
+        "real restart persistence"
+      ],
+      "note": "Full release gate must run under CI with SDK 10; do not treat offline diagnostics as release approval."
+    }
+  }
+]

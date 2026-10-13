@@ -17,7 +17,7 @@ if any(c.get('driver') != 'Simulation' for c in (config, config_b)):
 html = (FRONT / 'index.html').read_text(encoding='utf-8')
 html = html.replace('<link rel="stylesheet" href="./styles.css">',
                     '<style>\n' + (FRONT / 'styles.css').read_text(encoding='utf-8') + '\n</style>')
-for filename in ['station-data.js', 'station-workspace.js', 'shared-resource-coordinator.js', 'workflow-engine.js', 'mock-runtime.js', 'workflow-studio.js', 'governance-mock.js', 'workflow-edit-history.js', 'workflow-replay.js', 'workflow-quality.js', 'workflow-quality-ui.js', 'flow-editor.js', 'station-console.js', 'station-template-studio.js', 'station-upgrade-studio.js', 'deployment-recovery.js', 'fleet-rollout-studio.js', 'deployment-sandbox-ui.js', 'app.js']:
+for filename in ['station-data.js', 'api-client.js', 'station-workspace.js', 'shared-resource-coordinator.js', 'workflow-engine.js', 'mock-runtime.js', 'workflow-studio.js', 'governance-mock.js', 'workflow-edit-history.js', 'workflow-replay.js', 'workflow-quality.js', 'workflow-quality-ui.js', 'flow-editor.js', 'station-console.js', 'station-template-studio.js', 'station-upgrade-studio.js', 'deployment-recovery.js', 'fleet-rollout-studio.js', 'deployment-sandbox-ui.js', 'app.js']:
     html = html.replace(f'<script src="./{filename}"></script>',
                         '<script>\n' + (FRONT / filename).read_text(encoding='utf-8') + '\n</script>')
 out = ROOT / 'tests'/'fixtures'/'DeviceControl_V1.9_Preview.html'

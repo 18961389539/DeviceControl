@@ -24,6 +24,10 @@ public sealed class FlowEngine
     private string _status = "Idle";
     private bool _pauseRequested, _stepMode;
     private Func<string,CancellationToken,Task<bool>> _condition = (_,_) => Task.FromResult(false);
+    // Q05: ordinary-condition watchdog invoked while the flow waits on a pause /
+    // operator gate or on a shared-resource acquisition. A condition loss during
+    // those waits is latched into a cycle fault - never a silent resume.
+    private Func<SequenceStep?,CancellationToken,Task>? _pauseMonitor;
 
     public FlowEngine(StationConfig config) : this(config.Sequence,config.FlowVersion) {}
     public FlowEngine(IReadOnlyList<SequenceStep> sequence,string version)
@@ -108,7 +112,7 @@ public sealed class FlowEngine
     {
         lock (_sync) if (_gate != null) ReleaseGate("abort");
     }
-    private async Task<string> PauseAsync(string kind, int index, string message, CancellationToken ct)
+    private async Task<string> PauseAsync(string kind, int index, SequenceStep? node, string message, CancellationToken ct)
     {
         Task<string> waiting;
         lock (_sync)
@@ -119,7 +123,32 @@ public sealed class FlowEngine
             _gate = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
             waiting = _gate.Task;
         }
-        return await waiting.WaitAsync(ct);
+        // Q05: a pause is still part of the cycle lifecycle. The same ordinary-condition
+        // watchdog that covers long steps keeps running here; a guard/air loss while
+        // paused (even a transient one that is restored before the operator resumes)
+        // is latched and surfaced as a cycle fault with recovery required.
+        while (true)
+        {
+            var tick = Task.Delay(40, ct);
+            var done = await Task.WhenAny(waiting, tick);
+            if (done == waiting) return await waiting;
+            await tick;
+            if (_pauseMonitor is not null) await _pauseMonitor(node, ct);
+        }
+    }
+    /// <summary>Q05: wait for an asynchronous acquisition while the watchdog keeps
+    /// running, so a condition loss during a resource wait cancels the step instead
+    /// of being discovered only after the wait unblocks.</summary>
+    private async Task<T> WaitMonitoredAsync<T>(Task<T> waiting, SequenceStep node, CancellationToken ct)
+    {
+        while (true)
+        {
+            var tick = Task.Delay(40, ct);
+            var done = await Task.WhenAny(waiting, tick);
+            if (done == waiting) return await waiting;
+            await tick;
+            if (_pauseMonitor is not null) await _pauseMonitor(node, ct);
+        }
     }
     private async Task BoundaryAsync(int index, SequenceStep node, CancellationToken ct)
     {
@@ -130,7 +159,7 @@ public sealed class FlowEngine
             if (stop) { _stepMode = false; _pauseRequested = false; }
         }
         if (!stop) return;
-        var outcome = await PauseAsync("breakpoint", index, node.Label, ct);
+        var outcome = await PauseAsync("breakpoint", index, node, node.Label, ct);
         if (outcome != "continue") throw new OperationCanceledException(ct);
     }
     private async Task ExecuteNodeAsync(SequenceStep node, int index, string? parent,
@@ -166,11 +195,31 @@ public sealed class FlowEngine
                     var keys = Resources(node);
                     var acquired = new List<(string, SemaphoreSlim)>();
                     SharedResourceCoordinator.Lease? sharedLease = null;
+                    // Q06: idempotent release. Called BEFORE an operator wait so an
+                    // unbounded human decision never holds machine resources, and
+                    // again in finally for every other exit path.
+                    void ReleaseAcquired()
+                    {
+                        foreach (var (key, sem) in acquired.AsEnumerable().Reverse())
+                        { lock (_sync) _owners.Remove(key); sem.Release(); }
+                        acquired.Clear();
+                        var lease = sharedLease; sharedLease = null; lease?.Dispose();
+                    }
                     try
                     {
                         var sharedKeys = SharedResourceCoordinator.KeysFor(node);
                         if (_shared != null && sharedKeys.Length > 0)
-                            sharedLease = await _shared.AcquireAsync(_stationId,node.Id,sharedKeys,node.ResourceWaitTimeoutMs,ct);
+                        {
+                            using var waitCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                            try
+                            {
+                                // Q05: the acquisition wait is monitored too; a guard loss
+                                // while waiting cancels the pending request immediately.
+                                sharedLease = await WaitMonitoredAsync(
+                                    _shared.AcquireAsync(_stationId,node.Id,sharedKeys,node.ResourceWaitTimeoutMs,waitCts.Token), node, waitCts.Token);
+                            }
+                            catch { waitCts.Cancel(); throw; }
+                        }
                         foreach (var key in keys)
                         {
                             var mutex = _mutexes.GetOrAdd(key, _ => new SemaphoreSlim(1,1));
@@ -186,18 +235,18 @@ public sealed class FlowEngine
                         if (node.OnError == "Retry" && attempt <= node.MaxRetries) continue;
                         if (node.OnError == "WaitForOperator")
                         {
-                            var decision = await PauseAsync("error", index, ex.Message, ct);
+                            // Q06: release the machine resources BEFORE the operator gate.
+                            // The failed attempt is finished; retry re-acquires them with
+                            // the node's configured wait timeout. Holding the lease across
+                            // an unbounded human wait dragged other stations into faults.
+                            ReleaseAcquired();
+                            var decision = await PauseAsync("error", index, node, ex.Message, ct);
                             if (decision == "retry") continue;
                             throw new OperationCanceledException(ct);
                         }
                         throw;
                     }
-                    finally
-                    {
-                        foreach (var (key, sem) in acquired.AsEnumerable().Reverse())
-                        { lock (_sync) _owners.Remove(key); sem.Release(); }
-                        sharedLease?.Dispose();
-                    }
+                    finally { ReleaseAcquired(); }
                 }
             }
         }
@@ -221,11 +270,13 @@ public sealed class FlowEngine
     public async Task RunAsync(Func<SequenceStep,CancellationToken,Task> execute,
         Action<int,SequenceStep,string,long,string?,int> complete,
         Action<int,SequenceStep> started, CancellationToken ct,
-        Func<string,CancellationToken,Task<bool>>? condition=null)
+        Func<string,CancellationToken,Task<bool>>? condition=null,
+        Func<SequenceStep?,CancellationToken,Task>? pauseMonitor=null)
     {
         lock (_sync)
         {
             _condition=condition??((_,_)=>Task.FromResult(false));
+            _pauseMonitor=pauseMonitor;
             _status = "Running"; _active.Clear(); _traces.Clear(); _owners.Clear();
             _pauseRequested = false; _stepMode = false;
         }

@@ -314,7 +314,8 @@
             <button class="btn btn-light" data-governance="rollback">回滚到选中</button>
           </div><div class="divider"></div><h2>与当前版本差异</h2><div id="recipeDiff" class="recipe-details"></div></div>
         </div>
-        <div class="card" style="margin-top:18px"><div class="card-head"><div><h2>操作审计记录</h2><p>后端包含操作人、角色、路径、结果码与 TraceId；不记录密码与令牌</p></div><div class="btn-row" style="margin-top:0"><button class="btn btn-light" data-governance="audit-refresh">刷新</button><button class="btn btn-light" data-governance="audit-export">导出 CSV</button></div></div>
+        <div class="card" style="margin-top:18px"><div class="card-head"><div><h2>操作审计记录</h2><p>后端包含操作人、角色、路径、结果码与 TraceId；不记录密码与令牌</p></div><div class="btn-row" style="margin-top:0"><button class="btn btn-light" data-governance="command-lookup">命令查询</button><button class="btn btn-light" data-governance="audit-refresh">刷新</button><button class="btn btn-light" data-governance="audit-export">导出 CSV</button></div></div>
+          <div id="commandLookup" class="control-hint" style="display:none;margin-bottom:8px"></div>
           <div class="audit-scroll"><table class="audit-table"><thead><tr><th>时间</th><th>用户 / 角色</th><th>命令</th><th>结果</th><th>TraceId</th></tr></thead><tbody id="auditRows"></tbody></table></div>
           <div class="audit-pages"><span id="auditMeta">—</span><div><button class="btn btn-light" data-governance="audit-prev">上一页</button><button class="btn btn-light" data-governance="audit-next">下一页</button></div></div>
         </div>
@@ -329,6 +330,7 @@
   </main>
 </div>
 <script src="./station-data.js"></script>
+<script src="./api-client.js"></script>
 <script src="./station-workspace.js"></script>
 <script src="./shared-resource-coordinator.js"></script>
 <script src="./workflow-engine.js"></script>

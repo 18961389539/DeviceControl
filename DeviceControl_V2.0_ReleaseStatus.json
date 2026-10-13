@@ -1,20 +1,29 @@
 {
   "version": "2.0-rc",
+  "generatedAtUtc": "2026-10-13T15:07:50.518453+00:00",
   "releaseApproved": false,
-  "fullReleaseGateExecuted": false,
-  "dotnetSdkAvailable": false,
-  "reason": "C# build, contract and HTTP integration gates are not runnable in this environment",
-  "passedEvidence": [
-    "Node 13 sampled test runs",
-    "SQLite 5 standalone suites",
-    "V2.0 sandbox provenance regression",
-    "V1.9/1.8/1.7/1.6 browser regressions"
-  ],
-  "blockedGates": [
-    "dotnet build",
-    "dotnet contract runner",
-    "real HTTP integration",
-    "real restart persistence"
-  ],
-  "note": "Full release gate must run under CI with SDK 10; do not treat offline diagnostics as release approval."
+  "fullReleaseGateExecuted": true,
+  "dotnetSdkAvailable": true,
+  "sourceRevision": {
+    "gitHead": "ed1aa9f1a5f41bc0d18be5e340d2672facbda45c",
+    "workingTreeDirty": true,
+    "worktreeDigest": "c9d39d6c9f46f5e957165c40b9ec582518dd42960fe65c561ba78b4c6645dea7"
+  },
+  "manifest": {
+    "file": "MANIFEST_SHA256.txt",
+    "sha256": "e318ed6a5e4dd766c937157731c343d98e9d16ad09672a88a578affe2818b244",
+    "entries": 165
+  },
+  "gateEvidence": {
+    "path": "reports\\quality-fix-q01q08-20261013\\gate\\release-gate.json",
+    "profile": "release",
+    "passed": 58,
+    "failed": 0,
+    "blocked": 1,
+    "dotnetPresent": true,
+    "startedUtc": "2026-10-13T15:03:54.879215+00:00",
+    "finishedUtc": "2026-10-13T15:07:38.544004+00:00"
+  },
+  "reason": "release NOT approved: 0 failed / 1 blocked task(s) under the strict Q07 status contract",
+  "note": "Software-only simulation. Status is bound to the revision, manifest digest and gate evidence above; any source change invalidates it until regenerated."
 }

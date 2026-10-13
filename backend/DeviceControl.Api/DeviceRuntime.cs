@@ -25,6 +25,9 @@ public sealed class DeviceRuntime : ISequenceRuntime
     private readonly List<NodeVariableSnapshot> _currentSnapshots = new();
     private AlarmDetail? _activeAlarm;
     private string _cycleId = "";
+    private string _commandId = "";
+    private string? _traceId;
+    private string? _currentNodeId;
     private DateTimeOffset _cycleStarted;
     private System.Diagnostics.Stopwatch? _cycleTimer;
     private readonly StationConfig _config;
@@ -39,6 +42,7 @@ public sealed class DeviceRuntime : ISequenceRuntime
     private int _cycles, _stepIndex = -1;
     private bool _busy, _recoveryRequired;
     private readonly RunEligibilityRegistry? _eligibility;
+    private string? _recoveryDeploymentContext;
     private VisionResult? _vision;
     private CancellationTokenSource? _cycleCts;
 
@@ -57,8 +61,9 @@ public sealed class DeviceRuntime : ISequenceRuntime
         var persisted = journal.RecoveryState;
         if (journal.RecoveredInterruptions > 0)
         {
-            EnterRecoveryRequired($"上次软件退出时有 {journal.RecoveredInterruptions} 个未完成周期；已标记 Interrupted",
-                null, "StartupInterruptedCycles");
+            // SqliteStore.RecoverInterruptedCycles committed Interrupted rows, the
+            // recovery gate, and inflight cleanup in one transaction before this point.
+            _recoveryRequired = true;
             _step = "检测到进程中断的未完成仿真周期，必须人工恢复";
             Log("Warning", $"上次软件退出时有 {journal.RecoveredInterruptions} 个未完成周期；已标记 Interrupted");
         }
@@ -103,7 +108,7 @@ public sealed class DeviceRuntime : ISequenceRuntime
             if (mode == "Auto")
             {
                 // F04: an unresolved deployment (or broken eligibility check) blocks Auto.
-                var blocked = _eligibility?.BlockingReason(_stationId);
+                var blocked = _eligibility?.BlockingReason(_stationId, _recoveryDeploymentContext);
                 if (blocked != null) throw new InvalidOperationException(blocked);
             }
             _mode = mode; _step = "等待操作"; _stepIndex = -1;
@@ -162,6 +167,9 @@ public sealed class DeviceRuntime : ISequenceRuntime
     private async Task ManualAsync(string description, string actionType, string id,
         Func<CancellationToken, Task> action)
     {
+        string intentId;
+        var completionUnknown = false;
+        string? finalStepOverride = null;
         lock (_sync)
         {
             RequireIdle();
@@ -169,27 +177,68 @@ public sealed class DeviceRuntime : ISequenceRuntime
             _interlocks.Check(actionType, id);
             _busy = true; _step = description; _stepIndex = -1;
             Log("Info", "开始 " + description);
+            // The durable intent must exist before any device-facing operation begins.
+            try { intentId = _journal.BeginManualAction(actionType, id, CommandCorrelation.Current); }
+            catch (Exception ex)
+            {
+                _busy = false; _step = "恢复状态不可写，拒绝手动动作"; _recoveryRequired = true;
+                try { _journal.RaiseRecoveryRequired("手动动作意图拒写；未开始执行", null, actionType); }
+                catch { /* process remains fail-closed; durable intent could not be written */ }
+                throw new InvalidOperationException("手动动作意图无法持久化，已拒绝执行", ex);
+            }
+            _commandId = CommandCorrelation.Current ?? intentId;
+            _traceId = System.Diagnostics.Activity.Current?.TraceId.ToString();
         }
         try
         {
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             await action(timeout.Token);
+            try { _journal.CompleteManualAction(intentId, true, null); }
+            catch (Exception ex)
+            {
+                completionUnknown = true;
+                lock (_sync) { _recoveryRequired = true; _state = "Fault"; _alarm = "手动动作已执行，但结果无法持久化；需人工核查"; }
+                throw new InvalidOperationException("手动动作执行后无法持久化完成结果；意图保留并需人工核查", ex);
+            }
             Log("Info", "完成 " + description);
         }
         catch (Exception e)
         {
             lock (_sync)
             {
-                _state = "Fault"; _alarm = e.Message; _activeAlarm = FaultCatalog.From(e, description);
-                EnterRecoveryRequired("手动动作失败：" + e.Message, null, actionType);
-                InvalidateAllAxes();
-                Log("Error", description + " 失败: " + e.Message);
+                // Q06: a shared-resource contention timeout happens BEFORE any device
+                // action or motion started. It is rejected with a conflict but does not
+                // invalidate axis homing or require mechanism recovery - nothing moved.
+                var preActionContention = e is SharedResourceTimeoutException;
+                if (!preActionContention)
+                {
+                    _state = "Fault"; _alarm = e.Message; _activeAlarm = FaultCatalog.From(e, description);
+                    _recoveryRequired = true;
+                    InvalidateAllAxes();
+                }
+                else
+                {
+                    _state = "Idle"; _step = "共享资源被占用，未开始任何动作";
+                    finalStepOverride = _step;
+                }
+                if (!completionUnknown)
+                {
+                    try { _journal.CompleteManualAction(intentId, false, e.ToString()); }
+                    catch (Exception persistError)
+                    { Log("Error", "手动故障与恢复状态提交失败；未完成意图保留：" + persistError.Message); }
+                }
+                Log("Error", description + " 失败: " + e.Message, e);
             }
             throw;
         }
         finally
         {
-            lock (_sync) { _busy = false; _step = _state == "Fault" ? "故障待处理" : "等待操作"; }
+            lock (_sync)
+            {
+                _busy = false;
+                _step = _state == "Fault" ? "故障待处理" : finalStepOverride ?? "等待操作";
+                _commandId = ""; _traceId = null; _currentNodeId = null;
+            }
         }
     }
 
@@ -215,13 +264,15 @@ public sealed class DeviceRuntime : ISequenceRuntime
             _state = "Running"; _step = "准备开始"; _stepIndex = -1;
             _busy = true; _alarm = null; _activeAlarm = null; _vision = null;
             _currentSteps.Clear(); _currentSnapshots.Clear(); _cycleId = Guid.NewGuid().ToString("N")[..12];
+            _commandId = CommandCorrelation.Current ?? "cmd-" + Guid.NewGuid().ToString("N")[..12];
+            _traceId = System.Diagnostics.Activity.Current?.TraceId.ToString(); _currentNodeId = null;
             _cycleRecipe = _recipes.Active;
             _cycleFlowVersion=_config.FlowVersion;
             _cycleStarted = DateTimeOffset.UtcNow; _cycleTimer = System.Diagnostics.Stopwatch.StartNew();
             // Persist the in-flight marker before execution becomes visible to the caller.
             // An unexpected process exit will be recovered as Interrupted, never Completed.
             try { _journal.BeginCycle(new CycleStartRecord(_cycleId, _cycleStarted.ToString("O"),
-                _cycleRecipe?.Id, _cycleFlowVersion)); }
+                _cycleRecipe?.Id, _cycleFlowVersion, _commandId)); }
             catch { _state = "Idle"; _busy = false;
                 EnterRecoveryRequired("周期启动标记持久化失败", _cycleId, "BeginCycle"); throw; }
             _cycleCts = new CancellationTokenSource();
@@ -253,12 +304,23 @@ public sealed class DeviceRuntime : ISequenceRuntime
                     lock (_sync)
                     {
                         if (_state != "Running") throw new OperationCanceledException(ct);
-                        _stepIndex = i; _step = step.Label;
+                        _stepIndex = i; _step = step.Label; _currentNodeId = step.Id;
                         Log("Info", "流程步骤: " + _step);
                     }
-                }, ct, (signal,token)=>Task.FromResult(_io.ReadInput(signal)));
+                }, ct, (signal,token)=>Task.FromResult(_io.ReadInput(signal)),
+                // Q05: the same ordinary-condition watchdog keeps covering pause waits
+                // (breakpoint gates, operator gates, resource acquisition) - a guard
+                // loss while paused is latched into a cycle fault, not a silent resume.
+                (node, token) => { _interlocks.Check(node?.Type ?? "Sequence", node?.Device ?? "Station"); return Task.CompletedTask; });
+            // R02: never commit Completed without re-validating the cycle boundary.
+            // A guard/air-pressure loss during the final step's tail — or between the
+            // last node and this point — must surface as a failure with recovery
+            // required, never as a fabricated success. Mirrors the Sequence entry check.
+            ct.ThrowIfCancellationRequested();
+            _interlocks.Check("Sequence", "Station");
             lock (_sync)
             {
+                if (_state != "Running") throw new OperationCanceledException(ct);
                 _cycles++; _state = "Idle"; _step = "单周期完成";
                 _stepIndex = _config.Sequence.Count;
                 Log("Info", "完成第 " + _cycles + " 个周期");
@@ -281,7 +343,7 @@ public sealed class DeviceRuntime : ISequenceRuntime
                 _state = "Fault"; _alarm = e.Message; _activeAlarm = FaultCatalog.From(e, _step);
                 EnterRecoveryRequired("自动流程中断：" + e.Message, _cycleId, "Cycle");
                 InvalidateAllAxes(); _step = "故障待处理";
-                Log("Error", "自动流程中断: " + e.Message);
+                Log("Error", "自动流程中断: " + e.Message, e);
             }
         }
         finally
@@ -295,7 +357,7 @@ public sealed class DeviceRuntime : ISequenceRuntime
                     _journal.Append(new CycleRecord(_cycleId, _cycleStarted.ToString("O"),
                         DateTimeOffset.UtcNow.ToString("O"), outcome, _cycleTimer?.ElapsedMilliseconds ?? 0,
                         _currentSteps.ToArray(), _alarm ?? (outcome == "Stopped" ? "软件请求停止" : null), _cycleRecipe?.Id, _cycleFlowVersion,
-                        _flow.CompletedTraces(), _currentSnapshots.OrderBy(s=>s.Ordinal).ToArray()));
+                        _flow.CompletedTraces(), _currentSnapshots.OrderBy(s=>s.Ordinal).ToArray(), _commandId));
                 }
                 catch (Exception journalError)
                 {
@@ -303,12 +365,13 @@ public sealed class DeviceRuntime : ISequenceRuntime
                     EnterRecoveryRequired("周期数据持久化失败：" + journalError.Message, _cycleId, "Journal");
                     _alarm = "周期数据持久化失败：" + journalError.Message;
                     _activeAlarm = FaultCatalog.From(journalError,"SQLite Journal");
-                    Log("Error",_alarm);
+                    Log("Error",_alarm,journalError);
                 }
                 finally
                 {
                     _busy = false;
                     _cycleCts?.Dispose(); _cycleCts = null;
+                    _cycleId = ""; _commandId = ""; _traceId = null; _currentNodeId = null;
                 }
             }
         }
@@ -326,11 +389,57 @@ public sealed class DeviceRuntime : ISequenceRuntime
                 _config.Axes.ToDictionary(a => a.Id, a => _motion.GetAxis(a.Id).Status),
                 _config.Cylinders.ToDictionary(c => c.Id, c => _cylinders.GetCylinder(c.Id).Status),
                 _vision, _cycleRecipe?.Id, _cycleFlowVersion));
+            _currentNodeId = step.Id;
             _stepHistory.Add(record);
             if (_stepHistory.Count > 100) _stepHistory.RemoveRange(0, _stepHistory.Count - 100);
         }
     }
+    // R02: uniform ordinary-condition monitoring around EVERY long step. The inner
+    // simulation drivers poll their own loops (axis move, cylinder, vision, wait-input);
+    // this wrapper guarantees that a guard/air-pressure loss during ANY step — including
+    // Delay, which otherwise only sleeps — cancels the step and fails the cycle instead
+    // of yielding a false Completed. The first check is immediate, then every 40 ms.
     private async Task ExecuteStepAsync(SequenceStep step, CancellationToken ct)
+    {
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        Exception? conditionFailure = null;
+        var monitor = Task.Run(async () =>
+        {
+            try
+            {
+                while (true)
+                {
+                    linked.Token.ThrowIfCancellationRequested();
+                    _interlocks.Check(step.Type, step.Device);
+                    await Task.Delay(40, linked.Token);
+                }
+            }
+            catch (OperationCanceledException) { /* outer cancellation or normal completion */ }
+            catch (Exception ex)
+            {
+                conditionFailure = ex;
+                linked.Cancel();
+            }
+        }, CancellationToken.None);
+        try
+        {
+            await ExecuteStepCoreAsync(step, linked.Token);
+            // A condition failure detected while the step was still finishing makes
+            // its completion untrustworthy; surface the failure, not the result.
+            if (conditionFailure is not null) throw conditionFailure;
+        }
+        catch
+        {
+            if (conditionFailure is not null) throw conditionFailure;
+            throw;
+        }
+        finally
+        {
+            linked.Cancel();
+            try { await monitor; } catch { /* already captured in conditionFailure */ }
+        }
+    }
+    private async Task ExecuteStepCoreAsync(SequenceStep step, CancellationToken ct)
     {
         switch (step.Type)
         {
@@ -368,11 +477,24 @@ public sealed class DeviceRuntime : ISequenceRuntime
         lock (_sync)
         {
             RequireIdle();
-            if (_recoveryRequired) throw new InvalidOperationException("恢复未完成，禁止发布配方");
+            if (_recoveryRequired && _recoveryDeploymentContext is null)
+                throw new InvalidOperationException("恢复未完成，禁止发布配方");
             // F04: an interrupted deployment must also block ordinary version changes.
-            var blocked = _eligibility?.BlockingReason(_stationId);
+            var blocked = _eligibility?.BlockingReason(_stationId, _recoveryDeploymentContext);
             if (blocked != null) throw new InvalidOperationException(blocked);
             return action();
+        }
+    }
+    public T WithDeploymentRecoveryContext<T>(string deploymentId, Func<T> action)
+    {
+        lock (_sync)
+        {
+            RequireIdle();
+            if (_mode != "Manual") throw new InvalidOperationException("部署恢复要求手动模式");
+            if (_recoveryDeploymentContext is not null) throw new InvalidOperationException("已有部署恢复事务正在执行");
+            _recoveryDeploymentContext = deploymentId;
+            try { return action(); }
+            finally { _recoveryDeploymentContext = null; }
         }
     }
     public object RecoveryChecklist()
@@ -430,7 +552,6 @@ public sealed class DeviceRuntime : ISequenceRuntime
             // recovery confirmation can re-open the station.
             var blocked = _eligibility?.BlockingReason(_stationId);
             if (blocked != null) throw new InvalidOperationException(blocked);
-            _recoveryRequired = false; _step = "恢复条件已确认";
             // F01: the durable gate is only cleared here, with an audited actor.
             try { _journal.ClearRecoveryRequired(actor); }
             catch (Exception ex)
@@ -438,6 +559,7 @@ public sealed class DeviceRuntime : ISequenceRuntime
                 EnterRecoveryRequired("恢复确认持久化失败：" + ex.Message, null, "ConfirmRecovery");
                 throw new InvalidOperationException("恢复确认未能持久化，门禁保持有效", ex);
             }
+            _recoveryRequired = false; _step = "恢复条件已确认";
             Log("Info", "仿真恢复确认完成（" + actor + "）");
         }
     }
@@ -453,7 +575,7 @@ public sealed class DeviceRuntime : ISequenceRuntime
     { foreach (var a in _config.Axes) _motion.GetAxis(a.Id).InvalidateHome(); }
     private void RequireIdle()
     { if (_state != "Idle" || _busy) throw new InvalidOperationException("设备未处于空闲状态"); }
-    private void Log(string level, string message)
+    private void Log(string level, string message, Exception? exception = null)
     {
         lock (_sync)
         {
@@ -461,7 +583,9 @@ public sealed class DeviceRuntime : ISequenceRuntime
             if (_events.Count > 160) _events.RemoveRange(0, _events.Count - 160);
             // F10: mirror run events to a durable per-station log. Never throws
             // into the runtime path; failures are counted for diagnostics.
-            try { _journal.AppendEvent(level, message); } catch { /* diagnostics only */ }
+            try { _journal.AppendEvent(level, message, _cycleId.Length == 0 ? null : _cycleId,
+                _currentNodeId, string.IsNullOrEmpty(_commandId) ? CommandCorrelation.Current : _commandId,
+                _traceId ?? System.Diagnostics.Activity.Current?.TraceId.ToString(), exception?.ToString()); } catch { /* diagnostics only */ }
         }
     }
 }

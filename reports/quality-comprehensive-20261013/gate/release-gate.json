@@ -1,0 +1,620 @@
+{
+  "product": "DeviceControl",
+  "version": "2.0-rc",
+  "startedUtc": "2026-10-13T13:56:17.061795+00:00",
+  "finishedUtc": "2026-10-13T13:57:43.958590+00:00",
+  "profile": "release",
+  "browserIncluded": true,
+  "dotnetPresent": true,
+  "dotnetLocation": "C:\\Program Files\\dotnet\\dotnet.EXE",
+  "passed": 48,
+  "failed": 4,
+  "blocked": 1,
+  "releaseApproved": false,
+  "tests": [
+    {
+      "name": "offline:preview-build",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.12,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\offline_preview-build.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tools/build_preview.py"
+      ]
+    },
+    {
+      "name": "node:test_mock.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 13.5,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\node_test_mock.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tests/test_mock.mjs"
+      ]
+    },
+    {
+      "name": "node:test_governance.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.25,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\node_test_governance.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tests/test_governance.mjs"
+      ]
+    },
+    {
+      "name": "node:test_workflow_v05.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 8.88,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\node_test_workflow_v05.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tests/test_workflow_v05.mjs"
+      ]
+    },
+    {
+      "name": "node:test_workflow_v06.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 4.86,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\node_test_workflow_v06.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tests/test_workflow_v06.mjs"
+      ]
+    },
+    {
+      "name": "node:test_workflow_v07.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.16,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\node_test_workflow_v07.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tests/test_workflow_v07.mjs"
+      ]
+    },
+    {
+      "name": "node:test_workflow_v08.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.2,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\node_test_workflow_v08.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tests/test_workflow_v08.mjs"
+      ]
+    },
+    {
+      "name": "node:test_replay_v10.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.17,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\node_test_replay_v10.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tests/test_replay_v10.mjs"
+      ]
+    },
+    {
+      "name": "node:test_station_v11.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.44,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\node_test_station_v11.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tests/test_station_v11.mjs"
+      ]
+    },
+    {
+      "name": "node:test_resources_v12.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.52,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\node_test_resources_v12.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tests/test_resources_v12.mjs"
+      ]
+    },
+    {
+      "name": "node:test_workspace_v13.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.23,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\node_test_workspace_v13.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tests/test_workspace_v13.mjs"
+      ]
+    },
+    {
+      "name": "node:test_templates_v14.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.22,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\node_test_templates_v14.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tests/test_templates_v14.mjs"
+      ]
+    },
+    {
+      "name": "node:test_upgrade_rules_v15.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.16,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\node_test_upgrade_rules_v15.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tests/test_upgrade_rules_v15.mjs"
+      ]
+    },
+    {
+      "name": "node:test_recovery_v18.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.14,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\node_test_recovery_v18.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tests/test_recovery_v18.mjs"
+      ]
+    },
+    {
+      "name": "node:test_api_client_v20.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.47,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\node_test_api_client_v20.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tests/test_api_client_v20.mjs"
+      ]
+    },
+    {
+      "name": "node:test_api_client_v21.mjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.64,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\node_test_api_client_v21.mjs.log",
+      "command": [
+        "C:\\Program Files\\nodejs\\node.EXE",
+        "tests/test_api_client_v21.mjs"
+      ]
+    },
+    {
+      "name": "python:test_recovery_sandbox_v19.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.22,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\python_test_recovery_sandbox_v19.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_recovery_sandbox_v19.py"
+      ]
+    },
+    {
+      "name": "python:test_recovery_v20.py",
+      "status": "BLOCKED",
+      "exitCode": 77,
+      "seconds": 0.2,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\python_test_recovery_v20.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_recovery_v20.py"
+      ]
+    },
+    {
+      "name": "python:test_recovery_v19_static.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.09,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\python_test_recovery_v19_static.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_recovery_v19_static.py"
+      ]
+    },
+    {
+      "name": "python:test_recovery_v18_static.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.09,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\python_test_recovery_v18_static.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_recovery_v18_static.py"
+      ]
+    },
+    {
+      "name": "python:test_rollout_files_v16.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.09,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\python_test_rollout_files_v16.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_rollout_files_v16.py"
+      ]
+    },
+    {
+      "name": "python:test_rollout_v17_static.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.12,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\python_test_rollout_v17_static.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_rollout_v17_static.py"
+      ]
+    },
+    {
+      "name": "python:test_station_files_v12.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.09,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\python_test_station_files_v12.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_station_files_v12.py"
+      ]
+    },
+    {
+      "name": "python:test_template_files_v14.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.16,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\python_test_template_files_v14.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_template_files_v14.py"
+      ]
+    },
+    {
+      "name": "python:test_upgrade_files_v15.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.11,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\python_test_upgrade_files_v15.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_upgrade_files_v15.py"
+      ]
+    },
+    {
+      "name": "python:test_sqlite_schema.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.17,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\python_test_sqlite_schema.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_sqlite_schema.py"
+      ]
+    },
+    {
+      "name": "python:test_sqlite_migration_v08.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.17,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\python_test_sqlite_migration_v08.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_sqlite_migration_v08.py"
+      ]
+    },
+    {
+      "name": "python:test_sqlite_reliability.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.17,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\python_test_sqlite_reliability.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_sqlite_reliability.py"
+      ]
+    },
+    {
+      "name": "python:test_sqlite_migration_v09.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.2,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\python_test_sqlite_migration_v09.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_sqlite_migration_v09.py"
+      ]
+    },
+    {
+      "name": "python:test_sqlite_v10.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.27,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\python_test_sqlite_v10.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_sqlite_v10.py"
+      ]
+    },
+    {
+      "name": "python:test_v20_recovery_contract.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.11,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\python_test_v20_recovery_contract.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_v20_recovery_contract.py"
+      ]
+    },
+    {
+      "name": "browser:test_browser_v19.py",
+      "status": "FAIL",
+      "exitCode": 1,
+      "seconds": 0.33,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\browser_test_browser_v19.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_browser_v19.py"
+      ]
+    },
+    {
+      "name": "browser:test_browser_v18.py",
+      "status": "FAIL",
+      "exitCode": 1,
+      "seconds": 0.2,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\browser_test_browser_v18.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_browser_v18.py"
+      ]
+    },
+    {
+      "name": "browser:test_browser_v17.py",
+      "status": "FAIL",
+      "exitCode": 1,
+      "seconds": 0.2,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\browser_test_browser_v17.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_browser_v17.py"
+      ]
+    },
+    {
+      "name": "browser:test_browser_v16.py",
+      "status": "FAIL",
+      "exitCode": 1,
+      "seconds": 0.22,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\browser_test_browser_v16.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_browser_v16.py"
+      ]
+    },
+    {
+      "name": "browser:test_browser_v21.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 0.27,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\browser_test_browser_v21.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_browser_v21.py"
+      ]
+    },
+    {
+      "name": "dotnet:build-api",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.84,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\dotnet_build-api.log",
+      "command": [
+        "dotnet",
+        "build",
+        "backend/DeviceControl.Api/DeviceControl.Api.csproj",
+        "-c",
+        "Release",
+        "--nologo"
+      ]
+    },
+    {
+      "name": "dotnet:build-contracts",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.72,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\dotnet_build-contracts.log",
+      "command": [
+        "dotnet",
+        "build",
+        "backend/DeviceControl.ContractTests/DeviceControl.ContractTests.csproj",
+        "-c",
+        "Release",
+        "--nologo"
+      ]
+    },
+    {
+      "name": "dotnet:contract-runner",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 2.47,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\dotnet_contract-runner.log",
+      "command": [
+        "dotnet",
+        "run",
+        "--no-build",
+        "-c",
+        "Release",
+        "--project",
+        "backend/DeviceControl.ContractTests/DeviceControl.ContractTests.csproj"
+      ]
+    },
+    {
+      "name": "http:test_api_v09.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.59,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\http_test_api_v09.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_api_v09.py"
+      ]
+    },
+    {
+      "name": "http:test_api_v10.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 7.05,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\http_test_api_v10.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_api_v10.py"
+      ]
+    },
+    {
+      "name": "http:test_api_v12.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 8.56,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\http_test_api_v12.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_api_v12.py"
+      ]
+    },
+    {
+      "name": "http:test_api_v13.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.42,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\http_test_api_v13.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_api_v13.py"
+      ]
+    },
+    {
+      "name": "http:test_api_v14.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 2.39,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\http_test_api_v14.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_api_v14.py"
+      ]
+    },
+    {
+      "name": "http:test_api_v15.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 2.41,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\http_test_api_v15.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_api_v15.py"
+      ]
+    },
+    {
+      "name": "http:test_api_v16.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.78,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\http_test_api_v16.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_api_v16.py"
+      ]
+    },
+    {
+      "name": "http:test_api_v17.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.95,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\http_test_api_v17.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_api_v17.py"
+      ]
+    },
+    {
+      "name": "http:test_api_v18.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.88,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\http_test_api_v18.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_api_v18.py"
+      ]
+    },
+    {
+      "name": "http:test_api_v19.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.11,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\http_test_api_v19.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_api_v19.py"
+      ]
+    },
+    {
+      "name": "http:test_api_v21.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 5.78,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\http_test_api_v21.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_api_v21.py"
+      ]
+    },
+    {
+      "name": "http:test_api_v22.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 5.77,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\http_test_api_v22.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_api_v22.py"
+      ]
+    },
+    {
+      "name": "http:test_api_v23.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 2.41,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\http_test_api_v23.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_api_v23.py"
+      ]
+    },
+    {
+      "name": "http:test_api_v24.py",
+      "status": "PASS",
+      "exitCode": 0,
+      "seconds": 1.06,
+      "log": "reports\\quality-comprehensive-20261013\\gate\\logs\\http_test_api_v24.py.log",
+      "command": [
+        "C:\\Users\\35953\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "tests/test_api_v24.py"
+      ]
+    }
+  ],
+  "sourceSha256": {
+    "backend\\DeviceControl.Api\\Program.cs": "b0b1683d392c745375fed7e3d1de36fecfb46d5fd3ac2d11ef6d6c0c6fa24a84",
+    "backend\\DeviceControl.Api\\StationUpgradeManager.cs": "387c102db8099540203a0740719d6ad6bbe628654fdb08f2d395d67352468dd1",
+    "tools\\recovery_sandbox.py": "7ff7ae20b57ff371d27733f1a5bb6e56f91dab137a6971d20b23531a78b9fa9e"
+  },
+  "limitations": [
+    "Release not approved: offline-only, failing, missing, or unverified gates"
+  ]
+}

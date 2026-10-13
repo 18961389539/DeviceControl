@@ -8,6 +8,8 @@ import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from tools.recovery_sandbox import inspect
 import contextlib
+import os
+import sys
 
 ID='dep-'+'a'*32
 
@@ -22,6 +24,23 @@ def write_snapshot(db):
 def run():
     with tempfile.TemporaryDirectory(prefix='devicecontrol-v20-') as temp:
         root=Path(temp)
+        probe=root/'symlink-capability-probe';target=root/'symlink-target';target.write_text('probe')
+        linked=False
+        try:
+            probe.symlink_to(target)
+            # Some Windows filter configurations report success while materializing a
+            # plain file instead of a reparse point. Only claim capability when a real
+            # symbolic link exists; otherwise this required test must stay BLOCKED.
+            linked=probe.is_symlink()
+        except (OSError,NotImplementedError):
+            linked=False
+        finally:
+            try:
+                if probe.is_symlink() or probe.exists(): probe.unlink()
+            except OSError: pass
+        if not linked:
+            print('BLOCKED N08 filesystem does not materialize real symbolic links; run this required release test on a system with symlink capability')
+            return 'BLOCKED'
         parent=root/'data'/'deployments'
         a=parent/'backups'/'A'/f'{ID}.db'
         write_snapshot(a)
@@ -64,5 +83,8 @@ def run():
         assert not bad['backupValidated'] and not bad['checks'][0]['passed']
         assert journal.read_bytes()==json.dumps(record).encode()
     print('PASS V2.0 sandbox provenance: valid copy, cross-station substitution, file/directory symlinks; no production writes')
+    return 'PASS'
 
-if __name__=='__main__':run()
+if __name__=='__main__':
+    result=run()
+    if result=='BLOCKED':sys.exit(77)

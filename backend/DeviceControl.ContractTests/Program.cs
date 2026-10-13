@@ -68,6 +68,7 @@ try
     Console.WriteLine("OK   V1.2 shared-resource FIFO / timeout / cancel / atomic keys");
 }
 catch (Exception ex) { errors.Add("V12 resource-contract exception: " + ex); }
+await RecoveryRegressions.Run(root, errors);
 if (errors.Count>0)
 {
     foreach (var issue in errors)Console.Error.WriteLine(issue);

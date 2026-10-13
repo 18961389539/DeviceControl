@@ -6,6 +6,7 @@ import json,os,sqlite3,shutil,socket,subprocess,sys,tempfile,time,urllib.request
 from pathlib import Path
 import contextlib
 ROOT=Path(__file__).resolve().parents[1]
+from dotnet_harness import start_api, stop_api
 if not shutil.which('dotnet'):
  print('UNVERIFIED V1.5 HTTP: .NET 10 SDK absent')
  sys.exit(0)
@@ -25,7 +26,7 @@ with tempfile.TemporaryDirectory(prefix='dc-v15-') as directory:
    with urllib.request.urlopen(req,timeout=10) as r:return r.status,json.load(r)
   except urllib.error.HTTPError as e:return e.code,json.load(e)
  def boot():
-  p=subprocess.Popen(['dotnet','run','--no-launch-profile','--project',project],cwd=root,env=env,stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
+  p=start_api(root, env)
   for _ in range(160):
    if p.poll() is not None:raise AssertionError('V1.5 API startup failed')
    try:
@@ -34,9 +35,7 @@ with tempfile.TemporaryDirectory(prefix='dc-v15-') as directory:
    time.sleep(.3)
   raise AssertionError('V1.5 startup timeout')
  def halt(p):
-  p.terminate()
-  try:p.wait(timeout=10)
-  except subprocess.TimeoutExpired:p.kill();p.wait()
+  stop_api(p)
  def login(name):
   code,resp=call('/api/auth/login',{'username':name,'password':'demo123'})
   assert code==200,(code,resp)

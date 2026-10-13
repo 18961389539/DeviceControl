@@ -5,6 +5,7 @@ Full completed-cycle behavior is additionally covered by offline Chromium.
 import json,os,shutil,socket,subprocess,sys,tempfile,time,urllib.request,urllib.error
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
+from dotnet_harness import start_api, stop_api
 if not shutil.which('dotnet'):
  print('UNVERIFIED V1.6 HTTP: .NET 10 SDK absent')
  sys.exit(0)
@@ -24,7 +25,7 @@ with tempfile.TemporaryDirectory(prefix='dc-v16-') as folder:
    with urllib.request.urlopen(req,timeout=12) as r:return r.status,json.load(r)
   except urllib.error.HTTPError as e:return e.code,json.load(e)
  def boot():
-  proc=subprocess.Popen(['dotnet','run','--no-launch-profile','--project',project],cwd=root,env=env,stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
+  proc=start_api(root, env)
   for _ in range(160):
    if proc.poll() is not None:raise RuntimeError('V1.6 .NET startup failed')
    try:
@@ -33,9 +34,7 @@ with tempfile.TemporaryDirectory(prefix='dc-v16-') as folder:
    time.sleep(.3)
   raise RuntimeError('V1.6 .NET startup timeout')
  def stop(p):
-  p.terminate()
-  try:p.wait(timeout=10)
-  except subprocess.TimeoutExpired:p.kill();p.wait()
+  stop_api(p)
  def login(who):
   status,r=request('/api/auth/login',{'username':who,'password':'demo123'})
   assert status==200,(status,r)

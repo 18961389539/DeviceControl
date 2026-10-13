@@ -1,0 +1,68 @@
+[
+  {
+    "id": "N02",
+    "firstRecoveryCount": 1,
+    "nextRecoveryCount": 0,
+    "recoveryRequired": false,
+    "persistedOutcome": "Interrupted"
+  },
+  {
+    "id": "old-F01",
+    "first": true,
+    "second": true,
+    "third": true
+  },
+  {
+    "id": "old-F03",
+    "rejected": true,
+    "activePreserved": true,
+    "error": "\u7248\u672C\u51B2\u7A81\uFF1A\u914D\u65B9\u8349\u7A3F\u7684\u57FA\u51C6\u7248\u672C\u5DF2\u88AB\u66FF\u6362\uFF0C\u62D2\u7EDD\u53D1\u5E03"
+  },
+  {
+    "id": "old-F02",
+    "error": "SqliteException",
+    "memoryPreserved": true,
+    "diskPreserved": true
+  },
+  {
+    "id": "N03",
+    "manualError": "X \u5B9A\u4F4D\u8F74\u6A21\u62DF\u6545\u969C\uFF1A\u4F4D\u7F6E\u672A\u66F4\u65B0",
+    "beforeRestart": true,
+    "afterRestart": false
+  },
+  {
+    "id": "N01",
+    "status": "Interrupted",
+    "autoBlocked": true,
+    "rollbackBlocked": true,
+    "rollbackError": "\u5B58\u5728\u672A\u89E3\u51B3\u7684\u90E8\u7F72 dep-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\uFF08Interrupted\uFF09\uFF0C\u5FC5\u987B\u5148\u4EBA\u5DE5\u68C0\u67E5\u5E76\u56DE\u6EDA"
+  },
+  {
+    "id": "N05",
+    "reads": 9396442,
+    "missingBlockObservations": 23430,
+    "finalBlockPresent": true
+  },
+  {
+    "id": "N06",
+    "managerConstructionFailed": true,
+    "error": "JsonException"
+  },
+  {
+    "id": "old-F05",
+    "rejected": true,
+    "error": "\u666E\u901A\u8054\u9501\uFF1A\u9632\u62A4\u95E8\u72B6\u6001\u5F02\u5E38"
+  },
+  {
+    "id": "eligibility-missing",
+    "blockingReason": null
+  },
+  {
+    "id": "old-F07",
+    "latestReturned": true
+  },
+  {
+    "id": "native-sqlite",
+    "version": "3.53.3"
+  }
+]

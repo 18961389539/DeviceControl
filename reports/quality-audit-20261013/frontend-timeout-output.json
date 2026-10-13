@@ -1,0 +1,8 @@
+{
+  "id": "N04",
+  "headersReceived": true,
+  "configuredReadTimeoutMs": 8000,
+  "elapsedBodyWaitMs": 8500,
+  "bodySettled": false,
+  "timeoutCoversBody": false
+}

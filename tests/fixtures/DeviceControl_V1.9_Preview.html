@@ -498,7 +498,8 @@
             <button class="btn btn-light" data-governance="rollback">回滚到选中</button>
           </div><div class="divider"></div><h2>与当前版本差异</h2><div id="recipeDiff" class="recipe-details"></div></div>
         </div>
-        <div class="card" style="margin-top:18px"><div class="card-head"><div><h2>操作审计记录</h2><p>后端包含操作人、角色、路径、结果码与 TraceId；不记录密码与令牌</p></div><div class="btn-row" style="margin-top:0"><button class="btn btn-light" data-governance="audit-refresh">刷新</button><button class="btn btn-light" data-governance="audit-export">导出 CSV</button></div></div>
+        <div class="card" style="margin-top:18px"><div class="card-head"><div><h2>操作审计记录</h2><p>后端包含操作人、角色、路径、结果码与 TraceId；不记录密码与令牌</p></div><div class="btn-row" style="margin-top:0"><button class="btn btn-light" data-governance="command-lookup">命令查询</button><button class="btn btn-light" data-governance="audit-refresh">刷新</button><button class="btn btn-light" data-governance="audit-export">导出 CSV</button></div></div>
+          <div id="commandLookup" class="control-hint" style="display:none;margin-bottom:8px"></div>
           <div class="audit-scroll"><table class="audit-table"><thead><tr><th>时间</th><th>用户 / 角色</th><th>命令</th><th>结果</th><th>TraceId</th></tr></thead><tbody id="auditRows"></tbody></table></div>
           <div class="audit-pages"><span id="auditMeta">—</span><div><button class="btn btn-light" data-governance="audit-prev">上一页</button><button class="btn btn-light" data-governance="audit-next">下一页</button></div></div>
         </div>
@@ -516,6 +517,114 @@
 // Generated from backend/DeviceControl.Api/config/station.json; offline simulation only.
 window.STATION_CONFIG={"profileId":"DEMO-DUAL-STATION","driver":"Simulation","signals":[{"name":"PartPresent","direction":"DI","channel":"DI0","description":"产品到位","initial":true,"injectable":true},{"name":"GuardClosed","direction":"DI","channel":"DI1","description":"普通防护门状态（非安全）","initial":true,"injectable":true},{"name":"AirPressureOk","direction":"DI","channel":"DI2","description":"气压正常","initial":true,"injectable":true},{"name":"ClampExtended","direction":"DI","channel":"DI3","description":"夹紧气缸伸出到位","initial":false},{"name":"ClampRetracted","direction":"DI","channel":"DI4","description":"夹紧气缸缩回到位","initial":true},{"name":"StopperExtended","direction":"DI","channel":"DI5","description":"阻挡气缸伸出到位","initial":false},{"name":"StopperRetracted","direction":"DI","channel":"DI6","description":"阻挡气缸缩回到位","initial":true},{"name":"ClampExtend","direction":"DO","channel":"DO0","description":"夹紧伸出电磁阀"},{"name":"ClampRetract","direction":"DO","channel":"DO1","description":"夹紧缩回电磁阀"},{"name":"StopperExtend","direction":"DO","channel":"DO2","description":"阻挡伸出电磁阀"},{"name":"StopperRetract","direction":"DO","channel":"DO3","description":"阻挡缩回电磁阀"}],"axes":[{"id":"X","label":"X 定位轴","minMm":0,"maxMm":200,"homeMm":0,"speedMmPerSec":100},{"id":"Y","label":"Y 工艺轴","minMm":0,"maxMm":150,"homeMm":0,"speedMmPerSec":85}],"cylinders":[{"id":"Clamp","label":"夹紧气缸","extendOutput":"ClampExtend","retractOutput":"ClampRetract","extendedInput":"ClampExtended","retractedInput":"ClampRetracted","timeoutMs":1800},{"id":"Stopper","label":"阻挡气缸","extendOutput":"StopperExtend","retractOutput":"StopperRetract","extendedInput":"StopperExtended","retractedInput":"StopperRetracted","timeoutMs":1800}],"interlocks":[{"action":"AxisMove","device":"*","signal":"ClampRetracted","required":true,"message":"移动轴前夹紧气缸必须缩回"},{"action":"AxisMove","device":"*","signal":"StopperRetracted","required":true,"message":"移动轴前阻挡气缸必须缩回"},{"action":"CylinderExtend","device":"Clamp","signal":"StopperExtended","required":true,"message":"夹紧前阻挡气缸必须伸出"}],"sequence":[{"type":"WaitInput","label":"等待产品到位","device":"PartPresent","timeoutMs":2000,"id":"part"},{"type":"VisionLocate","label":"视觉定位","id":"vision","onError":"Retry","maxRetries":1,"sharedResources":["CELL-SHARED"],"resourceWaitTimeoutMs":2500},{"id":"xy-approach","type":"Parallel","label":"X/Y 双轴并行定位","children":[{"type":"AxisMove","label":"X 轴视觉定位","device":"X","useVisionX":true,"id":"x-place"},{"type":"AxisMove","label":"Y 轴工艺定位","device":"Y","positionMm":40,"id":"y-place"}]},{"type":"CylinderExtend","label":"阻挡气缸伸出","device":"Stopper","id":"stopper-extend"},{"type":"CylinderExtend","label":"夹紧气缸伸出","device":"Clamp","id":"clamp-extend"},{"type":"Delay","label":"工艺保持","durationMs":250,"id":"dwell"},{"type":"CylinderRetract","label":"夹紧气缸缩回","device":"Clamp","id":"clamp-retract"},{"type":"CylinderRetract","label":"阻挡气缸缩回","device":"Stopper","id":"stopper-retract"},{"id":"xy-return","type":"Parallel","label":"X/Y 双轴并行复归","children":[{"type":"AxisMove","label":"Y 轴返回等待位","device":"Y","positionMm":0,"id":"y-return"},{"type":"AxisMove","label":"X 轴返回等待位","device":"X","positionMm":0,"id":"x-return"}]}],"flowVersion":"flow-v0.5.0"};
 window.STATION_CONFIG_B={"profileId":"DEMO-STATION-B","driver":"Simulation","signals":[{"name":"PartPresent","direction":"DI","channel":"DI0","description":"产品到位","initial":true,"injectable":true},{"name":"GuardClosed","direction":"DI","channel":"DI1","description":"普通防护门状态（非安全）","initial":true,"injectable":true},{"name":"AirPressureOk","direction":"DI","channel":"DI2","description":"气压正常","initial":true,"injectable":true},{"name":"ClampExtended","direction":"DI","channel":"DI3","description":"夹紧气缸伸出到位","initial":false},{"name":"ClampRetracted","direction":"DI","channel":"DI4","description":"夹紧气缸缩回到位","initial":true},{"name":"StopperExtended","direction":"DI","channel":"DI5","description":"阻挡气缸伸出到位","initial":false},{"name":"StopperRetracted","direction":"DI","channel":"DI6","description":"阻挡气缸缩回到位","initial":true},{"name":"ClampExtend","direction":"DO","channel":"DO0","description":"夹紧伸出电磁阀"},{"name":"ClampRetract","direction":"DO","channel":"DO1","description":"夹紧缩回电磁阀"},{"name":"StopperExtend","direction":"DO","channel":"DO2","description":"阻挡伸出电磁阀"},{"name":"StopperRetract","direction":"DO","channel":"DO3","description":"阻挡缩回电磁阀"}],"axes":[{"id":"X","label":"X 定位轴","minMm":0,"maxMm":200,"homeMm":0,"speedMmPerSec":100},{"id":"Y","label":"Y 工艺轴","minMm":0,"maxMm":150,"homeMm":0,"speedMmPerSec":85}],"cylinders":[{"id":"Clamp","label":"夹紧气缸","extendOutput":"ClampExtend","retractOutput":"ClampRetract","extendedInput":"ClampExtended","retractedInput":"ClampRetracted","timeoutMs":1800},{"id":"Stopper","label":"阻挡气缸","extendOutput":"StopperExtend","retractOutput":"StopperRetract","extendedInput":"StopperExtended","retractedInput":"StopperRetracted","timeoutMs":1800}],"interlocks":[{"action":"AxisMove","device":"*","signal":"ClampRetracted","required":true,"message":"移动轴前夹紧气缸必须缩回"},{"action":"AxisMove","device":"*","signal":"StopperRetracted","required":true,"message":"移动轴前阻挡气缸必须缩回"},{"action":"CylinderExtend","device":"Clamp","signal":"StopperExtended","required":true,"message":"夹紧前阻挡气缸必须伸出"}],"sequence":[{"type":"WaitInput","label":"等待产品到位","device":"PartPresent","timeoutMs":2000,"id":"part"},{"type":"VisionLocate","label":"视觉定位","id":"vision","onError":"Retry","maxRetries":1,"sharedResources":["CELL-SHARED"],"resourceWaitTimeoutMs":2500},{"id":"xy-approach","type":"Parallel","label":"X/Y 双轴并行定位","children":[{"type":"AxisMove","label":"X 轴视觉定位","device":"X","useVisionX":true,"id":"x-place"},{"type":"AxisMove","label":"Y 轴工艺定位","device":"Y","positionMm":40,"id":"y-place"}]},{"type":"CylinderExtend","label":"阻挡气缸伸出","device":"Stopper","id":"stopper-extend"},{"type":"CylinderExtend","label":"夹紧气缸伸出","device":"Clamp","id":"clamp-extend"},{"type":"Delay","label":"工艺保持","durationMs":250,"id":"dwell"},{"type":"CylinderRetract","label":"夹紧气缸缩回","device":"Clamp","id":"clamp-retract"},{"type":"CylinderRetract","label":"阻挡气缸缩回","device":"Stopper","id":"stopper-retract"},{"id":"xy-return","type":"Parallel","label":"X/Y 双轴并行复归","children":[{"type":"AxisMove","label":"Y 轴返回等待位","device":"Y","positionMm":0,"id":"y-return"},{"type":"AxisMove","label":"X 轴返回等待位","device":"X","positionMm":0,"id":"x-return"}]}],"flowVersion":"flow-v0.5.0"};
+
+</script>
+<script>
+/* One request deadline covers headers, the complete bounded body, and JSON parsing.
+
+   R03: a write whose outcome cannot be confirmed (connection drop, truncated or
+   invalid JSON body, oversized response, timeout, 5xx) is surfaced as "result
+   unknown" and always carries the locally generated X-Command-Id (plus the server
+   trace ID when visible), so the operator reconciles by concrete ID instead of
+   guessing or blindly retrying. Business rejections (4xx) remain ordinary errors
+   and carry the same correlation IDs. Writes are never retried automatically.
+
+   R07: freshness is tracked per data domain (for example per-station snapshot and
+   flow). Only a successful read whose payload passes the caller's contract check
+   may mark a domain fresh; every failure (timeout, 503, invalid structure) keeps
+   or raises the stale flag, so a 503 JSON can no longer clear it. */
+(function(global){'use strict';
+ const READ_TIMEOUT_MS=8000,WRITE_TIMEOUT_MS=15000,MAX_RESPONSE_BYTES=8*1024*1024;
+ function newCommandId(){
+  return global.crypto?.randomUUID?global.crypto.randomUUID():('cmd-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));
+ }
+ function attach(error,extra){try{Object.assign(error,extra)}catch{}return error}
+ function describe(error){
+  if(!error)return '命令失败';
+  if(error.resultUnknown){
+   const ids=[error.commandId?('命令 '+error.commandId):null,error.traceId?('追踪 '+error.traceId):null].filter(Boolean).join(' · ');
+   return (error.message||'写操作结果未知：服务端可能已执行')+(ids?'（'+ids+'）':'')+'。请按上述 ID 核对运行记录与审计，不要自动重发';
+  }
+  return error.message||'命令失败';
+ }
+ function create({root='',readTimeoutMs=READ_TIMEOUT_MS,writeTimeoutMs=WRITE_TIMEOUT_MS,maxResponseBytes=MAX_RESPONSE_BYTES}={}){
+  const maxBytes=maxResponseBytes;
+  const domains=new Map();
+  const markFresh=key=>{if(key)domains.set(key,true)};
+  const markStale=key=>{if(key)domains.set(key,false)};
+  async function request(path,options={}){
+   const method=(options.method||'GET').toUpperCase(),write=method!=='GET';
+   const controller=new AbortController(),timeout=write?writeTimeoutMs:readTimeoutMs;
+   const timer=setTimeout(()=>controller.abort(),timeout);
+   const commandId=write?newCommandId():null;
+   const headers=new Headers(options.headers||{});
+   if(write&&!headers.has('X-Command-Id'))headers.set('X-Command-Id',commandId);
+   const context={action:path,station:options.station||null,at:new Date().toISOString(),commandId};
+   // First writer wins: a server-echoed command/trace ID set by an earlier pass
+   // must never be overwritten by the locally generated fallbacks.
+   const fail=(error,extra)=>{
+    const source={...context,...(extra||{})};
+    for(const key in source)if(error[key]===undefined)error[key]=source[key];
+    return error;
+   };
+   try{
+    const response=await fetch(root+path,{...options,headers,signal:controller.signal});
+    const declared=Number(response.headers.get('content-length')||0);
+    if(declared>maxBytes)
+     throw fail(Error(write?'服务器响应过大，已拒绝读取；写操作结果未知，服务端可能已执行':'服务器响应过大，已拒绝读取'),{resultUnknown:write,responseStatus:response.status});
+    const reader=response.body?.getReader();let chunks=[],length=0;
+    if(reader){
+     while(true){const {done,value}=await reader.read();if(done)break;length+=value.byteLength;
+      if(length>maxBytes){await reader.cancel();
+       throw fail(Error(write?'服务器响应超过 8 MiB，已拒绝读取；写操作结果未知，服务端可能已执行':'服务器响应超过 8 MiB，已拒绝读取'),{resultUnknown:write,responseStatus:response.status})}
+      chunks.push(value);
+     }
+    }
+    const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength}
+    const text=new TextDecoder().decode(bytes);let value=null;
+    try{value=text?JSON.parse(text):null}
+    catch(parseError){
+     // R03: a broken body cannot prove the write was rejected - it may be committed.
+     throw fail(Error(write?'写操作结果未知：响应不是有效 JSON，服务端可能已执行':('服务器返回了无效 JSON：'+parseError.message)),
+       {resultUnknown:write,responseStatus:response.status,parseError:parseError.message});
+    }
+    const traceId=response.headers.get('X-Trace-Id')||(value&&typeof value==='object'?value.traceId:null)||null;
+    const echoedId=response.headers.get('X-Command-Id')||(value&&typeof value==='object'?value.commandId:null)||commandId;
+    if(!response.ok){
+     const serverMessage=value&&typeof value==='object'?(value.error||value.message):null;
+     throw fail(Error(serverMessage||('请求失败 '+response.status)),
+      {status:response.status,responseStatus:response.status,
+       resultUnknown:write&&response.status>=500,commandId:echoedId,traceId});
+    }
+    if(!write&&options.freshness){
+     if(!options.expect||options.expect(value))markFresh(options.freshness);
+     else markStale(options.freshness);
+    }
+    return {ok:true,status:response.status,statusText:response.statusText,headers:response.headers,
+      json:async()=>value,text:async()=>text,data:value,commandId:echoedId,traceId};
+   }catch(error){
+    if(error?.name==='AbortError'){
+     if(write)throw fail(Error('写操作超时：结果未知，服务端可能已执行'),{resultUnknown:true,timeout:true,commandId});
+     if(options.freshness)markStale(options.freshness);
+     throw fail(Error('数据获取超时，界面显示的可能不是最新状态'),{timeout:true});
+    }
+    if(write&&error?.resultUnknown===undefined){
+     // No confirmable server response at all: the command may already be committed.
+     attach(error,{resultUnknown:true,network:true,commandId});
+     if(!error.message||/fetch|network/i.test(error.message))
+      error.message='写操作结果未知：与本地服务的连接中断，命令可能已被执行';
+     throw fail(error);
+    }
+    if(!write&&options.freshness)markStale(options.freshness);
+    throw fail(error);
+   }finally{clearTimeout(timer)}
+  }
+  request.isDataStale=()=>[...domains.values()].some(fresh=>!fresh);
+  request.staleDomains=()=>[...domains].filter(pair=>!pair[1]).map(pair=>pair[0]);
+  return request;
+ }
+ global.DeviceControlApiClient={create,defaults:{readTimeoutMs:READ_TIMEOUT_MS,writeTimeoutMs:WRITE_TIMEOUT_MS,maxResponseBytes:MAX_RESPONSE_BYTES},describe};
+})(window);
 
 </script>
 <script>
@@ -1710,6 +1819,7 @@ window.FlowEditor=FlowEditor;
   class StationConsole {
     constructor({root,backend,token,user,offline,coordinator,notify,openStation}){
       this.root=root;this.backend=backend;this.token=token;this.user=user;this.offline=offline;this.coordinator=coordinator;this.notify=notify;this.openStation=openStation;
+      this.api=global.DeviceControlApiClient.create({root});
       this.overviews=[];this.snaps={};this.owner=null;this.resources={leases:[],queue:[],events:[]};this.log=[];
       this.locked=false;this.busy=false;this.polling=false;
       this.panel=document.getElementById('panel-stations');
@@ -1762,18 +1872,9 @@ window.FlowEditor=FlowEditor;
       document.getElementById('fleetRefresh').disabled=this.busy||!this.user()||this.locked;
     }
     async request(path,body){
-      // F09: application-level timeout; a half-open connection must not freeze polling.
       const write=body!==undefined;
-      const controller=new AbortController();
-      const timer=setTimeout(()=>controller.abort(),write?15000:8000);
-      let response;
-      try{
-        response=await fetch(this.root+path,{method:write?'POST':'GET',headers:{'Content-Type':'application/json','X-Sim-Token':this.token()},body:write?JSON.stringify(body):undefined,signal:controller.signal});
-      }catch(e){
-        if(e&&e.name==='AbortError')throw Error(write?'写操作超时：结果未知，不会自动重发':'数据获取超时，界面可能非最新');
-        throw e;
-      }finally{clearTimeout(timer)}
-      const value=await response.json();if(!response.ok)throw Error(value.error||'HTTP '+response.status);return value;
+      const response=await this.api(path,{method:write?'POST':'GET',headers:{'Content-Type':'application/json','X-Sim-Token':this.token()},body:write?JSON.stringify(body):undefined});
+      return await response.json();
     }
     async refresh(){
       if(!this.user()||this.polling||this.locked)return;
@@ -1821,7 +1922,7 @@ window.FlowEditor=FlowEditor;
         else if(action==='reset')await this.post(id,'/api/fault/reset');
         else if(action==='confirm')await this.post(id,'/api/recovery/confirm');
         this.record('工站 '+id+'：'+({prepare:'轴已完成准备',auto:'切换自动',manual:'切换手动',start:'已提交启动请求',stop:'已提交软件停止',reset:'报警复位',confirm:'恢复确认'}[action]||action));
-      }catch(e){this.record('工站 '+id+' 操作失败：'+e.message,true)}
+      }catch(e){this.record('工站 '+id+' 操作失败：'+global.DeviceControlApiClient.describe(e),true)}
       finally{this.busy=false;await this.refresh();this.render()}
     }
   }
@@ -1851,6 +1952,7 @@ window.FlowEditor=FlowEditor;
   class StationTemplateStudio {
     constructor({root,backend,token,user,offline,coordinator,notify,onDeployed}){
       Object.assign(this,{root,backend,token,user,offline,coordinator,notify,onDeployed});
+      this.api=global.DeviceControlApiClient.create({root});
       this.templates=[];this.selected='';this.diff=[];this.error='';this.busy=false;
       this.panel=document.getElementById('panel-templates');
       this.panel.addEventListener('click',e=>{const b=e.target.closest('button[data-template-action]');if(b&&!b.disabled)void this.act(b.dataset.templateAction)});
@@ -1861,8 +1963,8 @@ window.FlowEditor=FlowEditor;
     get selectedRevision(){return this.templates.find(v=>v.id===this.selected)}
     get role(){return ({Operator:1,Engineer:2,Admin:3})[this.user()?.role]||0}
     async call(path,body){
-      const res=await fetch(this.root+path,{method:body===undefined?'GET':'POST',headers:{'X-Sim-Token':this.token(),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
-      const data=await res.json();if(!res.ok)throw Error(data.error||'HTTP '+res.status);return data;
+      const res=await this.api(path,{method:body===undefined?'GET':'POST',headers:{'X-Sim-Token':this.token(),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+      return await res.json();
     }
     stationOptions(){return Object.keys(this.offline).sort();}
     async refresh(){
@@ -1959,7 +2061,7 @@ window.FlowEditor=FlowEditor;
         }
         if(action!=='compare')this.diff=[];
         this.notify('模板操作完成：'+action);
-      }catch(e){this.error=e.message;this.notify(e.message,true)}
+      }catch(e){this.error=global.DeviceControlApiClient.describe(e);this.notify(this.error,true)}
       finally{this.busy=false;if(this.backend()&&this.user()&&action!=='compare')await this.refresh();else this.render()}
     }
   }
@@ -1988,6 +2090,7 @@ window.FlowEditor=FlowEditor;
  class StationUpgradeStudio {
    constructor({root,backend,token,user,offline,templates,notify,onChanged}){
      Object.assign(this,{root,backend,token,user,offline,templates,notify,onChanged});
+   this.api=global.DeviceControlApiClient.create({root});
      this.plan=null;this.history=[];this.busy=false;this.error='';this.selectedHistory='';
      this.panel=document.getElementById('panel-templates');
      this.panel.addEventListener('click',e=>{const b=e.target.closest('button[data-upgrade]');if(b&&!b.disabled)void this.act(b.dataset.upgrade)});
@@ -1998,7 +2101,7 @@ window.FlowEditor=FlowEditor;
    get role(){return ({Operator:1,Engineer:2,Admin:3})[this.user()?.role]||0}
    get selectedTemplate(){return this.templates().find(v=>v.id===document.getElementById('templateSelect').value)}
    get target(){return document.getElementById('upgradeStation').value}
-   async call(path,body){const r=await fetch(this.root+path,{method:body===undefined?'GET':'POST',headers:{'X-Sim-Token':this.token(),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const value=await r.json();if(!r.ok)throw Error(value.error||'HTTP '+r.status);return value.data}
+   async call(path,body){const r=await this.api(path,{method:body===undefined?'GET':'POST',headers:{'X-Sim-Token':this.token(),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),station:this.target});return (await r.json()).data}
    async refresh(){
      if(this.backend()&&this.user()&&!this.busy){try{this.history=await this.call('/api/upgrades/history');this.error=''}catch(e){this.error=e.message}}
      this.render();
@@ -2070,7 +2173,19 @@ window.FlowEditor=FlowEditor;
        }else if(action==='rollback'){
          const row=this.history.find(r=>r.id===this.selectedHistory);if(!row)throw Error('请选择部署记录');
          if(this.backend()){
-           const changed=await this.call('/api/upgrades/rollback',{deploymentId:row.id});this.notify('已回滚：'+changed.id);
+           let body={deploymentId:row.id},changed;
+           try{changed=await this.call('/api/upgrades/rollback',body)}catch(e){
+             if(e.status!==409||!e.message.includes('结果未知'))throw e;
+             const station=row.stationId;
+             const flow=prompt(`部署 ${row.id} 的提交结果未知。先查 GET /api/stations/${station}/flows 与 /api/stations/${station}/recipes 的当前活动版本，并完成现场核对。输入确认看到的流程版本 ID：`);
+             if(!flow)throw Error('已取消受控恢复');
+             const recipe=prompt('输入确认看到的配方活动版本 ID：');if(!recipe)throw Error('已取消受控恢复');
+             const note=prompt('简述版本核对依据（8–500 字符）；管理员将作为恢复证据持久记录：');
+             if(!note)throw Error('已取消受控恢复');
+             body={deploymentId:row.id,expectedCurrentFlowId:flow.trim(),expectedCurrentRecipeId:recipe.trim(),recoveryNote:note.trim()};
+             changed=await this.call('/api/upgrades/rollback',body);
+           }
+           this.notify('已回滚：'+changed.id);
          }else{
            const target=this.offline[row.stationId],g=target?.governance;
            if(!target||checks({status:'Published',config:target.machine.cfg},target).length)throw Error('工站不处于可回滚的空闲手动状态');
@@ -2081,7 +2196,7 @@ window.FlowEditor=FlowEditor;
          }
          this.plan=null;await this.onChanged(row.stationId);await this.refresh();
        }
-     }catch(e){this.error=e.message;this.notify(e.message,true)}finally{this.busy=false;this.render()}
+     }catch(e){this.error=global.DeviceControlApiClient.describe(e);this.notify(this.error,true)}finally{this.busy=false;this.render()}
    }
  }
  global.StationUpgradeStudio=StationUpgradeStudio;
@@ -2193,7 +2308,7 @@ class OfflineRollouts{
     if(!step||!['Failed','Applying'].includes(step.status))throw Error('工站没有待人工核对的失败步骤');
     const item=this.offline[stationId],g=item.governance,state=item.machine.snapshot();
     if(state.busy||state.state!=='Idle'||state.mode!=='Manual'||state.recoveryRequired||state.alarm)throw Error('工站必须空闲、手动、无报警');
-    if(g.flows.activeId!==step.expectedFlowId||g.activeId!==step.expectedRecipeId)throw Error('不在原始版本基线上；禁止盲目重试');
+    if(g.flows.activeId!==step.expectedFlowId||g.activeId!==step.expectedRecipeId)throw Error('不在原始版本基线上（内容恢复会发布新的版本 ID）；旧批次不能续跑，请关闭批次后基于当前版本重建');
     if(this.upgrades().some(x=>x.stationId===stationId&&['InProgress','Interrupted','ManualRecoveryRequired'].includes(x.status)))throw Error('单站部署日志尚未解决');
     step.status='Pending';step.error=null;step.recoveryActor=actor;step.recoveryNote=note.trim();step.reconciledAt=stamp();
     row.status='Paused';row.reason='人工核对已记录，确认后可继续';row.updatedAt=stamp();return row;
@@ -2268,6 +2383,7 @@ class OfflineRollouts{
 class FleetRolloutStudio{
  constructor({root,backend,token,user,offline,templates,upgradeStudio,notify,onChanged}){
   Object.assign(this,{root,backend,token,user,offline,templates,upgradeStudio,notify,onChanged});
+ this.api=global.DeviceControlApiClient.create({root});
   this.mock=new OfflineRollouts({offline,templates,upgrades:()=>upgradeStudio.history});
   this.rows=[];this.selected='';this.busy=false;this.info='';this.recovery=null;
   this.el=document.getElementById('rolloutDashboard');
@@ -2277,7 +2393,7 @@ class FleetRolloutStudio{
  }
  get role(){return ({Operator:1,Engineer:2,Admin:3})[this.user()?.role]||0}
  get current(){return this.rows.find(x=>x.id===this.selected)}
- async call(path,body){const r=await fetch(this.root+path,{method:body===undefined?'GET':'POST',headers:{'X-Sim-Token':this.token(),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const v=await r.json();if(!r.ok)throw Error(v.error||'HTTP '+r.status);return v.data}
+ async call(path,body){const r=await this.api(path,{method:body===undefined?'GET':'POST',headers:{'X-Sim-Token':this.token(),'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),station:this.target?.()||undefined});return (await r.json()).data}
  async refresh(){try{this.rows=this.backend()?await this.call('/api/rollouts'):this.mock.list();if(!this.rows.some(x=>x.id===this.selected))this.selected=this.rows[0]?.id||'';this.render()}catch(e){this.info=e.message;this.render()}}
  render(){
   const select=document.getElementById('rolloutHistory'),old=this.selected;
@@ -2342,9 +2458,19 @@ class FleetRolloutStudio{
       const stationId=document.getElementById('rolloutReconcileStation').value;
       const note=document.getElementById('rolloutReconcileNote').value;
       const body={stationId,note};
-      if(this.backend())await this.call('/api/rollouts/'+id+'/reconcile',body);else this.mock.reconcile(id,body,actor);
-      this.info='已记录人工核对，可按当前批次状态继续（不会自动部署）';
-      this.diagnostics=null;
+      try{
+        if(this.backend())await this.call('/api/rollouts/'+id+'/reconcile',body);else this.mock.reconcile(id,body,actor);
+        this.info='已记录人工核对，可按当前批次状态继续（不会自动部署）';
+        this.diagnostics=null;
+      }catch(e){
+        // R01 (conservative): a single-station rollback restores CONTENT but publishes
+        // NEW version IDs. The old batch can never return to its recorded baseline,
+        // so show the替代 steps explicitly instead of leaving a bare 409.
+        if(/原始版本基线/.test(e.message||'')){
+          this.info='该工站已不在批次原始版本基线上（内容恢复会发布新的版本 ID，内容恢复不等于 ID 恢复）。替代路径：① 终止（Abort）关闭本批次 → ② 在「⑤ 已有工站」升级历史中确认已恢复的版本 → ③ 基于当前版本重建灰度批次。旧批次不会自动续跑，也不放宽基线比较。';
+          this.notify('旧批次不能在此工站续跑：请关闭本批次并基于当前版本重建',true);
+        } else throw e;
+      }
     }else if(action==='inspect'){
       const check=this.backend()?await this.call('/api/rollouts/'+id+'/evidence'):this.mock.inspect(id);
       this.info=check.pass?'质量与周期证据齐全，可以确认验收':check.blockers.join('；');this.notify(this.info,!check.pass);
@@ -2369,7 +2495,7 @@ class FleetRolloutStudio{
       this.notify(this.info||'灰度批次状态已更新');
     }
     await this.refresh();
-  }catch(e){this.info=e.message;this.notify(e.message,true)}finally{this.busy=false;this.render()}
+  }catch(e){this.info=global.DeviceControlApiClient.describe(e);this.notify(this.info,true)}finally{this.busy=false;this.render()}
  }
 }
 global.OfflineRollouts=OfflineRollouts;global.FleetRolloutStudio=FleetRolloutStudio;
@@ -2383,6 +2509,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 class DeploymentSandboxUI{
  constructor({root,backend,token,user,upgradeStudio}){
   Object.assign(this,{root,backend,token,user,upgradeStudio});
+  this.api=global.DeviceControlApiClient.create({root});
   this.output=document.getElementById('sandboxReport');this.button=document.getElementById('sandboxInspectBtn');
   this.button.addEventListener('click',()=>void this.inspect());
  }
@@ -2397,9 +2524,9 @@ class DeploymentSandboxUI{
   try{
    let report;
    if(this.backend()){
-    const res=await fetch(this.root+'/api/upgrades/'+encodeURIComponent(id)+'/sandbox',
+    const res=await this.api('/api/upgrades/'+encodeURIComponent(id)+'/sandbox',
      {headers:{'X-Sim-Token':this.token()}});
-    const data=await res.json();if(!res.ok)throw Error(data.error||'服务器沙箱检查失败');
+    const data=await res.json();
     report=data.data;
    }else{
     // Do NOT forge positive backup/SQLite results in the no-backend demonstration.
@@ -2425,26 +2552,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
 <script>
 (() => {
   const root='http://127.0.0.1:5088';
-  // F09: unified fetch with application-level timeouts. Reads mark staleness instead of
-  // silently keeping old state; writes report "result unknown" and are never auto-resent.
-  const READ_TIMEOUT_MS=8000,WRITE_TIMEOUT_MS=15000;
-  let dataStale=false;
-  async function apiFetch(path,opts={}){
-    const write=(opts.method||'GET')!=='GET';
-    const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),write?WRITE_TIMEOUT_MS:READ_TIMEOUT_MS);
-    try{
-      const res=await fetch(root+path,{...opts,signal:controller.signal});
-      if(!write)dataStale=false;
-      return res;
-    }catch(e){
-      if(e&&e.name==='AbortError'){
-        if(write)throw Error('写操作超时：结果未知。请核对运行记录与审计，设备动作不会自动重发');
-        dataStale=true;throw Error('数据获取超时，界面显示的可能不是最新状态');
-      }
-      throw e;
-    }finally{clearTimeout(timer)}
-  }
+  const apiFetch=window.DeviceControlApiClient.create({root});
   const machineA=new MockRuntime(window.STATION_CONFIG);
   const machineB=new MockRuntime(window.STATION_CONFIG_B);
   machineA.stationId='A';machineB.stationId='B';
@@ -2462,8 +2570,10 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
   let selectedAxis='X',selectedCylinder='Clamp',toastTimer=null,polling=false;
   let historyFilter='All',selectedCycleId=null;
   let user=null,token=null,governanceData=null,auditData=null,recoveryData=null,selectedRecipeId=null,auditPage=1;
+  let auditStatus=null;
   const $=id=>document.getElementById(id);
   const h=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const describeError=e=>window.DeviceControlApiClient.describe(e);
   const names={PartPresent:'产品到位',GuardClosed:'防护门状态（普通 DI）',AirPressureOk:'气压正常',ClampExtended:'夹紧伸出到位',ClampRetracted:'夹紧缩回到位',StopperExtended:'阻挡伸出到位',StopperRetracted:'阻挡缩回到位',ClampExtend:'夹紧伸出阀',ClampRetract:'夹紧缩回阀',StopperExtend:'阻挡伸出阀',StopperRetract:'阻挡缩回阀',XStuck:'X 轴卡滞',YStuck:'Y 轴卡滞',ClampStuck:'夹紧气缸卡滞',StopperStuck:'阻挡气缸卡滞'};
   const stateText={Idle:'待机',Running:'运行中',Stopping:'停止中',Fault:'故障',Manual:'手动',Auto:'自动',Retracted:'缩回到位',Extended:'伸出到位',Unknown:'位置未知'};
   const titles={templates:'配置模板与部署',stations:'多工站调度',dashboard:'生产总览',manual:'手动调试',io:'IO 监控',config:'机构与互锁',sequence:'流程调试',analytics:'运行分析',events:'报警与日志',recovery:'故障恢复向导',governance:'配方版本与审计',workflow:'流程设计器',replay:'历史回放',quality:'流程质量门禁'};
@@ -2480,8 +2590,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
     try{
       const target=window.StationWorkspace.ensureStation(id);
       let targetConfig=offline[target]?.machine.cfg || window.STATION_CONFIG;
-      if(usingBackend){const res=await apiFetch(apiPath('/api/config',target),{headers:{'X-Sim-Token':token}});
-        if(!res.ok)throw Error('读取工站 '+target+' 配置失败');targetConfig=await res.json();}
+      if(usingBackend){try{targetConfig=await (await apiFetch(apiPath('/api/config',target),{headers:{'X-Sim-Token':token}})).json()}catch(e){throw Error('读取工站 '+target+' 配置失败：'+e.message)}}
       // Avoid changing context until the target has passed validation and can be loaded.
       if(!offline[target]){const shadow=new MockRuntime(targetConfig);shadow.stationId=target;shadow.sharedCoordinator=coordinator;offline[target]={machine:shadow,governance:new GovernanceMock(shadow)}}
       editor?.switchStation(target);
@@ -2507,9 +2616,10 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
   }
   async function registerRemoteStations(){
     if(!usingBackend||!user)return;
-    const r=await apiFetch('/api/stations',{headers:{'X-Sim-Token':token}});
-    if(!r.ok)throw Error('读取工站注册表失败');
-    const items=(await r.json()).stations||[];
+    let registry;
+    try{registry=await (await apiFetch('/api/stations',{headers:{'X-Sim-Token':token}})).json()}
+    catch(e){throw Error('读取工站注册表失败：'+e.message)}
+    const items=registry.stations||[];
     items.forEach(s=>window.StationWorkspace.register(s.id));
     updateStationOptions();
   }
@@ -2522,13 +2632,10 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
   async function detectBackend(){
     if(location.protocol==='file:'){render();return}
     try{
-      const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),650);
-      const res=await fetch(root+'/api/health',{signal:controller.signal});clearTimeout(timeout);
-      if(!res.ok)throw Error('服务不可用');
-      const health=await res.json();if(health.mode!=='Simulation')throw Error('本界面仅可连接仿真服务');
+      const health=await (await apiFetch('/api/health')).json();if(health.mode!=='Simulation')throw Error('本界面仅可连接仿真服务');
       usingBackend=true;
       // Do not auto-authorize or silently reuse a previous session. Explicit login is required.
-      if(user){const r=await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}});if(!r.ok)throw Error('无法读取站点配置');cfg=await r.json();populateSelectors();await refresh();}
+      if(user){try{cfg=await (await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}})).json()}catch(e){throw Error('无法读取站点配置：'+e.message)}populateSelectors();await refresh();}
     }catch(e){if(usingBackend){disconnected=true;toast('后端连接异常，控制已锁定：'+e.message,true)}else toast('未检测到 C# 本地仿真服务，已启用浏览器离线演示')}
     render();
   }
@@ -2538,9 +2645,10 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
     if(!user)throw Error('请先登录');
     const target=workspace.id;
     if(!usingBackend)return offline[target].governance.post(path,body,user);
-    const resp=await apiFetch(apiPath(path,target),{method:'POST',headers:{'Content-Type':'application/json','X-Sim-Token':token},body:JSON.stringify(body)});
-    let value;try{value=await resp.json()}catch{throw Error('后端未返回有效 JSON')}
-    if(!resp.ok)throw Error(value.error||'请求失败 '+resp.status);return value;
+    // R03: the shared client throws for !ok and classifies unconfirmable writes as
+    // "result unknown" (error.resultUnknown) carrying command/trace IDs.
+    const resp=await apiFetch(apiPath(path,target),{method:'POST',headers:{'Content-Type':'application/json','X-Sim-Token':token},body:JSON.stringify(body),station:target});
+    return await resp.json();
   }
   async function refresh(){
     if(polling||disconnected||!user||switching)return;
@@ -2548,10 +2656,18 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
     try{
       if(usingBackend){
         const heads={'X-Sim-Token':token};
-        const [res,fres]=await Promise.all([apiFetch(apiPath('/api/snapshot',context.station),{headers:heads}),apiFetch(apiPath('/api/flow',context.station),{headers:heads})]);
-        if(!res.ok||!fres.ok)throw Error('HTTP '+(res.ok?fres.status:res.status));
-        const [nextSnapshot,nextFlow]=await Promise.all([res.json(),fres.json()]);
-        if(workspace.isCurrent(context)){snapshot=nextSnapshot;flow=nextFlow}
+        // R07: freshness is per station/domain; only a successful read whose payload
+        // passes the contract check may mark it fresh, and stale responses from a
+        // previous station are still rejected below. R04: the audit-health header is
+        // surfaced in the status line; degraded audit refuses version/deployment writes.
+        const [snapRes,flowRes]=await Promise.all([
+          apiFetch(apiPath('/api/snapshot',context.station),{headers:heads,freshness:'snapshot:'+context.station,
+            expect:v=>!!v&&typeof v==='object'&&typeof v.state==='string'&&!!v.axes&&!!v.inputs}),
+          apiFetch(apiPath('/api/flow',context.station),{headers:heads,freshness:'flow:'+context.station,
+            expect:v=>!!v&&typeof v==='object'&&typeof v.version==='string'})
+        ]);
+        const [nextSnapshot,nextFlow]=[await snapRes.json(),await flowRes.json()];
+        if(workspace.isCurrent(context)){snapshot=nextSnapshot;flow=nextFlow;auditStatus=snapRes.headers.get('X-Audit-Status')||null}
       }else if(workspace.isCurrent(context)) {snapshot=offline[context.station].machine.snapshot();flow=offline[context.station].machine.flow.snapshot()}
     }catch(e){if(workspace.isCurrent(context)){disconnected=true;toast('本地仿真 API 已断开，所有控制已锁定，不会自动切换到浏览器模拟器',true)}}
     finally{polling=false;render()}
@@ -2560,7 +2676,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
     if(switching)return;
     const context=workspace.context();inFlight++;render();
     try{await request(path,body);await refresh();if(!workspace.isCurrent(context))return;if(currentTab==='governance'||currentTab==='recovery')await loadGovernance();toast('指令已执行（仿真）')}
-    catch(e){toast(e.message||'命令失败',true);await refresh()}
+    catch(e){toast(describeError(e),true);await refresh()}
     finally{inFlight--;render()}
   }
   function populateSelectors(){
@@ -2577,10 +2693,9 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
     if(backendProbe)await backendProbe;
     if(disconnected)throw Error('服务断开，请刷新页面后重试');
     if(usingBackend){
-      const res=await apiFetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
-      const value=await res.json();if(!res.ok)throw Error(value.error||'登录失败');token=value.token;user=value.user;
-      const cfgRes=await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}});
-      if(!cfgRes.ok)throw Error('登录后读取配置失败');cfg=await cfgRes.json();
+      const value=await (await apiFetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})})).json();
+      token=value.token;user=value.user;
+      try{cfg=await (await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}})).json()}catch(e){throw Error('登录后读取配置失败：'+e.message)}
     }else user=governance.login(username,password);
     $('loginOverlay').classList.add('hidden');await registerRemoteStations();populateSelectors();void stationConsole?.refresh();await refresh();await loadGovernance();render();
   }
@@ -2600,8 +2715,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
       if(path.startsWith('/api/audit'))return gov.auditPage(auditPage,40);
       if(path==='/api/recovery/checklist')return gov.checklist();
     }
-    const res=await apiFetch(apiPath(path,target),{headers:{'X-Sim-Token':token}});
-    if(!res.ok){const v=await res.json().catch(()=>({}));throw Error(v.error||'API '+res.status)}return res.json();
+    return await (await apiFetch(apiPath(path,target),{headers:{'X-Sim-Token':token}})).json();
   }
   async function loadGovernance(){
     if(!user||switching)return;
@@ -2663,7 +2777,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
     txt('workspaceTag','工作区 '+workspace.id);txt('workspaceBreadcrumb','STATION '+workspace.id);
     txt('userLabel',user?user.name+' · '+user.role:'未登录');$('logoutButton').disabled=!user;
     txt('connectionLabel',disconnected?'已断开 · 锁定':usingBackend?'C# 本地模拟后端':'浏览器模拟驱动');
-    txt('sourceMode',disconnected?'连接丢失':dataStale?'数据可能过期':usingBackend?'本地 API · Simulation':'离线 Simulation');
+    txt('sourceMode',disconnected?'连接丢失':auditStatus==='degraded'?'审计降级 · 数据可能过期':auditStatus==='unavailable'?'审计不可用 · 变更已受限':apiFetch.isDataStale()?'数据可能过期':usingBackend?'本地 API · Simulation':'离线 Simulation');
     txt('clock',new Date().toLocaleTimeString('zh-CN',{hour12:false}));
     txt('stateValue',stateText[d.state]||d.state);
     $('stateDot').className='state-dot '+(disconnected||d.state==='Fault'?'error':d.state==='Running'||d.state==='Stopping'?'running':'ok');
@@ -2803,6 +2917,22 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
       if(action==='audit-refresh'){await loadGovernance();return}
       if(action==='audit-prev'||action==='audit-next'){auditPage+=action==='audit-prev'?-1:1;await loadGovernance();return}
       if(action==='audit-export'){try{exportAudit();toast('本页审计记录已导出')}catch(e){toast(e.message,true)}return}
+      if(action==='command-lookup'){
+        // R03/R08: reconcile a "result unknown" write by its concrete command ID.
+        const raw=window.prompt('输入要核对的命令 ID（写操作错误提示中的 X-Command-Id）：');
+        const id=(raw||'').trim();if(!id)return;
+        try{
+          const response=await securedGet('/api/commands/'+encodeURIComponent(id));
+          const data=response?.data||{};
+          const box=$('commandLookup');box.style.display='block';
+          const audit=(data.audit||[]).map(x=>`${new Date(x.time).toLocaleTimeString('zh-CN')} ${x.method} ${x.path} → ${x.status} ${x.outcome}${x.errorMessage?'（'+x.errorMessage+'）':''}`).join('；');
+          const runs=(data.runs||[]).map(x=>`${x.id} → ${x.outcome}`).join('；');
+          box.innerHTML=data.found
+            ?`<b>命令 ${h(id)}</b>：审计 ${data.audit.length} 条${audit?'（'+h(audit)+'）':''}；运行记录 ${data.runs.length} 条${runs?'（'+h(runs)+'）':''}；未完结手动意图 ${data.manualIntents.length} 条；关联事件 ${data.events.length} 条`
+            :`<b>命令 ${h(id)}</b>：${h(data.guidance||'未找到该命令 ID 的记录')}`;
+        }catch(e){toast('命令查询失败：'+e.message,true)}
+        return;
+      }
       const id=selectedRecipeId;
       if(action==='draft'){
         const body={name:$('recipeName').value.trim(),visionOffsetMm:Number($('recipeOffset').value),extraDwellMs:Number($('recipeDwell').value)};
@@ -2850,7 +2980,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
     read:()=>securedGet('/api/flows'),
     send:async(path,body)=>request(path,body),
     refreshed:async()=>{
-      if(usingBackend){const res=await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}});if(!res.ok)throw Error('更新站点配置失败');cfg=await res.json()}
+      if(usingBackend){try{cfg=await (await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}})).json()}catch(e){throw Error('更新站点配置失败：'+e.message)}}
       else cfg=offline[workspace.id].machine.cfg;
       await refresh();
     }
@@ -2866,7 +2996,7 @@ global.DeploymentSandboxUI=DeploymentSandboxUI;
   upgradeStudio=new window.StationUpgradeStudio({root,backend:()=>usingBackend,token:()=>token,user:()=>user,
     offline,templates:()=>templateStudio.templates,notify:toast,onChanged:async id=>{
       if(id===workspace.id){
-        if(usingBackend){const r=await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}});if(r.ok)cfg=await r.json();}
+        if(usingBackend){try{cfg=await (await apiFetch(apiPath('/api/config'),{headers:{'X-Sim-Token':token}})).json()}catch{/* 配置刷新失败不阻断后续操作，状态轮询会恢复 */}}
         await refresh();if(currentTab==='workflow')await editor.open();
       }
       await stationConsole.refresh();

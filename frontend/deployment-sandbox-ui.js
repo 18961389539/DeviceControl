@@ -4,6 +4,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 class DeploymentSandboxUI{
  constructor({root,backend,token,user,upgradeStudio}){
   Object.assign(this,{root,backend,token,user,upgradeStudio});
+  this.api=global.DeviceControlApiClient.create({root});
   this.output=document.getElementById('sandboxReport');this.button=document.getElementById('sandboxInspectBtn');
   this.button.addEventListener('click',()=>void this.inspect());
  }
@@ -18,9 +19,9 @@ class DeploymentSandboxUI{
   try{
    let report;
    if(this.backend()){
-    const res=await fetch(this.root+'/api/upgrades/'+encodeURIComponent(id)+'/sandbox',
+    const res=await this.api('/api/upgrades/'+encodeURIComponent(id)+'/sandbox',
      {headers:{'X-Sim-Token':this.token()}});
-    const data=await res.json();if(!res.ok)throw Error(data.error||'服务器沙箱检查失败');
+    const data=await res.json();
     report=data.data;
    }else{
     // Do NOT forge positive backup/SQLite results in the no-backend demonstration.

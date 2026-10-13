@@ -5,6 +5,7 @@ by changing only persisted journal states while the service is down.
 import json,os,shutil,socket,subprocess,sys,tempfile,time,urllib.request,urllib.error
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
+from dotnet_harness import start_api, stop_api
 if not shutil.which('dotnet'):
  print('UNVERIFIED V1.8 HTTP: .NET 10 SDK absent');sys.exit(0)
 with tempfile.TemporaryDirectory(prefix='dc-v18-') as tmp:
@@ -23,7 +24,7 @@ with tempfile.TemporaryDirectory(prefix='dc-v18-') as tmp:
    with urllib.request.urlopen(req,timeout=12) as res:return res.status,json.load(res)
   except urllib.error.HTTPError as e:return e.code,json.load(e)
  def boot():
-  proc=subprocess.Popen(['dotnet','run','--no-launch-profile','--project',project],cwd=root,env=env,stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
+  proc=start_api(root, env)
   for _ in range(160):
    if proc.poll() is not None:raise RuntimeError('V1.8 API process failed to start')
    try:
@@ -32,9 +33,7 @@ with tempfile.TemporaryDirectory(prefix='dc-v18-') as tmp:
    time.sleep(.3)
   raise RuntimeError('V1.8 API startup timeout')
  def stop(proc):
-  proc.terminate()
-  try:proc.wait(timeout=12)
-  except subprocess.TimeoutExpired:proc.kill();proc.wait()
+  stop_api(proc)
  def login(name):
   code,row=request('/api/auth/login',{'username':name,'password':'demo123'})
   assert code==200,(code,row);return row['token']

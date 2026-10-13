@@ -19,7 +19,7 @@ with tempfile.TemporaryDirectory(prefix='dc-v10-') as tmp:
   db.execute('INSERT INTO production_runs VALUES (?,?,?,?,?,?,?,?,?)',('old-cycle','t0','t1','Completed',300,'flow-a',None,None,'{}'))
   db.commit()
   db.executescript(v4);db.executescript(v4)
-  assert [v[0] for v in db.execute('SELECT version FROM schema_version ORDER BY version')]==[1,2,3,4]
+  assert [v[0] for v in db.execute('SELECT version FROM schema_version ORDER BY version')]==[1,2,3,4,5]
   assert db.execute('SELECT count(*) FROM production_runs WHERE id="old-cycle"').fetchone()[0]==1
   assert db.execute('SELECT version_id FROM active_workflow').fetchone()[0]=='flow-a'
   # Completed run, exact trace evidence and snapshot hash

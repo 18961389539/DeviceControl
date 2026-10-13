@@ -6,6 +6,7 @@ import json,os,shutil,socket,subprocess,tempfile,time,urllib.request,urllib.erro
 from pathlib import Path
 import contextlib
 ROOT=Path(__file__).resolve().parents[1]
+from dotnet_harness import start_api, stop_api
 if not shutil.which('dotnet'):
  print('SKIP (unverified): .NET SDK unavailable; API integration tests were not executed')
  sys.exit(0)
@@ -18,8 +19,7 @@ with tempfile.TemporaryDirectory(prefix='devicecontrol-v09-api-') as folder:
  url=f'http://127.0.0.1:{port}'
  env={**os.environ,'SimListenUrl':url,'ASPNETCORE_CONTENTROOT':str(root)}
  project=ROOT/'backend/DeviceControl.Api/DeviceControl.Api.csproj'
- proc=subprocess.Popen(['dotnet','run','--project',str(project),'--no-launch-profile'],cwd=root,
-    env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+ proc=start_api(root, env)
  def request(path,method='GET',body=None,token=None):
   data=None if body is None else json.dumps(body).encode()
   req=urllib.request.Request(url+path,data=data,method=method,
@@ -75,6 +75,4 @@ with tempfile.TemporaryDirectory(prefix='devicecontrol-v09-api-') as folder:
    assert conn.execute('PRAGMA integrity_check').fetchone()[0]=='ok'
   print('PASS V0.9 C# HTTP API: publish gate, failed evidence, role denial, optimistic locking, SQLite')
  finally:
-  proc.terminate()
-  try:proc.communicate(timeout=8)
-  except subprocess.TimeoutExpired:proc.kill();proc.communicate()
+  stop_api(proc)

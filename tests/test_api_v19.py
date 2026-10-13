@@ -4,6 +4,7 @@ Must run in CI with .NET 10 SDK. Without it, explicit UNVERIFIED output, not PAS
 import hashlib,json,os,shutil,socket,subprocess,sys,tempfile,time,urllib.request,urllib.error
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
+from dotnet_harness import start_api, stop_api
 if not shutil.which('dotnet'):
  print('UNVERIFIED V1.9 HTTP: .NET 10 SDK absent');sys.exit(0)
 with tempfile.TemporaryDirectory(prefix='dc-v19-http-') as temp:
@@ -25,7 +26,7 @@ with tempfile.TemporaryDirectory(prefix='dc-v19-http-') as temp:
  def login(role):
   code,row=call('/api/auth/login',{'username':role,'password':'demo123'})
   assert code==200,(code,row);return row['token']
- proc=subprocess.Popen(['dotnet','run','--no-launch-profile','--project',project],cwd=data,env=env,stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
+ proc=start_api(data, env)
  try:
   for _ in range(180):
    if proc.poll() is not None:raise AssertionError('server exited before healthy')
@@ -62,6 +63,4 @@ with tempfile.TemporaryDirectory(prefix='dc-v19-http-') as temp:
   assert call('/api/upgrades/not-an-id/sandbox',token=engineer)[0] in (400,404,409)
   print('PASS V1.9 .NET HTTP sandbox: RBAC, verified copy, no mutations, tamper rejection, invalid ID')
  finally:
-  proc.terminate()
-  try:proc.wait(timeout=12)
-  except subprocess.TimeoutExpired:proc.kill();proc.wait()
+  stop_api(proc)

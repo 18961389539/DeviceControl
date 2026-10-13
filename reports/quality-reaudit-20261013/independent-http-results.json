@@ -1,0 +1,450 @@
+[
+  {
+    "name": "N01 interrupted deployment blocks Auto",
+    "passed": true,
+    "evidence": {
+      "status": 409,
+      "body": {
+        "ok": false,
+        "error": "存在未解决的部署 dep-2db5fdcc91e9444791e60006406df98c（Interrupted），必须先人工检查并回滚"
+      }
+    }
+  },
+  {
+    "name": "N01 real changed-version deployment can be rolled back",
+    "passed": true,
+    "evidence": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "data": {
+          "id": "dep-2db5fdcc91e9444791e60006406df98c",
+          "stationId": "B",
+          "templateId": "tmpl-796f5b9d3de8",
+          "planId": "plan-db49528f7395431fbbd157b26ae18a7b",
+          "actor": "admin",
+          "startedAt": "2026-10-13T11:30:30.1499346+00:00",
+          "finishedAt": "2026-10-13T11:30:31.0249206+00:00",
+          "status": "RolledBack",
+          "error": null,
+          "beforeFlow": {
+            "id": "flow-d8ba14a3d6",
+            "status": "Published",
+            "sourceId": null,
+            "author": "system",
+            "createdAt": "2026-10-13T11:30:29.5920304+00:00",
+            "hash": "E58B270BDA36E3E3B12630E25D9362CCC4EAE1456C824713D8070BAA0BFB278E",
+            "definition": [
+              {
+                "id": "part",
+                "type": "WaitInput",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [],
+                "label": "等待产品到位",
+                "device": "PartPresent",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 2000,
+                "durationMs": 0,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "vision",
+                "type": "VisionLocate",
+                "onError": "Retry",
+                "maxRetries": 1,
+                "children": [],
+                "label": "视觉定位",
+                "device": "",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 0,
+                "sharedResources": [
+                  "CELL-SHARED"
+                ],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "xy-approach",
+                "type": "Parallel",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [
+                  {
+                    "id": "x-place",
+                    "type": "AxisMove",
+                    "onError": "Abort",
+                    "maxRetries": 0,
+                    "children": [],
+                    "label": "X 轴视觉定位",
+                    "device": "X",
+                    "useVisionX": true,
+                    "positionMm": 0,
+                    "timeoutMs": 0,
+                    "durationMs": 0,
+                    "sharedResources": [],
+                    "resourceWaitTimeoutMs": 2500
+                  },
+                  {
+                    "id": "y-place",
+                    "type": "AxisMove",
+                    "onError": "Abort",
+                    "maxRetries": 0,
+                    "children": [],
+                    "label": "Y 轴工艺定位",
+                    "device": "Y",
+                    "useVisionX": false,
+                    "positionMm": 40,
+                    "timeoutMs": 0,
+                    "durationMs": 0,
+                    "sharedResources": [],
+                    "resourceWaitTimeoutMs": 2500
+                  }
+                ],
+                "label": "X/Y 双轴并行定位",
+                "device": "",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 0,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "stopper-extend",
+                "type": "CylinderExtend",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [],
+                "label": "阻挡气缸伸出",
+                "device": "Stopper",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 0,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "clamp-extend",
+                "type": "CylinderExtend",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [],
+                "label": "夹紧气缸伸出",
+                "device": "Clamp",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 0,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "dwell",
+                "type": "Delay",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [],
+                "label": "工艺保持",
+                "device": "",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 250,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "clamp-retract",
+                "type": "CylinderRetract",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [],
+                "label": "夹紧气缸缩回",
+                "device": "Clamp",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 0,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "stopper-retract",
+                "type": "CylinderRetract",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [],
+                "label": "阻挡气缸缩回",
+                "device": "Stopper",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 0,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              },
+              {
+                "id": "xy-return",
+                "type": "Parallel",
+                "onError": "Abort",
+                "maxRetries": 0,
+                "children": [
+                  {
+                    "id": "y-return",
+                    "type": "AxisMove",
+                    "onError": "Abort",
+                    "maxRetries": 0,
+                    "children": [],
+                    "label": "Y 轴返回等待位",
+                    "device": "Y",
+                    "useVisionX": false,
+                    "positionMm": 0,
+                    "timeoutMs": 0,
+                    "durationMs": 0,
+                    "sharedResources": [],
+                    "resourceWaitTimeoutMs": 2500
+                  },
+                  {
+                    "id": "x-return",
+                    "type": "AxisMove",
+                    "onError": "Abort",
+                    "maxRetries": 0,
+                    "children": [],
+                    "label": "X 轴返回等待位",
+                    "device": "X",
+                    "useVisionX": false,
+                    "positionMm": 0,
+                    "timeoutMs": 0,
+                    "durationMs": 0,
+                    "sharedResources": [],
+                    "resourceWaitTimeoutMs": 2500
+                  }
+                ],
+                "label": "X/Y 双轴并行复归",
+                "device": "",
+                "useVisionX": false,
+                "positionMm": 0,
+                "timeoutMs": 0,
+                "durationMs": 0,
+                "sharedResources": [],
+                "resourceWaitTimeoutMs": 2500
+              }
+            ],
+            "reason": "初始流程配置"
+          },
+          "beforeRecipe": {
+            "id": "77b42219dd",
+            "sourceId": null,
+            "status": "Published",
+            "createdAt": "2026-10-13T11:30:29.5914247+00:00",
+            "author": "system",
+            "values": {
+              "name": "默认工艺",
+              "visionOffsetMm": 0,
+              "extraDwellMs": 0
+            },
+            "hash": "9CD54541DAD59B28",
+            "reason": "初始化基准版本"
+          },
+          "afterFlowId": "flow-f9bb24a5fe",
+          "afterRecipeId": "32c78faef0",
+          "backupFile": "backups\\B\\dep-2db5fdcc91e9444791e60006406df98c.db",
+          "backupSha256": "079A5BB7B83DD9B94EC4468EF48E4C1A124CB41ED9471C808EB3D89738CDC9D7",
+          "recoveryNote": null,
+          "recoveryObservedBy": null,
+          "recoveryObservedAt": null,
+          "recoveryObservedFlowId": null,
+          "recoveryObservedRecipeId": null
+        }
+      }
+    }
+  },
+  {
+    "name": "N01 rollback persists resolved status",
+    "passed": true,
+    "evidence": {
+      "status": "RolledBack"
+    }
+  },
+  {
+    "name": "N01 rollback restores recipe content",
+    "passed": true,
+    "evidence": {
+      "before": {
+        "name": "默认工艺",
+        "visionOffsetMm": 0,
+        "extraDwellMs": 0
+      },
+      "after": {
+        "name": "默认工艺",
+        "visionOffsetMm": 0,
+        "extraDwellMs": 0
+      }
+    }
+  },
+  {
+    "name": "N07 actual failure audit matches HTTP",
+    "passed": true,
+    "evidence": {
+      "http": 500,
+      "auditStatus": 500,
+      "auditOutcome": "Failed"
+    }
+  },
+  {
+    "name": "N09 HTTP failure correlates command trace and persistent exception detail",
+    "passed": true,
+    "evidence": {
+      "commandId": "cmd-89aa85d1a62a4f4db54bedf54cf55368",
+      "traceId": "aef1ceb9f9a0d9186f3310d20c7e90e8",
+      "responseCommandId": "cmd-89aa85d1a62a4f4db54bedf54cf55368",
+      "responseTraceId": "aef1ceb9f9a0d9186f3310d20c7e90e8",
+      "exceptionDetailPresent": true
+    }
+  },
+  {
+    "name": "N09 actual manual operation log correlates with HTTP command and trace",
+    "passed": true,
+    "evidence": {
+      "commandId": "cmd-dc7429ff38bd4394a5c1b4287d1e4834",
+      "traceId": "b22ac1c3676a8228f8229d0d04e0014f",
+      "matchingEvents": [
+        {
+          "TimeUtc": "2026-10-13T11:30:31.1002293+00:00",
+          "Level": "Info",
+          "Message": "开始 X 使能",
+          "RunId": null,
+          "NodeId": null,
+          "CommandId": "cmd-dc7429ff38bd4394a5c1b4287d1e4834",
+          "TraceId": "b22ac1c3676a8228f8229d0d04e0014f",
+          "ErrorDetail": null
+        },
+        {
+          "TimeUtc": "2026-10-13T11:30:31.1019545+00:00",
+          "Level": "Info",
+          "Message": "完成 X 使能",
+          "RunId": null,
+          "NodeId": null,
+          "CommandId": "cmd-dc7429ff38bd4394a5c1b4287d1e4834",
+          "TraceId": "b22ac1c3676a8228f8229d0d04e0014f",
+          "ErrorDetail": null
+        }
+      ]
+    }
+  },
+  {
+    "name": "N06 corrupt rollout preserves diagnostic API",
+    "passed": true,
+    "evidence": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "failedStations": {},
+        "deploymentStartupIssues": [],
+        "templateStartupIssues": [],
+        "rolloutStartupIssues": [
+          "roll-dddddddddddddddddddddddddddddddd.json: Expected depth to be zero at the end of the JSON payload. There is an open JSON object or array that should be closed. Path: $ | LineNumber: 0 | BytePositionInLine: 1."
+        ],
+        "eventWriteFailures": {
+          "A": 0,
+          "B": 0
+        }
+      }
+    }
+  },
+  {
+    "name": "N06 diagnostic identifies corrupt rollout",
+    "passed": true,
+    "evidence": {
+      "ok": true,
+      "failedStations": {},
+      "deploymentStartupIssues": [],
+      "templateStartupIssues": [],
+      "rolloutStartupIssues": [
+        "roll-dddddddddddddddddddddddddddddddd.json: Expected depth to be zero at the end of the JSON payload. There is an open JSON object or array that should be closed. Path: $ | LineNumber: 0 | BytePositionInLine: 1."
+      ],
+      "eventWriteFailures": {
+        "A": 0,
+        "B": 0
+      }
+    }
+  },
+  {
+    "name": "N09 readiness rejects damaged rollout state",
+    "passed": true,
+    "evidence": {
+      "status": 503,
+      "body": {
+        "ready": false,
+        "mode": "Simulation",
+        "stations": [
+          {
+            "stationId": "A",
+            "ready": true,
+            "storeError": null,
+            "blockingReason": null,
+            "recoveryRequired": false
+          },
+          {
+            "stationId": "B",
+            "ready": true,
+            "storeError": null,
+            "blockingReason": null,
+            "recoveryRequired": false
+          }
+        ],
+        "failedStations": {},
+        "startupIssues": [
+          "roll-dddddddddddddddddddddddddddddddd.json: Expected depth to be zero at the end of the JSON payload. There is an open JSON object or array that should be closed. Path: $ | LineNumber: 0 | BytePositionInLine: 1."
+        ]
+      }
+    }
+  },
+  {
+    "name": "N09 database audit pagination retains old history",
+    "passed": true,
+    "evidence": {
+      "status": 200,
+      "total": 2115,
+      "count": 15
+    }
+  },
+  {
+    "name": "N06 corrupt template preserves diagnostics",
+    "passed": true,
+    "evidence": {
+      "status": 200,
+      "body": {
+        "ok": true,
+        "failedStations": {},
+        "deploymentStartupIssues": [],
+        "templateStartupIssues": [
+          "catalog.json: The JSON value could not be converted to System.Collections.Generic.List`1[DeviceControl.Api.StationTemplateRevision]. Path: $ | LineNumber: 0 | BytePositionInLine: 1."
+        ],
+        "rolloutStartupIssues": [
+          "roll-dddddddddddddddddddddddddddddddd.json: Expected depth to be zero at the end of the JSON payload. There is an open JSON object or array that should be closed. Path: $ | LineNumber: 0 | BytePositionInLine: 1."
+        ],
+        "eventWriteFailures": {
+          "A": 0,
+          "B": 0
+        }
+      }
+    }
+  },
+  {
+    "name": "N06 damaged template blocks mutation and preserves evidence",
+    "passed": true,
+    "evidence": {
+      "status": 409,
+      "body": {
+        "ok": false,
+        "error": "模板目录损坏，已保留原文件并禁用模板修改；请先人工修复或归档"
+      }
+    }
+  }
+]

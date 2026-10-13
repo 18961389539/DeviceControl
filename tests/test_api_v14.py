@@ -6,6 +6,7 @@ Never report as passed if .NET SDK is missing.
 import json, os, shutil, socket, subprocess, sys, tempfile, time, urllib.error, urllib.request
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
+from dotnet_harness import start_api, stop_api
 if not shutil.which('dotnet'):
  print('UNVERIFIED V1.4 HTTP: .NET 10 SDK absent')
  sys.exit(0)
@@ -25,8 +26,7 @@ with tempfile.TemporaryDirectory(prefix='devicecontrol-v14-') as d:
    with urllib.request.urlopen(req,timeout=15) as r:return r.status,json.load(r)
   except urllib.error.HTTPError as e:return e.code,json.load(e)
  def boot():
-  proc=subprocess.Popen(['dotnet','run','--no-launch-profile','--project',project],cwd=root,env=env,
-                         stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT)
+  proc=start_api(root, env)
   for _ in range(150):
    if proc.poll() is not None:raise AssertionError('V1.4 .NET process exited')
    try:
@@ -35,9 +35,7 @@ with tempfile.TemporaryDirectory(prefix='devicecontrol-v14-') as d:
    time.sleep(.35)
   raise AssertionError('V1.4 API startup timeout')
  def stop(proc):
-  proc.terminate()
-  try:proc.wait(timeout=10)
-  except subprocess.TimeoutExpired:proc.kill();proc.wait()
+  stop_api(proc)
  def login(role):
   code,val=request('/api/auth/login',{'username':role,'password':'demo123'});assert code==200,(code,val)
   return val['token']

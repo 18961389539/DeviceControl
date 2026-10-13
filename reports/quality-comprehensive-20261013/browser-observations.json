@@ -1,0 +1,9 @@
+{
+  "status": 200,
+  "auditStatus": null,
+  "commandId": "cmd-f4e81f1d42964f4c804fab577dc046d6",
+  "traceId": "e9128efe39296bd65b87410cb1321aeb",
+  "nativeAuditStatus": "degraded",
+  "exposeHeaders": "X-Command-Id,X-Trace-Id,X-Request-Id",
+  "scope": "Real Chromium response-header visibility; not complete main UI usability acceptance"
+}

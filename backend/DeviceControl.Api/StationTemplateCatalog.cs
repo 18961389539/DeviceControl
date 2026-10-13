@@ -19,23 +19,34 @@ public sealed class StationTemplateCatalog
     private readonly object _gate = new();
     private readonly string _file;
     private List<StationTemplateRevision> _versions;
+    private readonly List<string> _startupIssues = new();
+    public IReadOnlyList<string> StartupIssues { get { lock (_gate) return _startupIssues.ToArray(); } }
     private static readonly JsonSerializerOptions Json = new() { PropertyNameCaseInsensitive = true, WriteIndented = true };
     public StationTemplateCatalog(IHostEnvironment env)
     {
         var folder = Path.Combine(env.ContentRootPath, "data", "templates");
         Directory.CreateDirectory(folder);
         _file = Path.Combine(folder, "catalog.json");
-        _versions = File.Exists(_file)
-            ? JsonSerializer.Deserialize<List<StationTemplateRevision>>(File.ReadAllText(_file), Json)
-                  ?? throw new InvalidOperationException("模板目录损坏")
-            : new();
-        foreach (var row in _versions)
+        _versions = new();
+        if (File.Exists(_file))
         {
-            ValidateSnapshot(row);
-            if (row.Status is not ("Draft" or "Validated" or "Published"))
-                throw new InvalidOperationException("模板目录包含未知状态");
+            try
+            {
+                var loaded = JsonSerializer.Deserialize<List<StationTemplateRevision>>(File.ReadAllText(_file), Json)
+                    ?? throw new InvalidOperationException("模板目录为空或损坏");
+                foreach (var row in loaded)
+                {
+                    ValidateSnapshot(row);
+                    if (row.Status is not ("Draft" or "Validated" or "Published"))
+                        throw new InvalidOperationException("模板目录包含未知状态");
+                }
+                _versions = loaded;
+            }
+            catch (Exception ex) { _startupIssues.Add(Path.GetFileName(_file) + ": " + ex.Message); }
         }
     }
+    private void EnsureHealthy()
+    { if (_startupIssues.Count > 0) throw new InvalidOperationException("模板目录损坏，已保留原文件并禁用模板修改；请先人工修复或归档"); }
     public IReadOnlyList<StationTemplateRevision> List()
     {
         lock (_gate) return _versions.AsEnumerable().Reverse().Select(Clone).ToArray();
@@ -102,6 +113,7 @@ public sealed class StationTemplateCatalog
             Hash(config, recipe), config, recipe);
         lock (_gate)
         {
+            EnsureHealthy();
             var candidate = new List<StationTemplateRevision>(_versions) { revision };
             Persist(candidate);
             _versions = candidate;
@@ -112,6 +124,7 @@ public sealed class StationTemplateCatalog
     {
         lock (_gate)
         {
+            EnsureHealthy();
             var r = Find(id);
             if (r.Status != "Draft") throw new InvalidOperationException("只能验证模板草稿");
             ValidateSnapshot(r);
@@ -128,6 +141,7 @@ public sealed class StationTemplateCatalog
     {
         lock (_gate)
         {
+            EnsureHealthy();
             var r = Find(id);
             if (r.Status != "Validated") throw new InvalidOperationException("只能发布已验证的模板");
             ValidateSnapshot(r);
